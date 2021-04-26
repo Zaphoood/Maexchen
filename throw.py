@@ -2,7 +2,8 @@ import constants as c
 
 class Throw:
     def __init__(self, num0, num1):
-        assert 1 <= num0 <= 6 and 1 <= num1 <= 6
+        if not 1 <= num0 <= 6 and 1 <= num1 <= 6:
+            raise ValueError("Values must be elements of [1, 6].")
         self.num0 = num0
         self.num1 = num1
         self.value = max(num0, num1) * 10 + min(num0, num1)

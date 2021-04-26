@@ -21,12 +21,15 @@ class DummyPlayer(Player):
     # überbieten, wird dieses angegeben. Kann es das nicht, wird der Vorgänger
     # entweder angezweifelt oder ein falsches Ergebnis verkündet
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
         if myThrow > lastThrow:
-            return MoveThrow
+            return MoveThrow(myThrow)
         else:
             if not lastThrow.isMaexchen:
                 # Vorgänger hatte kein Mäxchen -> Ergebnis kann überboten werden
-                return random.choice(MoveThrow(lastThrow + 1), MoveDoubt)
+                return random.choice(MoveThrow(lastThrow + 1), MoveDoubt())
+            else:
+                # Vorgänger hatte Mäxchen -> Immer anzweifeln
+                return MoveDoubt()

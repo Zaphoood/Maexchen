@@ -1,4 +1,5 @@
 import constants as c
+import random
 
 
 class Throw:
@@ -41,3 +42,8 @@ class Throw:
     def __lt__(self, other):
         # Ist von kleinerem Rang
         return self.rank < other.rank
+
+
+def randomThrow():
+    # Gibt einen Zufälligen Wurf zurück
+    return Throw(random.randint(1, 6), random.randint(1, 6))

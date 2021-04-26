@@ -1,12 +1,11 @@
-from enum import Enum
-
 import constants as c
+
 
 class Throw:
     num0: int
     num1: int
     value: int
-    rank: Enum
+    rank: int
     isDouble: bool
     isMaexchen: bool
 
@@ -17,8 +16,8 @@ class Throw:
         self.num1 = num1
         self.value = max(num0, num1) * 10 + min(num0, num1)
         self.rank = c.THROW_RANK_BY_VALUE[self.value]
-        self.isDouble = num0 == num1 # Pasch
-        self.isMaexchen = self.value == c.MAEXCHEN # Mäxchen
+        self.isDouble = num0 == num1  # Pasch
+        self.isMaexchen = self.value == c.MAEXCHEN  # Mäxchen
 
     def __repr__(self):
         return f"Throw (value={self.value})"

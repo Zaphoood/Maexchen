@@ -1,6 +1,7 @@
 from throw import Throw
 from move import Move
 
+
 class Player:
     def __init__(self):
         pass

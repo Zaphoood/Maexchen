@@ -13,7 +13,7 @@ class Player:
         # und dem des vorherigen Spielers lastThrow einen Zug (Move)
         # zurück. Der eigene Wurf wird zuvor vom Spiel (Game) zufällig gewählt
         # und dieser Funktion übergeben
-        pass
+        raise NotImplementedError
 
 
 class DummyPlayer(Player):
@@ -24,12 +24,15 @@ class DummyPlayer(Player):
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
-        if myThrow > lastThrow:
+        if lastThrow is None:
             return MoveThrow(myThrow)
         else:
-            if not lastThrow.isMaexchen:
-                # Vorgänger hatte kein Mäxchen -> Ergebnis kann überboten werden
-                return random.choice(MoveThrow(lastThrow + 1), MoveDoubt())
+            if myThrow > lastThrow:
+                return MoveThrow(myThrow)
             else:
-                # Vorgänger hatte Mäxchen -> Immer anzweifeln
-                return MoveDoubt()
+                if not lastThrow.isMaexchen:
+                    # Vorgänger hatte kein Mäxchen -> Ergebnis kann überboten werden
+                    return random.choice(MoveThrow(lastThrow + 1), MoveDoubt())
+                else:
+                    # Vorgänger hatte Mäxchen -> Immer anzweifeln
+                    return MoveDoubt()

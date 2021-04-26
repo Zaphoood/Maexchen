@@ -1,3 +1,6 @@
+from __future__ import annotations
+# Notwendig für type hints die sich auf die eigene Klasse beziehen
+
 import constants as c
 from throw import Throw
 
@@ -12,14 +15,17 @@ class Move:
         self.value = value  # Wird nur für Züge verwendet, bei denen der Spieler würfelt.
         # Beinhaltet die Angabe des Spielers über das Würfelergebnis
 
+    def __eq__(self, other: Move) -> Move:
+        return self.move == other.move and self.value == other.value
+
 
 class MoveDoubt(Move):
     # Klasse die eine Zug darstellt, bei dem das vorherige Ergebnis angezweifelt wird
     move: c.ALL_MOVES
     value: Throw
 
-    def __init__(self, move: c.ALL_MOVES):
-        super().__init__(c.ALL_MOVES.DOUBT, None)
+    def __init__(self):
+        super().__init__(c.ALL_MOVES.DOUBT)
 
 
 class MoveThrow(Move):
@@ -27,5 +33,5 @@ class MoveThrow(Move):
     move: c.ALL_MOVES
     value: Throw
 
-    def __init__(self, move: c.ALL_MOVES, value: Throw = None):
+    def __init__(self, value: Throw):
         super().__init__(c.ALL_MOVES.THROW, value)

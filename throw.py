@@ -59,7 +59,7 @@ class Throw:
         return self.rank < other.rank
 
     def __add__(self, other: int):
-        # Gibt das nte nächstgrößere Wurfergebnis zurück. n ist als Parameter gegeben.
+        # Gibt das nte nächstgrößere Wurfergebnis zurück. n ist als Parameter other gegeben.
         # Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren.
         assert isinstance(other, int)
         newRank = self.rank + other

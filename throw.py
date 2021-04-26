@@ -1,6 +1,15 @@
+from enum import Enum
+
 import constants as c
 
 class Throw:
+    num0: int
+    num1: int
+    value: int
+    rank: Enum
+    isDouble: bool
+    isMaexchen: bool
+
     def __init__(self, num0, num1):
         if not 1 <= num0 <= 6 and 1 <= num1 <= 6:
             raise ValueError("Values must be elements of [1, 6].")

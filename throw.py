@@ -35,6 +35,9 @@ class Throw:
         self.isDouble = num0 == num1  # Pasch
         self.isMaexchen = self.value == c.MAEXCHEN  # Mäxchen
 
+    def __str__(self):
+        return str(self.value)
+
     def __repr__(self):
         return f"Throw (value={self.value})"
 

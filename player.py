@@ -32,7 +32,7 @@ class DummyPlayer(Player):
             else:
                 if not lastThrow.isMaexchen:
                     # Vorgänger hatte kein Mäxchen -> Ergebnis kann überboten werden
-                    return random.choice(MoveThrow(lastThrow + 1), MoveDoubt())
+                    return random.choice([MoveThrow(lastThrow + 1), MoveDoubt()])
                 else:
                     # Vorgänger hatte Mäxchen -> Immer anzweifeln
                     return MoveDoubt()

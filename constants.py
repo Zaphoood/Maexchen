@@ -17,3 +17,6 @@ THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
 class ALL_MOVES(Enum):
     DOUBT = 0  # Das Ergebnis des vorherigen Spielers anzweifeln
     THROW = 1  # Würfeln und das Ergebnis verkünden (Die Möglichkeit des Lügens ist hier beinhaltet)
+
+    def __str__(self):
+        return str(self._name_)

@@ -8,7 +8,7 @@ class Throw:
         self.value = max(num0, num1) * 10 + min(num0, num1)
         self.rank = c.THROW_RANK_BY_VALUE[self.value]
         self.isDouble = num0 == num1 # Pasch
-        self.isMaexchen = value == c.MAEXCHEN # Mäxchen
+        self.isMaexchen = self.value == c.MAEXCHEN # Mäxchen
 
     def __repr__(self):
         return f"Throw (value={self.value})"

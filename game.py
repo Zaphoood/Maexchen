@@ -1,6 +1,5 @@
 from player import Player
 from throw import Throw, randomThrow
-import constants as c
 import logging
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
@@ -25,10 +24,13 @@ class Game:
         self.running = False
 
     def init(self) -> None:
-        # Initialisiert das Spiel
-        logging.info("Game initialized")
-        self.initialized = True
-        self.running = True
+        # Überprüft, ob genügend Spieler vorhanden sind un initialisiert das Spiel
+        if len(self.players) > 1:
+            logging.info("Game initialized")
+            self.initialized = True
+            self.running = True
+        else:
+            logging.error("Game can't be initialized with only one player.")
 
     def run(self) -> None:
         # Führt Iterationen des Spiels durch, bis es beendet ist
@@ -54,36 +56,16 @@ class Game:
         # Dadurch wird currentPlayer am Ende von move() nicht erhöht
         incrementCurrentPlayer = True
 
-        # Zufälligen Wurf generieren
-        currentThrow = randomThrow()
-        logging.info(f"Player {self.currentPlayer} threw {str(currentThrow)}")
-        # Den Spieler, der an der Reihe ist, nach seinem Zug fragen
-        move = self.players[self.currentPlayer].getMove(currentThrow, self.lastThrowStated)
-        logging.info(f"Player {self.currentPlayer} chose move {move.move}"
-                     + (f" with value {move.value}" if move.value is not None else ""))
-        # Den Zug auswerten
-        if move.move == c.ALL_MOVES.THROW:
-            # Der Spieler akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
-            # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
-            if self.lastThrowStated is None:
-                # Es gibt keinen Vorgänger
-                logging.info("First round, automatically beats predecessor")
-                self.lastThrowStated = move.value
-                self.lastThrowActual = currentThrow
-            else:
-                if move.value > self.lastThrowStated:
-                    # Vorgänger wurde überboten
-                    # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
-                    logging.info(f"Current throw {move.value} beats stated previous throw {self.lastThrowStated}")
-                    self.lastThrowStated = move.value
-                    self.lastThrowActual = currentThrow
-                else:
-                    # Vorgänger wurde nicht überboten
-                    logging.info(
-                        f"Current throw {move.value} doesn't beat stated previous throw {self.lastThrowStated}")
-                    self.players.pop(self.currentPlayer)
-                    incrementCurrentPlayer = False
-        elif move.move == c.ALL_MOVES.DOUBT:
+        if self.lastThrowStated is None:
+            # Erste Runde -> Es gibt keinen Vorgänger
+            doubtPred = False
+        else:
+            # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
+            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated)
+            logging.info(f"Player {self.currentPlayer} chose " + ("not " if not doubtPred else "")
+                         + "to doubt their predecessor.")
+
+        if doubtPred:
             # Der Spieler zweifelt das vorherige Ergebnis an
             if self.lastThrowStated == self.lastThrowActual:
                 # Spieler hat nicht Recht, Vorgänger hat die Wahrheit gesagt
@@ -98,8 +80,41 @@ class Game:
                     f"Previous player was rightfully doubted, Player {(self.currentPlayer - 1) % len(self.players)} will be removed")
                 self.players.pop(self.currentPlayer - 1)
                 incrementCurrentPlayer = False
+
+            # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
+            # kann irgendein Ergebnis würfeln und musst niemanden überbieten
+            logging.info("Value to be beaten is reset.")
+            self.lastThrowStated = None
+            self.lastThrowActual = None
         else:
-            raise ValueError(f"Unknown move {move.move}")
+            # Der Spieler akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
+            # Zufälligen Wurf generieren
+            currentThrow = randomThrow()
+            logging.info(f"Player {self.currentPlayer} threw {str(currentThrow)}")
+            # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
+            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)
+            logging.info(f"Player {self.currentPlayer} states they threw {throwStated}")
+            # Den Zug auswerten
+            # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
+            if self.lastThrowStated is None:
+                # Es gibt keinen Vorgänger
+                logging.info("First round, automatically beats predecessor")
+                self.lastThrowStated = throwStated
+                self.lastThrowActual = currentThrow
+            else:
+                if throwStated > self.lastThrowStated:
+                    # Vorgänger wurde überboten
+                    # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
+                    logging.info(
+                        f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
+                    self.lastThrowStated = throwStated
+                    self.lastThrowActual = currentThrow
+                else:
+                    # Vorgänger wurde nicht überboten
+                    logging.info(
+                        f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
+                    self.players.pop(self.currentPlayer)
+                    incrementCurrentPlayer = False
 
         if len(self.players) == 0:
             # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.

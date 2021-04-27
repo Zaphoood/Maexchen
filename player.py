@@ -9,35 +9,46 @@ class Player:
     def __init__(self):
         pass
 
-    def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
-        # Gibt basierend auf dem Wurf dieses Spielers myThrow
-        # und dem des vorherigen Spielers lastThrow einen Zug (Move)
-        # zurück. Der eigene Wurf wird zuvor vom Spiel (Game) zufällig gewählt
-        # und dieser Funktion übergeben
+    def getDoubt(self, lastThrow: Throw) -> bool:
+        """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
+        # TODO: Make all docstrings """-strings
+
+        raise NotImplementedError
+
+    def getThrowStated(self, myThrow: Throw) -> Throw:
+        """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
+
+        Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
+        zufällig gewählt und dieser Funktion übergeben"""
+
         raise NotImplementedError
 
 
 class DummyPlayer(Player):
     """Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
-    überbieten, wird dieses angegeben. Kann es das nicht, wird der Vorgänger
-    entweder angezweifelt oder ein falsches Ergebnis verkündet"""
+    überbieten, wird dieses angegeben. Kann es das nicht, wird ein falsches Ergebnis verkündet"""
 
     def __init__(self) -> None:
         super().__init__()
 
-    def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
+    def getDoubt(self, lastThrow: Throw) -> bool:
+        if lastThrow.isMaexchen:
+            return True
+        else:
+            return False
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
         if lastThrow is None:
-            return Move(c.ALL_MOVES.THROW, myThrow)
+            # Erste Runde
+            return myThrow
         else:
             if myThrow > lastThrow:
-                return Move(c.ALL_MOVES.THROW, myThrow)
+                # Vorgänger kann überboten werden -> Wahrheitsgemäße Antwort machen
+                return myThrow
             else:
-                if not lastThrow.isMaexchen:
-                    # Vorgänger hatte kein Mäxchen -> Ergebnis kann überboten werden
-                    return random.choice([Move(c.ALL_MOVES.THROW, value=lastThrow + 1), Move(c.ALL_MOVES.DOUBT)])
-                else:
-                    # Vorgänger hatte Mäxchen -> Immer anzweifeln
-                    return Move(c.ALL_MOVES.DOUBT)
+                # Vorgänger kann kein Mäxchen gehabt haben, sonst wäre er angezweifelt worden
+                # Lügen und nächsthöheres Würfelergebnis angeben
+                return lastThrow + 1
 
 
 class ShowOffPlayer(Player):
@@ -49,11 +60,13 @@ class ShowOffPlayer(Player):
     def __init__(self) -> None:
         super().__init__()
 
-    def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
+    def getDoubt(self, lastThrow: Throw) -> bool:
         if lastThrow.isMaexchen:
-            # Mäxchen kann nicht überboten werden, deswegen anzweifeln
-            return Move(c.ALL_MOVES.DOUBT)
+            return True
         else:
-            # Zufälligen Pasch oder Mäxchen generieren, der besser als der Wurf des Vorgängers ist
-            rank_11 = c.THROW_RANK_BY_VALUE[11]
-            return Move(c.ALL_MOVES.THROW, Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):])))
+            return False
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+        # Zufälligen Pasch oder Mäxchen generieren, der besser als der Wurf des Vorgängers ist
+        rank_11 = c.THROW_RANK_BY_VALUE[11]
+        return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))

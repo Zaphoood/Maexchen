@@ -24,7 +24,6 @@ class DummyPlayer(Player):
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
-        return MoveDoubt()
         if lastThrow is None:
             return MoveThrow(myThrow)
         else:
@@ -37,3 +36,15 @@ class DummyPlayer(Player):
                 else:
                     # Vorgänger hatte Mäxchen -> Immer anzweifeln
                     return MoveDoubt()
+
+
+class ShowOffPlayer(Player):
+    # Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben
+    def __init__(self):
+        super().__init__()
+
+    def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
+        if lastThrow.isMaexchen:
+            return MoveDoubt
+        else:
+            return max(lastThrow()+1, Throw(*random.choice([(2, 1), *[(i, i) for i in range(1, 7)]])))

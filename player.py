@@ -1,7 +1,8 @@
 import random
 
+import constants as c
 from throw import Throw
-from move import Move, MoveThrow, MoveDoubt
+from move import Move
 
 
 class Player:
@@ -17,34 +18,42 @@ class Player:
 
 
 class DummyPlayer(Player):
-    # Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
-    # überbieten, wird dieses angegeben. Kann es das nicht, wird der Vorgänger
-    # entweder angezweifelt oder ein falsches Ergebnis verkündet
+    """Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
+    überbieten, wird dieses angegeben. Kann es das nicht, wird der Vorgänger
+    entweder angezweifelt oder ein falsches Ergebnis verkündet"""
+
     def __init__(self) -> None:
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
         if lastThrow is None:
-            return MoveThrow(myThrow)
+            return Move(c.ALL_MOVES.THROW, myThrow)
         else:
             if myThrow > lastThrow:
-                return MoveThrow(myThrow)
+                return Move(c.ALL_MOVES.THROW, myThrow)
             else:
                 if not lastThrow.isMaexchen:
                     # Vorgänger hatte kein Mäxchen -> Ergebnis kann überboten werden
-                    return random.choice([MoveThrow(lastThrow + 1), MoveDoubt()])
+                    return random.choice([Move(c.ALL_MOVES.THROW, value=lastThrow + 1), Move(c.ALL_MOVES.DOUBT)])
                 else:
                     # Vorgänger hatte Mäxchen -> Immer anzweifeln
-                    return MoveDoubt()
+                    return Move(c.ALL_MOVES.DOUBT)
 
 
 class ShowOffPlayer(Player):
-    # Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben
+    """Angeber-Spielerklasse.
+
+    Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben, es sei denn, der Vorgänger hat
+    Mäxchen gewürfelt"""
+
     def __init__(self) -> None:
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
         if lastThrow.isMaexchen:
-            return MoveDoubt
+            # Mäxchen kann nicht überboten werden, deswegen anzweifeln
+            return Move(c.ALL_MOVES.DOUBT)
         else:
-            return max(lastThrow()+1, Throw(*random.choice([(2, 1), *[(i, i) for i in range(1, 7)]])))
+            # Zufälligen Pasch oder Mäxchen generieren, der besser als der Wurf des Vorgängers ist
+            rank_11 = c.THROW_RANK_BY_VALUE[11]
+            return Move(c.ALL_MOVES.THROW, Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):])))

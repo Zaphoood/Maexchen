@@ -16,21 +16,3 @@ class Move:
 
     def __eq__(self, other: Move) -> bool:
         return self.move == other.move and self.value == other.value
-
-
-class MoveDoubt(Move):
-    # Klasse die eine Zug darstellt, bei dem das vorherige Ergebnis angezweifelt wird
-    move: c.ALL_MOVES
-    value: Throw
-
-    def __init__(self) -> None:
-        super().__init__(c.ALL_MOVES.DOUBT)
-
-
-class MoveThrow(Move):
-    # Klasse die eine Zug darstellt, bei dem gewürfelt wird
-    move: c.ALL_MOVES
-    value: Throw
-
-    def __init__(self, value: Throw) -> None:
-        super().__init__(c.ALL_MOVES.THROW, value)

@@ -3,7 +3,7 @@ from throw import Throw, randomThrow
 import constants as c
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
 class Game:
@@ -12,7 +12,7 @@ class Game:
     lastThrowStated: Throw  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
     lastThrowActual: Throw  # Tatsächlicher Wurf des letzten Spielers
     moveCounter: int  # Zählt die Züge
-    initialized: bool # Gibt an, ob das Spiel initialisiert wurde
+    initialized: bool  # Gibt an, ob das Spiel initialisiert wurde
     running: bool  # Gibt an, ob das Spiel noch läuft
 
     def __init__(self, players: list[Player]):
@@ -52,7 +52,7 @@ class Game:
         # Den Spieler, der an der Reihe ist, nach seinem Zug fragen
         move = self.players[self.currentPlayer].getMove(currentThrow, self.lastThrowStated)
         logging.info(f"Player {self.currentPlayer} chose move {move.move}"
-                     + f" with value {move.value}" if move.value is not None else "")
+                     + (f" with value {move.value}" if move.value is not None else ""))
         # Den Zug auswerten
         if move.move == c.ALL_MOVES.THROW:
             # Der Spieler akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
@@ -71,7 +71,8 @@ class Game:
                     self.lastThrowActual = currentThrow
                 else:
                     # Vorgänger wurde nicht überboten
-                    logging.info(f"Current throw {move.value} doesn't beat stated previous throw {self.lastThrowStated}")
+                    logging.info(
+                        f"Current throw {move.value} doesn't beat stated previous throw {self.lastThrowStated}")
                     self.players.pop(self.currentPlayer)
                     incrementCurrentPlayer = False
         elif move.move == c.ALL_MOVES.DOUBT:
@@ -85,16 +86,24 @@ class Game:
             else:
                 # Spieler hat Recht, Vorgänger hat gelogen
                 # Vorherigen Spieler entfernen
-                logging.info(f"Previous player was rightfully doubted, Player {(self.currentPlayer - 1) % len(self.players)} will be removed")
+                logging.info(
+                    f"Previous player was rightfully doubted, Player {(self.currentPlayer - 1) % len(self.players)} will be removed")
                 self.players.pop(self.currentPlayer - 1)
                 incrementCurrentPlayer = False
         else:
             raise ValueError(f"Unknown move {move.move}")
 
-        if len(self.players) == 1:
+        if len(self.players) == 0:
+            # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
+            # Das Spiel ist bereits vorbei, wenn nur ein Spieler übrig bleibt.
+            logging.warning("Zero players left, game is over. (How did we get here?)")
+            self.running = False
+        elif len(self.players) == 1:
             # Spiel ist vorbei
             logging.info(f"One player left, game is over")
             self.running = False
+        else:
+            logging.info(f"{len(self.players)} players left")
 
         # Den Index, der angibt, welcher Spieler an der Reihe ist, nur erhöhen, falls kein Spieler gelöscht wurde
         if incrementCurrentPlayer:

@@ -24,6 +24,7 @@ class DummyPlayer(Player):
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
+        return MoveDoubt()
         if lastThrow is None:
             return MoveThrow(myThrow)
         else:

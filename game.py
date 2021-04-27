@@ -15,7 +15,7 @@ class Game:
     initialized: bool  # Gibt an, ob das Spiel initialisiert wurde
     running: bool  # Gibt an, ob das Spiel noch läuft
 
-    def __init__(self, players: list[Player]):
+    def __init__(self, players: list[Player]) -> None:
         self.players = players
         self.currentPlayer = 0
         self.lastThrowStated = None
@@ -24,11 +24,19 @@ class Game:
         self.initialized = False
         self.running = False
 
-    def init(self):
+    def init(self) -> None:
         # Initialisiert das Spiel
         logging.info("Game initialized")
         self.initialized = True
         self.running = True
+
+    def run(self) -> None:
+        # Führt Iterationen des Spiels durch, bis es beendet ist
+        while self.running:
+            self.move()
+
+        if len(self.players) > 0:
+            logging.info(f"Player ? won")  # TODO: IDs to identify players
 
     def move(self) -> None:
         # Führt eine Iteration des Spiels durch

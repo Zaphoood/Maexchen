@@ -1,3 +1,5 @@
+from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
+
 import constants as c
 import random
 
@@ -13,7 +15,7 @@ class Throw:
     isDouble: bool
     isMaexchen: bool
 
-    def __init__(self, *args: int):
+    def __init__(self, *args: int) -> None:
         if len(args) == 1:
             # Ein Argument wurde gegeben, also der Wert des Wurfs (self.value)
             self.value = args[0]
@@ -35,33 +37,33 @@ class Throw:
         self.isDouble = num0 == num1  # Pasch
         self.isMaexchen = self.value == c.MAEXCHEN  # Mäxchen
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Throw (value={self.value})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Throw) -> bool:
         # Ist von gleichem Rang
         return self.rank == other.rank
 
-    def __ge__(self, other):
+    def __ge__(self, other: Throw) -> bool:
         # Ist von größerem oder gleichem Rang
         return self.rank >= other.rank
 
-    def __gt__(self, other):
+    def __gt__(self, other: Throw) -> bool:
         # Ist von größerem Rang
         return self.rank > other.rank
 
-    def __le__(self, other):
+    def __le__(self, other: Throw) -> bool:
         # Ist von kleinerem oder gleichen Rang
         return self.rank <= other.rank
 
-    def __lt__(self, other):
+    def __lt__(self, other: Throw) -> bool:
         # Ist von kleinerem Rang
         return self.rank < other.rank
 
-    def __add__(self, other: int):
+    def __add__(self, other: int) -> Throw:
         # Gibt das nte nächstgrößere Wurfergebnis zurück. n ist als Parameter other gegeben.
         # Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren.
         assert isinstance(other, int)
@@ -71,10 +73,10 @@ class Throw:
         else:
             raise OutOfBoundsError
 
-    def __sub__(self, other: int):
+    def __sub__(self, other: int) -> Throw:
         return self.__add__(-other)
 
 
-def randomThrow():
+def randomThrow() -> Throw:
     """Gibt einen zufälligen Wurf zurück"""
     return Throw(random.randint(1, 6), random.randint(1, 6))

@@ -20,7 +20,7 @@ class DummyPlayer(Player):
     # Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
     # überbieten, wird dieses angegeben. Kann es das nicht, wird der Vorgänger
     # entweder angezweifelt oder ein falsches Ergebnis verkündet
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:
@@ -40,7 +40,7 @@ class DummyPlayer(Player):
 
 class ShowOffPlayer(Player):
     # Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def getMove(self, myThrow: Throw, lastThrow: Throw) -> Move:

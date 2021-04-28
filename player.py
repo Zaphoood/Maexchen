@@ -67,6 +67,6 @@ class ShowOffPlayer(Player):
             return False
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
-        # Zufälligen Pasch oder Mäxchen generieren, der besser als der Wurf des Vorgängers ist
+        """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))

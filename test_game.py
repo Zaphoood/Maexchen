@@ -4,7 +4,8 @@ from player import DummyPlayer
 
 
 class TestOnePlayer(unittest.TestCase):
-    # Testet ein Spiel mit nur einem Spieler
+    """Testet ein Spiel mit nur einem Spieler"""
+
     def setUp(self):
         players = [DummyPlayer()]
         self.game = Game(players)
@@ -16,8 +17,10 @@ class TestOnePlayer(unittest.TestCase):
 
 
 class TestThreePlayers(unittest.TestCase):
-    # Testet ein Spiel mit drei Spielern. Es gibt kein erwartetes Ergebnis,
-    # nur, dass am Ende ein Spieler übrig ist der gewonnen hat
+    """Testet ein Spiel mit drei Spielern.
+
+    Es gibt kein erwartetes Ergebnis, nur, dass am Ende ein Spieler übrig ist, der gewonnen hat.
+    """
 
     def setUp(self):
         players = [DummyPlayer()] * 3

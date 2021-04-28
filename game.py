@@ -6,6 +6,7 @@ logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
 class Game:
+    """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
     players: list[Player]  # Liste aller Spieler
     currentPlayer: int  # Index des Spielers der gerade an der Reihe ist
     lastThrowStated: Throw  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
@@ -24,7 +25,7 @@ class Game:
         self.running = False
 
     def init(self) -> None:
-        # Überprüft, ob genügend Spieler vorhanden sind un initialisiert das Spiel
+        """Überprüft, ob genügend Spieler vorhanden sind un initialisiert das Spiel"""
         if len(self.players) > 1:
             logging.info("Game initialized")
             self.initialized = True
@@ -33,7 +34,7 @@ class Game:
             logging.error("Game can't be initialized with only one player.")
 
     def run(self) -> None:
-        # Führt Iterationen des Spiels durch, bis es beendet ist
+        """Führt so lange Iterationen des Spiels durch, bis es beendet ist"""
         while self.running:
             self.move()
 
@@ -41,8 +42,7 @@ class Game:
             logging.info(f"Player ? won")  # TODO: IDs to identify players
 
     def move(self) -> None:
-        # Führt eine Iteration des Spiels durch
-
+        """Führt eine Iteration des Spiels durch"""
         if not self.initialized:
             logging.error("Game.move() was called even though the game is not yet initialized")
             return

@@ -7,9 +7,13 @@ import random
 class OutOfBoundsError(Exception):
     """Wird gemeldet, wenn eine Addition von Throw und int zu einem nicht definierten Wert
     führen würde (z. B. größer als Mäxchen, kleiner als 31)"""
+    pass
 
 
 class Throw:
+    """Stellt ein Würfelergebnis dar.
+
+    """
     value: int
     rank: int
     isDouble: bool

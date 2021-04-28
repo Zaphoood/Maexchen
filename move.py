@@ -5,7 +5,8 @@ from throw import Throw
 
 
 class Move:
-    # Klasse die einen Zug beschreibt, der von einem Spieler durchgeführt wird
+    """Klasse die einen Zug beschreibt, der von einem Spieler durchgeführt wird"""
+
     move: c.ALL_MOVES
     value: Throw
 

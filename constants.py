@@ -13,10 +13,16 @@ THROW_VALUES = [
 THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
 
 
-# Alle möglichen Arten von Zügen die ein Spieler durchführen kann (z.B. das vorherige Ergebnis anzweifeln, würfeln)
 class ALL_MOVES(Enum):
-    DOUBT = 0  # Das Ergebnis des vorherigen Spielers anzweifeln
-    THROW = 1  # Würfeln und das Ergebnis verkünden (Die Möglichkeit des Lügens ist hier beinhaltet)
+    """Alle möglichen Arten von Zügen die ein Spieler durchführen kann
+
+    Mögliche Werte sind
+    -DOUBT: Das Ergebnis des vorherigen Spielers anzweifeln
+    -THROW: Würfeln und das Ergebnis verkünden (Die Möglichkeit des Lügens ist hier beinhaltet)
+    """
+
+    DOUBT = 0
+    THROW = 1
 
     def __str__(self) -> str:
         return str(self._name_)

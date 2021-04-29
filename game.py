@@ -39,7 +39,7 @@ class Game:
             self.move()
 
         if len(self.players) > 0:
-            logging.info(f"Player ? won")  # TODO: IDs to identify players
+            logging.info(f"Player of class {self.players[0].__class__.__name__} won")  # TODO: IDs to identify players
 
     def move(self) -> None:
         """Führt eine Iteration des Spiels durch"""
@@ -50,8 +50,7 @@ class Game:
             logging.warning("Game.move() was called even though the game is already over")
             return
 
-        # logging.info(f"Round {self.moveCounter}")
-        print(f"Round {self.moveCounter}")
+        logging.info(f"Round {self.moveCounter}")
 
         # incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
         # Dadurch wird currentPlayer am Ende von move() nicht erhöht
@@ -133,9 +132,8 @@ class Game:
         if incrementCurrentPlayer:
             self.currentPlayer += 1
         # Modulo-Operator muss immer angewendet werden, auch wenn der Spielerindex nicht erhöht wurde, für den Fall
-        # dass der letzte Spieler in self.players entfernt wird
+        # dass der letzte Spieler aus self.players entfernt wird
         self.currentPlayer %= len(self.players)
-        print(f"current: {self.currentPlayer}, len:{len(self.players)}")
 
         self.moveCounter += 1
 

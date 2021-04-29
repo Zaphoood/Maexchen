@@ -9,18 +9,20 @@ class Player:
     def __init__(self):
         pass
 
+    def __str__(self):
+        return self.__class__.__name__
+
     def getDoubt(self, lastThrow: Throw) -> bool:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
         # TODO: Make all docstrings """-strings
-
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
-        zufällig gewählt und dieser Funktion übergeben"""
-
+        zufällig gewählt und dieser Funktion übergeben. Die Funktion muss None als Wert für lastThrow akzeptieren
+        können."""
         raise NotImplementedError
 
 
@@ -69,4 +71,7 @@ class ShowOffPlayer(Player):
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
-        return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))
+        if lastThrow is None:
+            return Throw(random.choice(c.THROW_VALUES[rank_11:]))
+        else:
+            return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))

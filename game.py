@@ -33,6 +33,7 @@ class Game:
         else:
             logging.error("Game can't be initialized with only one player.")
 
+
     def run(self) -> None:
         """Führt so lange Iterationen des Spiels durch, bis es beendet ist"""
         while self.running:

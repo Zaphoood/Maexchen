@@ -13,6 +13,7 @@ THROW_VALUES = [
 THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
 
 
+# TODO: Move this enum to move.py
 class ALL_MOVES(Enum):
     """Alle möglichen Arten von Zügen die ein Spieler durchführen kann
 

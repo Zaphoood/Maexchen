@@ -11,9 +11,7 @@ class OutOfBoundsError(Exception):
 
 
 class Throw:
-    """Stellt ein Würfelergebnis dar.
-
-    """
+    """Stellt ein Würfelergebnis dar."""
     value: int
     rank: int
     isDouble: bool
@@ -68,8 +66,8 @@ class Throw:
         return self.rank < other.rank
 
     def __add__(self, other: int) -> Throw:
-        # Gibt das nte nächstgrößere Wurfergebnis zurück. n ist als Parameter other gegeben.
-        # Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren.
+        """Gibt das nte nächstgrößere Wurfergebnis zurück. n ist als Parameter other gegeben.
+        Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren."""
         assert isinstance(other, int)
         newRank = self.rank + other
         if 0 <= newRank < len(c.THROW_VALUES):

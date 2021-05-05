@@ -6,15 +6,19 @@ from move import Move
 
 
 class Player:
-    def __init__(self):
-        pass
+    id: int  # Identification number that is unique among all players in one Game
+
+    def __init__(self, id: int = None):
+        self.id = id
 
     def __str__(self):
         return self.__class__.__name__
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} with id {self.id}>"
+
     def getDoubt(self, lastThrow: Throw) -> bool:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
-        # TODO: Make all docstrings """-strings
         raise NotImplementedError
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
@@ -30,8 +34,8 @@ class DummyPlayer(Player):
     """Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
     überbieten, wird dieses angegeben. Kann es das nicht, wird ein falsches Ergebnis verkündet"""
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, id: int = None) -> None:
+        super().__init__(id)
 
     def getDoubt(self, lastThrow: Throw) -> bool:
         if lastThrow.isMaexchen:
@@ -59,8 +63,8 @@ class ShowOffPlayer(Player):
     Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben, es sei denn, der Vorgänger hat
     Mäxchen gewürfelt"""
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, id = None) -> None:
+        super().__init__(id)
 
     def getDoubt(self, lastThrow: Throw) -> bool:
         if lastThrow.isMaexchen:

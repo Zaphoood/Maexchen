@@ -17,6 +17,14 @@ class Game:
 
     def __init__(self, players: list[Player]) -> None:
         self.players = players
+        # Make sure every player has a unique integer id
+        ids = set()
+        for p in self.players:
+            if p.id is None or p.id in ids:
+                next_id = max(ids) + 1 if ids else 0  # Start with 0 as the first ID if no other IDs have been assigned
+                p.id = next_id
+            ids.add(p.id)
+
         self.currentPlayer = 0
         self.lastThrowStated = None
         self.lastThrowActual = None
@@ -25,7 +33,7 @@ class Game:
         self.running = False
 
     def init(self) -> None:
-        """Überprüft, ob genügend Spieler vorhanden sind un initialisiert das Spiel"""
+        """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""
         if len(self.players) > 1:
             logging.info("Game initialized")
             self.initialized = True
@@ -39,7 +47,7 @@ class Game:
             self.move()
 
         if len(self.players) > 0:
-            logging.info(f"Player of class {self.players[0].__class__.__name__} won")  # TODO: IDs to identify players
+            logging.info(f"{repr(self.players[0])} won")
 
     def move(self) -> None:
         """Führt eine Iteration des Spiels durch"""

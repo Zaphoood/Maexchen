@@ -16,6 +16,46 @@ class TestOnePlayer(unittest.TestCase):
         self.assertFalse(self.game.isRunning())
 
 
+class TestPlayerIds(unittest.TestCase):
+    """Testet das verhalten der Game Klasse hinsichtlich dem vergeben einzigartiger ids"""
+
+    def assert_unique_ids(self, game):
+        ids = set()
+        for p in game.players:
+            self.assertFalse(p.id in ids)
+            self.assertTrue(isinstance(p.id, int))
+            ids.add(p.id)
+
+    def test_assign(self):
+        # No IDs assigned manually
+        players = []
+        for i in range(10):
+            players.append(DummyPlayer())
+        game = Game(players)
+        print(f"test_assign")
+        print(", ".join([str(p.id) for p in game.players]))
+        self.assert_unique_ids(game)
+
+    def test_partial(self):
+        # Some IDs assigned manually, some to be assigned by Game
+        players = [DummyPlayer(id=3), DummyPlayer(id=100), DummyPlayer(), DummyPlayer(), DummyPlayer(id=2)]
+        game = Game(players)
+        print(f"test_partial")
+        print(", ".join([str(p.id) for p in game.players]))
+        self.assert_unique_ids(game)
+        self.assertTrue(any([p.id == 3 for p in game.players]))
+        self.assertTrue(any([p.id == 100 for p in game.players]))
+        self.assertTrue(any([p.id == 2 for p in game.players]))
+
+    def test_conflict(self):
+        # Conflicting IDs assigned manually
+        players = [DummyPlayer(id=2), DummyPlayer(id=2), DummyPlayer(id=3), DummyPlayer(), DummyPlayer(id=2)]
+        game = Game(players)
+        print(f"test_conflict")
+        print(", ".join([str(p.id) for p in game.players]))
+        self.assert_unique_ids(game)
+
+
 class TestThreePlayers(unittest.TestCase):
     """Testet ein Spiel mit drei Spielern.
 

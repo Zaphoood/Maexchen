@@ -1,6 +1,8 @@
+import logging
+import copy
+
 from player import Player
 from throw import Throw, randomThrow
-import logging
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
@@ -16,12 +18,15 @@ class Game:
     running: bool  # Gibt an, ob das Spiel noch läuft
 
     def __init__(self, players: list[Player]) -> None:
-        self.players = players
-        # Make sure every player has a unique integer id
+        # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
+        # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
+        self.players = [copy.copy(p) for p in players]
+        # Jedem Spieler eine eindeutige ID zuweisen
         ids = set()
         for p in self.players:
             if p.id is None or p.id in ids:
-                next_id = max(ids) + 1 if ids else 0  # Start with 0 as the first ID if no other IDs have been assigned
+                # 0 als anfängliche ID verwenden falls noch keine zugewiesen wurden
+                next_id = max(ids) + 1 if ids else 0
                 p.id = next_id
             ids.add(p.id)
 
@@ -70,7 +75,7 @@ class Game:
         else:
             # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
             doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated)
-            logging.info(f"Player {self.currentPlayer} chose " + ("not " if not doubtPred else "")
+            logging.info(f"{repr(self.players[self.currentPlayer])} chose " + ("not " if not doubtPred else "")
                          + "to doubt their predecessor.")
 
         if doubtPred:
@@ -78,14 +83,15 @@ class Game:
             if self.lastThrowStated == self.lastThrowActual:
                 # Spieler hat nicht Recht, Vorgänger hat die Wahrheit gesagt
                 # Aktuellen Spieler entfernen
-                logging.info(f"Previous player was wrongfully doubted, Player {self.currentPlayer} will be removed")
+                logging.info(
+                    f"Previous player was wrongfully doubted, {repr(self.players[self.currentPlayer])} will be removed")
                 self.players.pop(self.currentPlayer)
                 incrementCurrentPlayer = False
             else:
                 # Spieler hat Recht, Vorgänger hat gelogen
                 # Vorherigen Spieler entfernen
                 logging.info(
-                    f"Previous player was rightfully doubted, Player {(self.currentPlayer - 1) % len(self.players)} will be removed")
+                    f"Previous player was rightfully doubted, {repr(self.players[(self.currentPlayer - 1) % len(self.players)])} will be removed")
                 self.players.pop(self.currentPlayer - 1)
                 incrementCurrentPlayer = False
 
@@ -98,10 +104,10 @@ class Game:
             # Der Spieler akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
             # Zufälligen Wurf generieren
             currentThrow = randomThrow()
-            logging.info(f"Player {self.currentPlayer} threw {str(currentThrow)}")
+            logging.info(f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}")
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)
-            logging.info(f"Player {self.currentPlayer} states they threw {throwStated}")
+            logging.info(f"{repr(self.players[self.currentPlayer])} states they threw {throwStated}")
             # Den Zug auswerten
             # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
             if self.lastThrowStated is None:

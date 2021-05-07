@@ -12,10 +12,10 @@ class Player:
         self.id = id
 
     def __str__(self):
-        return self.__class__.__name__
+        return f"{self.__class__.__name__} with id {self.id}"
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} with id {self.id}>"
+        return f"<{self.__class__.__name__} (id={self.id})>"
 
     def getDoubt(self, lastThrow: Throw) -> bool:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""

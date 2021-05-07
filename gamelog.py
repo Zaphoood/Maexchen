@@ -1,4 +1,6 @@
-from gameevent import Event, EventAbort
+import contextlib
+
+from gameevent import Event, EventFinish, EventAbort
 from player import Player
 
 
@@ -7,13 +9,10 @@ class GameLog:
     players: list[Player]
     n_players: int  # Gesamtanzahl der Spieler zu Beginn des Spiels
 
-    def __init__(self):
+    def __init__(self, players: list[Player] = []):
+        self.players = players
+        self.n_players = len(players)
         self.rounds = []
-        self.players = []
-        self.n_players = 0
-
-    def init(self):
-        self.n_players = len(self.players)
 
     def happen(self, event):
         if not self.rounds:
@@ -25,13 +24,18 @@ class GameLog:
         self.rounds.append([])
 
     def pretty(self):
-        prettyStr = f"Game initialized with {self.n_players}\n"
+        prettyList = [f"=== Game initialized with {self.n_players} player{'s' if self.n_players > 1 else ''}: ==="]
+        prettyList.extend([f" - {str(player)}" for player in self.players])
         for i, round in enumerate(self.rounds):
-            prettyStr += f"=== Round {i} ===\n"
+            prettyList.append(f"== Round {i} ==")
             for event in round:
-                prettyStr += f"{str(event)}\n"
+                prettyList.append(f"{str(event)}")
 
-        if not isinstance(self.rounds[-1][-1], EventAbort):
-            prettyStr += f"Game finished regularly.\n"
+        ongoing = True
+        with contextlib.suppress(IndexError):
+            if isinstance(self.rounds[-1][-1], (EventFinish, EventAbort)):
+                ongoing = False
+        if ongoing:
+            prettyList.append("(Game is still ongoing)")
 
-        return prettyStr
+        return "\n".join(prettyList)

@@ -7,7 +7,8 @@ class EVENT_TYPES(Enum):
     THROW = 0
     DOUBT = 1
     KICK = 2
-    ABORT = 3
+    FINISH = 3
+    ABORT = 4
 
 
 class Event:
@@ -62,6 +63,16 @@ class EventKick(Event):
         return f"Player {self.playerId} was kicked"
 
 
+class EventFinish(Event):
+    """Spiel wird ordnungsgemäß beendet."""
+    
+    def __init__(self):
+        super(self).__init__(EVENT_TYPES.FINISH, None)
+
+    def __str__(self):
+        return "Game finished regularly."
+
+
 class EventAbort(Event):
     """Spiel wird vorzeitig beendet."""
 
@@ -69,4 +80,4 @@ class EventAbort(Event):
         super().__init__(EVENT_TYPES.ABORT, None)
 
     def __str__(self):
-        return "Game was ended"
+        return "Game was aborted"

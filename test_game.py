@@ -2,6 +2,8 @@ import unittest
 from game import Game
 from player import DummyPlayer
 
+import random
+
 
 class TestOnePlayer(unittest.TestCase):
     """Testet ein Spiel mit nur einem Spieler"""
@@ -62,6 +64,14 @@ class TestThreePlayers(unittest.TestCase):
         self.game.init()
         while self.game.isRunning():
             self.game.move()
+
+
+class TestLog(unittest.TestCase):
+    def test_log(self):
+        random.seed(12345)  # Gleicher seed für reproduzierbarkeit
+        game = Game([DummyPlayer()] * 4)
+        game.run()
+        print(game.log.pretty())
 
 
 if __name__ == '__main__':

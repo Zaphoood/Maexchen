@@ -1,6 +1,7 @@
 from enum import Enum
 
 from throw import Throw
+from player import Player
 
 
 class EVENT_TYPES(Enum):
@@ -9,6 +10,12 @@ class EVENT_TYPES(Enum):
     KICK = 2
     FINISH = 3
     ABORT = 4
+
+
+class KICK_REASON(Enum):
+    LYING = 0
+    FALSE_ACCUSATION = 1
+    FAILED_TO_BEAT_PREDECESSOR = 2
 
 
 class Event:
@@ -55,29 +62,41 @@ class EventDoubt(Event):
 
 class EventKick(Event):
     """Spieler verlässt (unfreiwillig) das Spiel."""
+    reason: KICK_REASON
+    reasonToStr: dict[KICK_REASON, str]
 
-    def __init__(self, playerId: int):
+    def __init__(self, playerId: int, reason: KICK_REASON):
         super().__init__(EVENT_TYPES.KICK, playerId)
+        self.reason = reason
+        self.reasonToStr = {
+            KICK_REASON.LYING: "Lying",
+            KICK_REASON.FALSE_ACCUSATION: "Making a false accusation",
+            KICK_REASON.FAILED_TO_BEAT_PREDECESSOR: "Failing to beat their predecessor's result"
+        }
 
     def __str__(self):
-        return f"Player {self.playerId} was kicked"
+        return f"Player {self.playerId} was kicked. Reason: {self.reasonToStr[self.reason]}"
 
 
 class EventFinish(Event):
     """Spiel wird ordnungsgemäß beendet."""
-    
-    def __init__(self):
-        super(self).__init__(EVENT_TYPES.FINISH, None)
+    winner: Player
+
+    def __init__(self, winner):
+        super().__init__(EVENT_TYPES.FINISH, None)
+        self.winner = winner
 
     def __str__(self):
-        return "Game finished regularly."
+        return f"Game finished regularly. {str(self.winner)} won."
 
 
 class EventAbort(Event):
     """Spiel wird vorzeitig beendet."""
+    message: str  # Grund, warum das Spiel vorzeitig beendet wurde
 
-    def __init__(self):
+    def __init__(self, message=""):
         super().__init__(EVENT_TYPES.ABORT, None)
+        self.message = message
 
     def __str__(self):
-        return "Game was aborted"
+        return f"Game was aborted. {self.message}"

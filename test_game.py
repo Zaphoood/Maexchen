@@ -89,8 +89,6 @@ class TestGameWithLog(unittest.TestCase):
         game2 = Game([DummyPlayer()] * 4, seed=fixed_seed)
         game2.init()
         game2.run()
-        print(game1.log.rounds[0][0])
-        print(game2.log.rounds[0][0])
         self.assertEqual(game1.log, game2.log)
 
 

@@ -79,6 +79,7 @@ class Throw:
         return self.__add__(-other)
 
 
-def randomThrow() -> Throw:
-    """Gibt einen zufälligen Wurf zurück"""
-    return Throw(random.randint(1, 6), random.randint(1, 6))
+# Deprecated, use Game.randomThrow() instead (--> Reproducible behavior via fixed seed)
+# def randomThrow() -> Throw:
+#     """Gibt einen zufälligen Wurf zurück"""
+#     return Throw(random.randint(1, 6), random.randint(1, 6))

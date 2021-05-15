@@ -1,8 +1,13 @@
 import unittest
-from game import Game
-from player import DummyPlayer
+import logging
 
-import random
+from game import Game
+from player import Player, DummyPlayer
+from gamelog import GameLog
+import gameevent
+import throw
+
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 
 
 class TestOnePlayer(unittest.TestCase):
@@ -68,10 +73,45 @@ class TestThreePlayers(unittest.TestCase):
 
 class TestLog(unittest.TestCase):
     def test_log(self):
-        random.seed(12345)  # Gleicher seed für reproduzierbarkeit
-        game = Game([DummyPlayer()] * 4)
-        game.run()
-        print(game.log.pretty())
+        log1 = GameLog()
+        log1.happen(gameevent.EventAbort)
+        log2 = GameLog()
+        log2.happen(gameevent.EventAbort)
+        self.assertEqual(log1, log2)
+
+
+class TestGameWithLog(unittest.TestCase):
+    def test_gamewlog(self):
+        fixed_seed = 12345
+        game1 = Game([DummyPlayer()] * 4, seed=fixed_seed)
+        game1.init()
+        game1.run()
+        game2 = Game([DummyPlayer()] * 4, seed=fixed_seed)
+        game2.init()
+        game2.run()
+        print(game1.log.rounds[0][0])
+        print(game2.log.rounds[0][0])
+        self.assertEqual(game1.log, game2.log)
+
+
+class TestGameEvent(unittest.TestCase):
+    def test_gameevent_equals(self):
+        e1 = gameevent.EventThrow(1, throw.Throw(1, 2), throw.Throw(1, 2))
+        e2 = gameevent.EventThrow(1, throw.Throw(1, 2), throw.Throw(1, 2))
+        self.assertEqual(e1, e2)
+        e1 = gameevent.EventDoubt(1)
+        e2 = gameevent.EventDoubt(1)
+        self.assertEqual(e1, e2)
+        e1 = gameevent.EventKick(1, "reason")
+        e2 = gameevent.EventKick(1, "reason")
+        self.assertEqual(e1, e2)
+        p = Player(1)
+        e1 = gameevent.EventFinish(p)
+        e2 = gameevent.EventFinish(p)
+        self.assertEqual(e1, e2)
+        e1 = gameevent.EventAbort()
+        e2 = gameevent.EventAbort()
+        self.assertEqual(e1, e2)
 
 
 if __name__ == '__main__':

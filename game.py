@@ -5,9 +5,9 @@ import random
 from gamelog import GameLog
 import gameevent
 from player import Player
-from throw import Throw, randomThrow
+from throw import Throw
 
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
+# logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
 class Game:
@@ -58,6 +58,9 @@ class Game:
 
     def run(self) -> None:
         """Führt so lange Iterationen des Spiels durch, bis es beendet ist"""
+        if not self.initialized:
+            logging.error("Game.run() was called even though the game is not yet initialized")
+            return
         while self.running:
             self.move()
 
@@ -93,15 +96,15 @@ class Game:
                 playerToKick = self.currentPlayer
                 logging.info(
                     f"Previous player was wrongfully doubted, {repr(self.players[self.currentPlayer])} will be removed")
-                self.log.happen(gameevent.EventKick(self.players[playerToKick].id),
-                                gameevent.KICK_REASON.FALSE_ACCUSATION)
+                self.log.happen(gameevent.EventKick(
+                    self.players[playerToKick].id, gameevent.KICK_REASON.FALSE_ACCUSATION))
             else:
                 # Spieler hat Recht, Vorgänger hat gelogen -> Vorherigen Spieler entfernen
                 playerToKick = self.currentPlayer - 1
                 logging.info(
                     f"Previous player was rightfully doubted, {repr(self.players[playerToKick % len(self.players)])} will be removed")
-                self.log.happen(gameevent.EventKick(self.players[playerToKick].id,
-                                gameevent.KICK_REASON.LYING))
+                self.log.happen(gameevent.EventKick(
+                    self.players[playerToKick].id, gameevent.KICK_REASON.LYING))
             self.players.pop(playerToKick)
             incrementCurrentPlayer = False
 
@@ -114,7 +117,7 @@ class Game:
             # Der Spieler akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
             # Zufälligen Wurf generieren
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
-            currentThrow = randomThrow()
+            currentThrow = self.randomThrow()
             logging.info(f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}")
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)

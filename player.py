@@ -2,7 +2,6 @@ import random
 
 import constants as c
 from throw import Throw
-from move import Move
 
 
 class Player:
@@ -16,6 +15,11 @@ class Player:
 
     def __repr__(self):
         return f"<{self.__class__.__name__} (id={self.id})>"
+
+    def __eq__(self, other):
+        if not isinstance(other, Player):
+            raise NotImplementedError
+        return isinstance(other, self.__class__) and self.id == other.id
 
     def getDoubt(self, lastThrow: Throw) -> bool:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
@@ -63,7 +67,7 @@ class ShowOffPlayer(Player):
     Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben, es sei denn, der Vorgänger hat
     Mäxchen gewürfelt"""
 
-    def __init__(self, id = None) -> None:
+    def __init__(self, id=None) -> None:
         super().__init__(id)
 
     def getDoubt(self, lastThrow: Throw) -> bool:

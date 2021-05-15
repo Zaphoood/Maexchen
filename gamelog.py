@@ -1,4 +1,6 @@
+from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
 import contextlib
+import copy
 
 from gameevent import Event, EventFinish, EventAbort
 from player import Player
@@ -10,7 +12,9 @@ class GameLog:
     n_players: int  # Gesamtanzahl der Spieler zu Beginn des Spiels
 
     def __init__(self, players: list[Player] = []):
-        self.players = players
+        # Player-Liste kopieren, damit Player-Instanzen erhalten bleiben
+        # wenn Player-Instanzen in Game() verändert werden
+        self.players = [copy.copy(p) for p in players]
         self.n_players = len(players)
         self.rounds = []
 
@@ -39,3 +43,13 @@ class GameLog:
             prettyList.append("(Game is still ongoing)")
 
         return "\n".join(prettyList)
+
+    def __eq__(self, other: GameLog) -> bool:
+        if self.n_players != other.n_players or self.players != other.players:
+            return False
+        for r_a, r_b in zip(self.rounds, other.rounds):
+            if r_a != r_b:
+                for el_a, el_b in zip(r_a, r_b):
+                    if el_a != el_b:
+                        return False
+        return True

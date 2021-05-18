@@ -31,9 +31,8 @@ class GameLog:
         prettyList = [f"=== Game initialized with {self.n_players} player{'s' if self.n_players > 1 else ''}: ==="]
         prettyList.extend([f" - {str(player)}" for player in self.players])
         for i, round in enumerate(self.rounds):
-            prettyList.append(f"== Round {i} ==")
             for event in round:
-                prettyList.append(f"{str(event)}")
+                prettyList.append(f"[Round {i}] {str(event)}")
 
         ongoing = True
         with contextlib.suppress(IndexError):

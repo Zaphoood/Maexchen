@@ -7,7 +7,7 @@ from gamelog import GameLog
 import gameevent
 import throw
 
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
 class TestOnePlayer(unittest.TestCase):
@@ -82,7 +82,7 @@ class TestLog(unittest.TestCase):
 
 class TestGameWithLog(unittest.TestCase):
     def test_gamewlog(self):
-        fixed_seed = 12345
+        fixed_seed = 123456
         game1 = Game([DummyPlayer()] * 4, seed=fixed_seed)
         game1.init()
         game1.run()
@@ -90,6 +90,7 @@ class TestGameWithLog(unittest.TestCase):
         game2.init()
         game2.run()
         self.assertEqual(game1.log, game2.log)
+        print(game1.log.pretty())
 
 
 class TestGameEvent(unittest.TestCase):

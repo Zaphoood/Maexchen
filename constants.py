@@ -25,5 +25,9 @@ class ALL_MOVES(Enum):
     DOUBT = 0
     THROW = 1
 
-    def __str__(self) -> str:
-        return str(self._name_)
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self._name_}"
+
+    def __str__(self):
+        return f"{self._name_}"
+

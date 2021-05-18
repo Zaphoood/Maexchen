@@ -1,7 +1,6 @@
 from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
 
 import constants as c
-import random
 
 
 class OutOfBoundsError(Exception):
@@ -77,9 +76,3 @@ class Throw:
 
     def __sub__(self, other: int) -> Throw:
         return self.__add__(-other)
-
-
-# Deprecated, use Game.randomThrow() instead (--> Reproducible behavior via fixed seed)
-# def randomThrow() -> Throw:
-#     """Gibt einen zufälligen Wurf zurück"""
-#     return Throw(random.randint(1, 6), random.randint(1, 6))

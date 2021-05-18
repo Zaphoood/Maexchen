@@ -118,10 +118,9 @@ class Game:
             # Zufälligen Wurf generieren
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
-            logging.info(f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}")
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)
-            logging.info(f"{repr(self.players[self.currentPlayer])} states they threw {throwStated}")
+            logging.info(f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
             self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
             # Den Zug auswerten
             # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat

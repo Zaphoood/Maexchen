@@ -14,11 +14,23 @@ class EVENT_TYPES(Enum):
     FINISH = 3
     ABORT = 4
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self._name_}"
+
+    def __str__(self):
+        return f"{self._name_}"
+
 
 class KICK_REASON(Enum):
     LYING = 0
     FALSE_ACCUSATION = 1
     FAILED_TO_BEAT_PREDECESSOR = 2
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self._name_}"
+
+    def __str__(self):
+        return f"{self._name_}"
 
 
 KICK_REASON_TO_STR = {
@@ -33,14 +45,14 @@ class Event:
     eventType: EVENT_TYPES  # What kind of Event this represents
     playerId: int  # The player which caused the event
 
-    def __init__(self, eventType: EVENT_TYPES, playerId: int):
+    def __init__(self, eventType: EVENT_TYPES, playerId: int) -> None:
         self.eventType = eventType
         self.playerId = playerId
 
-    def __str__(self):
-        return f"{self.__class__.__name__} by Player {self.playerId})>"
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} by Player with id {self.playerId})>"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"
 
     def __eq__(self, other: Event) -> bool:
@@ -62,7 +74,10 @@ class EventThrow(Event):
         self.isTruthful = throwActual == throwStated
 
     def __str__(self) -> str:
-        return f"Player {self.playerId} threw {self.throwActual}, said they threw {self.throwStated}"
+        return f"Player with id {self.playerId} threw {self.throwActual}, states they threw {self.throwStated}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} (playerId={self.playerId}, throwActual={self.throwActual}, throwStated={self.throwStated})>"
 
     def __eq__(self, other: Event) -> bool:
         return super().__eq__(other) and self.throwActual == other.throwActual and self.throwStated == other.throwStated
@@ -75,20 +90,22 @@ class EventDoubt(Event):
         super().__init__(EVENT_TYPES.DOUBT, playerId)
 
     def __str__(self) -> str:
-        return f"Player {self.playerId} doubted their predecessor"
+        return f"Player {self.playerId} chose to doubt their predecessor"
 
 
 class EventKick(Event):
     """Spieler verlässt (unfreiwillig) das Spiel."""
     reason: KICK_REASON
-    reasonToStr: dict[KICK_REASON, str]
 
     def __init__(self, playerId: int, reason: KICK_REASON) -> None:
         super().__init__(EVENT_TYPES.KICK, playerId)
         self.reason = reason
 
     def __str__(self) -> str:
-        return f"Player {self.playerId} was kicked. Reason: {KICK_REASON_TO_STR[self.reason]}"
+        return f"Player {self.playerId} was removed. Reason: {KICK_REASON_TO_STR[self.reason]}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} (playerId={self.playerId}, reason=\"{str(self.reason)}\")>"
 
     def __eq__(self, other: Event) -> bool:
         return super().__eq__(other) and self.reason == other.reason
@@ -105,6 +122,9 @@ class EventFinish(Event):
     def __str__(self) -> str:
         return f"Game finished regularly. {str(self.winner)} won"
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} (winner={repr(self.winner)})"
+
     def __eq__(self, other: Event) -> bool:
         # Unterdrücken von AttributeError für den Fall, dass other keine EventAbort-Instanz ist
         # und deshalb nicht das Attribut .winner hat
@@ -118,17 +138,20 @@ class EventAbort(Event):
     """Spiel wird vorzeitig beendet."""
     message: str  # Grund, warum das Spiel vorzeitig beendet wurde
 
-    def __init__(self, message=""):
+    def __init__(self, message="") -> None:
         super().__init__(EVENT_TYPES.ABORT, None)
         self.message = message
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Game was aborted" + (f". {self.message}" if self.message else ". <No message provided>")
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"
 
     def __eq__(self, other: Event) -> bool:
         # Unterdrücken von AttributeError für den Fall, dass other keine EventAbort-Instanz ist
         # und deshalb nicht das Attribut .message hat
-        # super().__eq__(other) wird hier nicht verwendet, da diese funktion auch die Gleichheit
+        # super().__eq__(other) wird nicht verwendet, da diese Funktion auch die Gleichheit
         # von .playerId überprüft, welche hier aber irrelevant ist
         with contextlib.suppress(AttributeError):
             return isinstance(other, EventAbort) and self.message == other.message

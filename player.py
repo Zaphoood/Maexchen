@@ -7,8 +7,8 @@ from throw import Throw
 class Player:
     id: int  # Identification number that is unique among all players in one Game
 
-    def __init__(self, id: int = None):
-        self.id = id
+    def __init__(self, playerId: int = None):
+        self.id = playerId
 
     def __str__(self):
         return f"{self.__class__.__name__} with id {self.id}"
@@ -38,8 +38,8 @@ class DummyPlayer(Player):
     """Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
     überbieten, wird dieses angegeben. Kann es das nicht, wird ein falsches Ergebnis verkündet"""
 
-    def __init__(self, id: int = None) -> None:
-        super().__init__(id)
+    def __init__(self, playerId: int = None) -> None:
+        super().__init__(playerId)
 
     def getDoubt(self, lastThrow: Throw) -> bool:
         if lastThrow.isMaexchen:
@@ -67,8 +67,8 @@ class ShowOffPlayer(Player):
     Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben, es sei denn, der Vorgänger hat
     Mäxchen gewürfelt"""
 
-    def __init__(self, id=None) -> None:
-        super().__init__(id)
+    def __init__(self, playerId=None) -> None:
+        super().__init__(playerId)
 
     def getDoubt(self, lastThrow: Throw) -> bool:
         if lastThrow.isMaexchen:

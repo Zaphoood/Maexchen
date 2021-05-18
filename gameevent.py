@@ -136,7 +136,7 @@ class EventFinish(Event):
 
 class EventAbort(Event):
     """Spiel wird vorzeitig beendet."""
-    message: str  # Grund, warum das Spiel vorzeitig beendet wurde
+    message: str  # Grund, warum das Spiel vorzeitig beendet wird
 
     def __init__(self, message="") -> None:
         super().__init__(EVENT_TYPES.ABORT, None)

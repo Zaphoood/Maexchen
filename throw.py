@@ -25,7 +25,7 @@ class Throw:
             num0 = self.value // 10
             num1 = self.value % 10
         elif len(args) == 2:
-            # Zwei Argumente wurden gegeben, also die Ergebnisse der einzelnen Würfel
+            # Zwei Argumente wurden gegeben, i.e. die Ergebnisse der einzelnen Würfel
             num0, num1 = args
             if not 1 <= num0 <= 6 and 1 <= num1 <= 6:
                 raise ValueError("Values must be elements of [1, 6].")

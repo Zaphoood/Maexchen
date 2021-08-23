@@ -2,7 +2,8 @@ import unittest
 import logging
 
 from game import Game
-from player import Player, DummyPlayer
+from player import Player, DummyPlayer, ShowOffPlayer
+from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
 import throw
@@ -41,7 +42,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_partial(self):
         # Some IDs assigned manually, some to be assigned by Game
-        players = [DummyPlayer(id=3), DummyPlayer(id=100), DummyPlayer(), DummyPlayer(), DummyPlayer(id=2)]
+        players = [DummyPlayer(playerId=3), DummyPlayer(playerId=100), DummyPlayer(), DummyPlayer(), DummyPlayer(playerId=2)]
         game = Game(players)
         self.assert_unique_ids(game)
         self.assertTrue(any([p.id == 3 for p in game.players]))
@@ -50,7 +51,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_conflict(self):
         # Conflicting IDs assigned manually
-        players = [DummyPlayer(id=2), DummyPlayer(id=2), DummyPlayer(id=3), DummyPlayer(), DummyPlayer(id=2)]
+        players = [DummyPlayer(playerId=2), DummyPlayer(playerId=2), DummyPlayer(playerId=3), DummyPlayer(), DummyPlayer(playerId=2)]
         game = Game(players)
         self.assert_unique_ids(game)
 
@@ -111,6 +112,14 @@ class TestGameEvent(unittest.TestCase):
         e1 = gameevent.EventAbort()
         e2 = gameevent.EventAbort()
         self.assertEqual(e1, e2)
+
+
+class TestGameUser(unittest.TestCase):
+    def test_game_w_user(self):
+        up = UserPlayer()
+        game = Game([DummyPlayer()] * 2 + [ShowOffPlayer(), up])
+        game.init()
+        game.run()
 
 
 if __name__ == '__main__':

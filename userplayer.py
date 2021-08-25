@@ -70,7 +70,7 @@ class UserPlayer(Player):
                 gotAnswer = True
             else:
                 print(
-                    f"Your input {answ} is not an allowed number. (Allowed numbers are: {', '.join([str(a) for a in allowedAnswers])}; \"{ANSWER_ABORT[0]}\" to exit). Try again: ",
+                    f"Your input {answ} is not an allowed number. (Allowed numbers are: {', '.join([str(a) for a in allowedAnswers])}).\nTry again (\"{ANSWER_ABORT[0]}\" to exit): ",
                     end="")
                 continue
 

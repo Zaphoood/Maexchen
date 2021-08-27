@@ -5,6 +5,7 @@ from game import Game
 from player import DummyPlayer, ShowOffPlayer
 from gamelog import GameLog
 
+
 class TestEvaluate(TestCase):
     def test_get_winner(self):
         players = [DummyPlayer(), ShowOffPlayer()]
@@ -14,3 +15,5 @@ class TestEvaluate(TestCase):
         self.game.run()
         print(f"Seed is {self.game.getSeed()}\n")
         print(self.game.log.pretty())
+        # Bei diesem Seed gewinnt DummyPlayer
+        self.assertEqual(getWinner(self.game.log), players[0])

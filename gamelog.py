@@ -35,14 +35,16 @@ class GameLog:
                 prettyList.append(f"[Round {i}] {str(event)}")
 
         # Überprüfen, ob das Spiel noch im Gange ist
-        ongoing = True
-        with contextlib.suppress(IndexError):
-            if isinstance(self.rounds[-1][-1], (EventFinish, EventAbort)):
-                ongoing = False
-        if ongoing:
+        if not self.hasFinished():
             prettyList.append("(Game is still ongoing)")
 
         return prettyList
+
+    def hasFinished(self):
+        """Gibt zurück, ob das Spiel, zu dem dieser GameLog gehört, (ordnungsgemäß) beendet wurde"""
+        with contextlib.suppress(IndexError):
+            return isinstance(self.rounds[-1][-1], (EventFinish, EventAbort))
+        return False
 
     def pretty(self) -> str:
         """Den von prettyList() Spielablauf als string zurückgeben"""

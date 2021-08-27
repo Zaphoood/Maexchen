@@ -28,12 +28,14 @@ class GameLog:
         self.rounds.append([])
 
     def pretty(self):
+        # Output is stored as a list of strings first and then joined by "\n"
         prettyList = [f"=== Game initialized with {self.n_players} player{'s' if self.n_players > 1 else ''}: ==="]
         prettyList.extend([f" - {str(player)}" for player in self.players])
         for i, round in enumerate(self.rounds):
             for event in round:
                 prettyList.append(f"[Round {i}] {str(event)}")
 
+        # Check whether the game has finished yet
         ongoing = True
         with contextlib.suppress(IndexError):
             if isinstance(self.rounds[-1][-1], (EventFinish, EventAbort)):

@@ -143,7 +143,7 @@ class EventAbort(Event):
         self.message = message
 
     def __str__(self) -> str:
-        return "Game was aborted" + (f". {self.message}" if self.message else ". <No message provided>")
+        return "Game was aborted. " + (self.message if self.message else "(No message provided)")
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"

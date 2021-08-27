@@ -27,8 +27,8 @@ class GameLog:
     def newRound(self):
         self.rounds.append([])
 
-    def pretty(self):
-        # Output is stored as a list of strings first and then joined by "\n"
+    def prettyList(self):
+        # Output is stored as a list of strings
         prettyList = [f"=== Game initialized with {self.n_players} player{'s' if self.n_players > 1 else ''}: ==="]
         prettyList.extend([f" - {str(player)}" for player in self.players])
         for i, round in enumerate(self.rounds):
@@ -43,7 +43,11 @@ class GameLog:
         if ongoing:
             prettyList.append("(Game is still ongoing)")
 
-        return "\n".join(prettyList)
+        return prettyList
+
+    def pretty(self):
+        # Join return value from prettyList() to make a string
+        return "\n".join(self.prettyList())
 
     def __eq__(self, other: GameLog) -> bool:
         if not isinstance(other, GameLog):

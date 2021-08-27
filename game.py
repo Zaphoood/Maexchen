@@ -1,11 +1,13 @@
 import logging
 import copy
 import random
+from sys import maxsize
 
 from gamelog import GameLog
 import gameevent
 from player import Player
 from throw import Throw
+
 
 # logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
@@ -44,6 +46,12 @@ class Game:
 
         self.log = GameLog(self.players)
 
+        # Pseudo-Zufallszahlengenerator (RNG) initialisieren. Falls ein Seed als Parameter angegeben ist, diesen
+        # verwenden, ansonsten einen neuen Seed generieren. Dadurch ist der Seed immer bekannt und kann verwendet
+        # werden, um Spiele zu reproduzieren
+        if seed is None:
+            seed = random.randrange(maxsize)  # From sys.maxsize
+        self._seed = seed
         self.rng = random.Random(seed)
 
     def init(self) -> None:
@@ -120,7 +128,8 @@ class Game:
             currentThrow = self.randomThrow()
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)
-            logging.info(f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
+            logging.info(
+                f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
             self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
             # Den Zug auswerten
             # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
@@ -172,6 +181,9 @@ class Game:
 
     def isRunning(self) -> bool:
         return self.running
+
+    def getSeed(self):
+        return self._seed
 
     def randomThrow(self) -> Throw:
         """Gibt einen zufälligen Wurf zurück.

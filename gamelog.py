@@ -11,8 +11,10 @@ class GameLog:
     players: list[Player]
     n_players: int  # Gesamtanzahl der Spieler zu Beginn des Spiels
 
-    def __init__(self, players: list[Player] = []):
-        # Player-Liste kopieren, damit Player-Instanzen hier erhalten bleiben, wenn sie in Game() verändert werden
+    def __init__(self, players: list[Player] = None):
+        players = [] if players is None else players
+        # Player-Liste kopieren, damit Player-Instanzen erhalten bleiben
+        # wenn Player-Instanzen in Game() verändert werden
         self.players = [copy.copy(p) for p in players]
         self.n_players = len(players)
         self.rounds = []

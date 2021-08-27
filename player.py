@@ -17,8 +17,12 @@ class Player:
         return f"<{self.__class__.__name__} (id={self.id})>"
 
     def __eq__(self, other):
+        # Falls other kein Player oder eine Unterklasse davon ist, Fehler ausgeben
         if not isinstance(other, Player):
             raise NotImplementedError
+        # Überprüfen, ob other von der gleiche Klasse oder einer Unterklasse wie self ist.
+        # Falls other und self Instanzen von verschiedenen Unterklassen von Player sind, wird
+        # das oben nicht erkannt, deswegen hier überprüfen.
         return isinstance(other, self.__class__) and self.id == other.id
 
     def getDoubt(self, lastThrow: Throw) -> bool:
@@ -35,8 +39,10 @@ class Player:
 
 
 class DummyPlayer(Player):
-    """Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
-    überbieten, wird dieses angegeben. Kann es das nicht, wird ein falsches Ergebnis verkündet"""
+    """Sehr grundlegende Spielerklasse.
+
+    Kann das eigene Ergebnis den Vorgänger überbieten, wird dieses angegeben.
+    Kann es das nicht, wird ein falsches Ergebnis verkündet"""
 
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)

@@ -8,5 +8,9 @@ from gamelog import GameLog
 class TestEvaluate(TestCase):
     def test_get_winner(self):
         players = [DummyPlayer(), ShowOffPlayer()]
-        self.game = Game(players)
+        seed = 8310664473561248720
+        self.game = Game(players, seed=seed)
+        self.game.init()
+        self.game.run()
+        print(f"Seed is {self.game.getSeed()}\n")
         print(self.game.log.pretty())

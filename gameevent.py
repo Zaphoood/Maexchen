@@ -25,6 +25,7 @@ class KICK_REASON(Enum):
     LYING = 0
     FALSE_ACCUSATION = 1
     FAILED_TO_BEAT_PREDECESSOR = 2
+    NO_RESPONSE = 3
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self._name_}"
@@ -33,11 +34,13 @@ class KICK_REASON(Enum):
         return f"{self._name_}"
 
 
-KICK_REASON_TO_STR = {
-    KICK_REASON.LYING: "Lying",
-    KICK_REASON.FALSE_ACCUSATION: "Making a false accusation",
-    KICK_REASON.FAILED_TO_BEAT_PREDECESSOR: "Failing to beat their predecessor's result"
-}
+KICK_REASON_TO_STR = {KICK_REASON.__getattr__(k): v for k, v in
+                      [
+                          ("LYING", "Lying"),
+                          ("FALSE_ACCUSATION", "Making a false accusation"),
+                          ("FAILED_TO_BEAT_PREDECESSOR", "Failing to beat their predecessor's result"),
+                          ("NO_RESPONSE", "Player didn't respond")
+                      ]}
 
 
 class Event:

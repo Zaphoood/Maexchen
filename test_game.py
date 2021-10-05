@@ -2,7 +2,8 @@ import unittest
 import logging
 
 from game import Game
-from player import Player, DummyPlayer
+from player import Player, DummyPlayer, ShowOffPlayer
+from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
 import throw
@@ -111,6 +112,14 @@ class TestGameEvent(unittest.TestCase):
         e1 = gameevent.EventAbort()
         e2 = gameevent.EventAbort()
         self.assertEqual(e1, e2)
+
+
+class TestGameUser(unittest.TestCase):
+    def test_game_w_user(self):
+        up = UserPlayer()
+        game = Game([DummyPlayer()] * 2 + [ShowOffPlayer(), up])
+        game.init()
+        game.run()
 
 
 if __name__ == '__main__':

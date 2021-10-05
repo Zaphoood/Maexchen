@@ -41,7 +41,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_partial(self):
         # Some IDs assigned manually, some to be assigned by Game
-        players = [DummyPlayer(id=3), DummyPlayer(id=100), DummyPlayer(), DummyPlayer(), DummyPlayer(id=2)]
+        players = [DummyPlayer(playerId=3), DummyPlayer(playerId=100), DummyPlayer(), DummyPlayer(), DummyPlayer(playerId=2)]
         game = Game(players)
         self.assert_unique_ids(game)
         self.assertTrue(any([p.id == 3 for p in game.players]))
@@ -50,7 +50,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_conflict(self):
         # Conflicting IDs assigned manually
-        players = [DummyPlayer(id=2), DummyPlayer(id=2), DummyPlayer(id=3), DummyPlayer(), DummyPlayer(id=2)]
+        players = [DummyPlayer(playerId=2), DummyPlayer(playerId=2), DummyPlayer(playerId=3), DummyPlayer(), DummyPlayer(playerId=2)]
         game = Game(players)
         self.assert_unique_ids(game)
 

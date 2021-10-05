@@ -35,7 +35,9 @@ class Game:
                 p.id = next_id
             ids.add(p.id)
 
-        self.currentPlayer = 0
+        self.rng = random.Random(seed)
+
+        self.currentPlayer = self.rng.randrange(0, len(self.players))
         self.lastThrowStated = None
         self.lastThrowActual = None
         self.moveCounter = 0
@@ -44,7 +46,6 @@ class Game:
 
         self.log = GameLog(self.players)
 
-        self.rng = random.Random(seed)
 
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""

@@ -5,7 +5,8 @@ from throw import Throw
 
 
 class Player:
-    id: int  # Identification number that is unique among all players in one Game
+    id: int  # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss; wird von Game
+    # zugewiesen
 
     def __init__(self, playerId: int = None):
         self.id = playerId

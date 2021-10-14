@@ -91,6 +91,8 @@ class ShowOffPlayer(Player):
 class RandomPlayer(Player):
     def __init__(self, playerId: int = None, doubtChance: float = 0.5, throwStatedFunc: Callable = None) -> None:
         super().__init__(playerId)
+        if not 0 <= doubtChance <= 1:
+            raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
         def defaultThrowStatedFunc(myThrow, lastThrow):

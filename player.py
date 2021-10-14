@@ -1,3 +1,4 @@
+from typing import Callable
 import random
 
 import constants as c
@@ -6,6 +7,7 @@ from throw import Throw
 
 class Player:
     id: int  # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss; wird von Game
+
     # zugewiesen
 
     def __init__(self, playerId: int = None):
@@ -84,3 +86,20 @@ class ShowOffPlayer(Player):
             return Throw(random.choice(c.THROW_VALUES[rank_11:]))
         else:
             return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))
+
+
+class RandomPlayer(Player):
+    def __init__(self, playerId: int = None, doubtChance: float = 0.5, throwStatedFunc: Callable = None) -> None:
+        super().__init__(playerId)
+        self.doubtChance = doubtChance
+
+        def defaultThrowStatedFunc(myThrow, lastThrow):
+            return Throw(c.THROW_VALUES)
+
+        self.throwStatedFunc = throwStatedFunc or defaultThrowStatedFunc
+
+    def getDoubt(self, lastThrow: Throw) -> bool:
+        return random.random() < self.doubtChance
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+        return self.throwStatedFunc(myThrow, lastThrow)

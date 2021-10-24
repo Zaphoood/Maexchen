@@ -96,7 +96,7 @@ class RandomPlayer(Player):
         self.doubtChance = doubtChance
 
     def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
-        return random.random() < self.doubtChance
+        return rng.random() < self.doubtChance
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
-        return Throw(random.choice(c.THROW_VALUES))
+        return Throw(rng.choice(c.THROW_VALUES))

@@ -44,13 +44,13 @@ class DummyPlayer(Player):
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
         if lastThrow is None:
             # Erste Runde
             return myThrow
@@ -73,13 +73,13 @@ class ShowOffPlayer(Player):
     def __init__(self, playerId=None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
@@ -95,8 +95,8 @@ class RandomPlayer(Player):
             raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
         return random.random() < self.doubtChance
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
         return Throw(random.choice(c.THROW_VALUES))

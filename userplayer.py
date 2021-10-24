@@ -1,6 +1,7 @@
 import constants as c
 from player import Player
 from throw import Throw
+from random import Random
 
 ANSWER_YES = ["y", "yes"]
 ANSWER_NO = ["n", "no"]
@@ -11,11 +12,11 @@ class UserPlayer(Player):
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, rng: Random) -> bool:
         gotAnsw, trust = self.getInputYesNo(f"Do you trust the previous player that they threw {lastThrow.value}? ")
         return not trust if gotAnsw else None
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: Random) -> Throw:
         beatsLast = myThrow > lastThrow
         truthPrompt = f"You threw {myThrow.value}, which " + ("doesn't beat" if not beatsLast else "beats") + \
                       f" the previous player, who threw {lastThrow}. Do you tell the truth? "

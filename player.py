@@ -24,11 +24,11 @@ class Player:
             raise NotImplementedError
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)

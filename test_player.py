@@ -1,8 +1,8 @@
 import unittest
 
 import constants as c
-from player import DummyPlayer
-from throw import Throw, OutOfBoundsError
+from player import DummyPlayer, RandomPlayer
+from throw import Throw
 from move import Move
 
 
@@ -21,6 +21,11 @@ class TestDummyPlayer(unittest.TestCase):
         move = dummy.getDoubt(Throw(2, 1))
         self.assertEqual(move, Move(c.ALL_MOVES.DOUBT))
 
+class TestRandomPlayer(unittest.TestCase):
+    def test_get_doubt(self):
+        rand = RandomPlayer()
+        rand.getDoubt(Throw(2, 1))
+        rand.getThrowStated(Throw(4, 5), Throw(6, 1))
 
 if __name__ == '__main__':
     unittest.main()

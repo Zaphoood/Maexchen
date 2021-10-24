@@ -1,4 +1,4 @@
-from unittest import TestCase
+import unittest
 
 from evaluate import getWinner
 from game import Game
@@ -6,7 +6,7 @@ from player import DummyPlayer, ShowOffPlayer
 from gamelog import GameLog
 
 
-class TestEvaluate(TestCase):
+class TestEvaluate(unittest.TestCase):
     def test_get_winner(self):
         players = [DummyPlayer(playerId=0), DummyPlayer(playerId=1), DummyPlayer(playerId=2), ShowOffPlayer()]
         seed = 8310664473561248720
@@ -27,3 +27,7 @@ class TestEvaluate(TestCase):
         self.assertEqual(getWinner(self.game.log), None)
         self.game.init()
         self.assertEqual(getWinner(self.game.log), None)
+
+
+if __name__ == '__main__':
+    unittest.main()

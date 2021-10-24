@@ -62,6 +62,7 @@ class Evaluation:
             else:
                 winner = getWinner(game.log)
                 self.gamesWon[winner.id] += 1
+                self.winRounds[winner.id].append(game.log.countRounds())
 
         self.done = True
 
@@ -78,5 +79,7 @@ class Evaluation:
         for i, player in enumerate(players):
             player.id = i
 
+
 if __name__ == '__main__':
-    eval = Evaluation([DummyPlayer() for _ in range(3)], 1000)
+    eval = Evaluation([DummyPlayer() for _ in range(3)], 100)
+    eval.run()

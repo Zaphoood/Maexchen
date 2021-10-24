@@ -60,6 +60,10 @@ class GameLog:
 
         return [event for round in self.rounds for event in round]
 
+    def countRounds(self) -> int:
+        """Gibt die Anzahl der Runden des Spiels an."""
+        return len(self.rounds)
+
     def __eq__(self, other: GameLog) -> bool:
         if not isinstance(other, GameLog):
             raise NotImplementedError

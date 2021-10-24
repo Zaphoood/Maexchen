@@ -6,7 +6,7 @@ import copy
 
 from gamelog import GameLog
 from gameevent import EventKick
-from player import Player, DummyPlayer
+from player import Player, DummyPlayer, ShowOffPlayer
 from game import Game
 
 
@@ -70,9 +70,12 @@ class Evaluation:
             return "Simulation hasn't been evaluated yet. Run Evaluation.run() to evaluate."
 
         prettyString = f"Simulation has been run {self.repetitions} times:\nThe players win rates were:\n"
+        playerNameStrings = [str(player) for player in
+             self.players]
+        maxPlayerLen = max([len(pStr) for pStr in playerNameStrings])
         prettyString += "\n".join(
-            [f" - {str(player)} | {(self.gamesWon[player.id] / self.repetitions) * 100:.2f}%" for player in
-             self.players])
+            [f" - {pStr} {' '*((maxPlayerLen - len(pStr)) % 2)}{'. ' * (int((maxPlayerLen - len(pStr))/2) + 3)}{(self.gamesWon[player.id] / self.repetitions) * 100:.2f}%" for pStr, player in
+             zip(playerNameStrings, self.players)])
 
         return prettyString
 
@@ -82,6 +85,6 @@ class Evaluation:
 
 
 if __name__ == '__main__':
-    eval = Evaluation([DummyPlayer() for _ in range(3)], 1000)
+    eval = Evaluation([DummyPlayer(), DummyPlayer(), ShowOffPlayer(), ShowOffPlayer()], 1000)
     eval.run()
     print(eval.prettyResults())

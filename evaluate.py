@@ -2,9 +2,11 @@
 
 Dient zum wiederholten durchführen eines Games und zur Auswertung"""
 
+import copy
+
 from gamelog import GameLog
 from gameevent import EventKick
-from player import Player
+from player import Player, DummyPlayer
 from game import Game
 
 
@@ -37,12 +39,16 @@ class Evaluation:
         :param repetitions: Anzahl der Durchführungen der Simulation
         """
 
-        self.players = players
+        # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
+        # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
+        self.players = [copy.copy(p) for p in players]
         self.repetitions = repetitions
         self.assignIds(self.players)
 
         # Speichern, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
-        self.gamesWon = [0] * len(self.players)
+        self.gamesWon = [0 for _ in range(len(self.players))]
+        self.winRounds = [[] for _ in range(len(self.players))]
+        print(self.winRounds)
 
         self.done = False
 
@@ -71,3 +77,6 @@ class Evaluation:
     def assignIds(self, players) -> None:
         for i, player in enumerate(players):
             player.id = i
+
+if __name__ == '__main__':
+    eval = Evaluation([DummyPlayer() for _ in range(3)], 1000)

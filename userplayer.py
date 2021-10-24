@@ -25,7 +25,10 @@ class UserPlayer(Player):
             return None
         truthConfirm = False
         if truth and not beatsLast:
-            truthConfirm = self.getInputYesNo("By doing this you will lose this round. Are you sure? ")
+            gotAnswer, truthConfirm = self.getInputYesNo("By doing this you will lose this round. Are you sure? ")
+            # Keine Antowort bedeutet, dass der Benutzer das Spiel abbrechen möchte. Deshalb wird bestätigt,
+            # ein zu niedriges Ergebnis anzugeben, um direkt auszuscheiden
+            truthConfirm = truthConfirm or (not gotAnswer)
         if truth and (beatsLast or truthConfirm):
             return myThrow
         else:

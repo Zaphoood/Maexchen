@@ -48,7 +48,6 @@ class Evaluation:
         # Speichern, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
         self.gamesWon = [0 for _ in range(len(self.players))]
         self.winRounds = [[] for _ in range(len(self.players))]
-        print(self.winRounds)
 
         self.done = False
 
@@ -66,14 +65,16 @@ class Evaluation:
 
         self.done = True
 
-    def prettyResults(self):
+    def prettyResults(self) -> str:
         if not self.done:
             return "Simulation hasn't been evaluated yet. Run Evaluation.run() to evaluate."
 
-        prettyString = f"Simulation has been run {self.repetitions} times:\nThe players win rates were:"
+        prettyString = f"Simulation has been run {self.repetitions} times:\nThe players win rates were:\n"
         prettyString += "\n".join(
             [f" - {str(player)} | {(self.gamesWon[player.id] / self.repetitions) * 100:.2f}%" for player in
              self.players])
+
+        return prettyString
 
     def assignIds(self, players) -> None:
         for i, player in enumerate(players):
@@ -81,5 +82,6 @@ class Evaluation:
 
 
 if __name__ == '__main__':
-    eval = Evaluation([DummyPlayer() for _ in range(3)], 100)
+    eval = Evaluation([DummyPlayer() for _ in range(3)], 1000)
     eval.run()
+    print(eval.prettyResults())

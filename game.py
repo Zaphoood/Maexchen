@@ -87,7 +87,7 @@ class Game:
             doubtPred = False
         else:
             # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
-            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated)
+            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.rng)
 
         if doubtPred is None:
             self.log.happen(gameevent.EventKick(
@@ -126,7 +126,7 @@ class Game:
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
-            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)
+            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.rng)
             if throwStated is None:
                 self.log.happen(gameevent.EventKick(
                     self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))

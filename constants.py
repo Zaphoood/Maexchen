@@ -1,3 +1,5 @@
+from logging import WARN
+
 MAEXCHEN = 21
 
 # Alle möglichen Ergebnisse für einen Wurf (mit der höheren Zahl als erste Stelle),
@@ -9,3 +11,5 @@ THROW_VALUES = [
 ]
 # Weist jedem Wurfergebnisses einen Rang zu
 THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
+
+LOGGING_LEVEL = WARN  # logging.WARN

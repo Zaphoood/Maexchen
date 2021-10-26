@@ -6,15 +6,19 @@ from player import DummyPlayer, ShowOffPlayer
 from evaluate import Evaluation
 
 args = sys.argv[1:]
-n_reps = 1000
+n_reps = None
 verbose = False
 
 for i, arg in enumerate(args):
     if arg == "-n":
-        with suppress(ValueError):  # contextlib.suppress
+        with suppress(ValueError, IndexError):  # contextlib.suppress
             n_reps = int(args[i + 1])
     elif arg == "-v":
         verbose = True
+
+if n_reps is None:
+    print("Must provide number of repetitions (Syntax: main.py -n [Number of repetitions])")
+    sys.exit(1)
 
 print(f"Running simulation {n_reps} times...")
 

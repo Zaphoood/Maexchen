@@ -33,7 +33,7 @@ def getWinner(log: GameLog) -> Player:
 class Evaluation:
     """Führt wiederholte Spielsimulationen durch."""
 
-    def __init__(self, players: list[Player], repetitions: int) -> None:
+    def __init__(self, players: list[Player], repetitions: int, verbose: bool = False) -> None:
         """
         :param players: Liste der Spielerklassen die simuliert werden sollen
         :param repetitions: Anzahl der Durchführungen der Simulation
@@ -51,8 +51,18 @@ class Evaluation:
 
         self.done = False
 
+        self.verbose = verbose
+
     def run(self) -> None:
+        prg_steps = 20
+        prg = 0
+        if self.verbose:
+            print("[" + "." * prg_steps + "]", end="\r")
         for i in range(self.repetitions):
+            if int(i/self.repetitions*prg_steps) > prg:
+                prg = int(i / self.repetitions * prg_steps)
+                if self.verbose:
+                    print("[" + "#"*prg + "."*(prg_steps-prg) + "]", end=("\r" if i<self.repetitions-1 else "\n"))
             game = Game(self.players)
             game.init()
             game.run()
@@ -83,8 +93,3 @@ class Evaluation:
         for i, player in enumerate(players):
             player.id = i
 
-
-if __name__ == '__main__':
-    eval = Evaluation([DummyPlayer(), DummyPlayer(), ShowOffPlayer(), ShowOffPlayer()], 1000)
-    eval.run()
-    print(eval.prettyResults())

@@ -37,10 +37,10 @@ class Game:
                 p.id = next_id
             ids.add(p.id)
 
+        self.iRound = -1  # Gibt den Index der Runde an, in der sich das Spiel gerade befindet
         self.currentPlayer = 0
         self.lastThrowStated = None
         self.lastThrowActual = None
-        self.moveCounter = 0
         self.initialized = False
         self.running = False
 
@@ -81,7 +81,8 @@ class Game:
             logging.warning("Game.move() was called even though the game is already over")
             return
 
-        logging.info(f"Round {self.moveCounter}")
+        self.iRound = 0 if self.iRound == -1 else self.iRound + 1
+        logging.info(f"Round {self.iRound}")
         self.log.newRound()
 
         # incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
@@ -93,7 +94,7 @@ class Game:
             doubtPred = False
         else:
             # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
-            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated)
+            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.iRound)
 
         if doubtPred:
             # Der Spieler zweifelt das vorherige Ergebnis an
@@ -127,7 +128,7 @@ class Game:
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
-            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated)
+            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.iRound)
             logging.info(
                 f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
             self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
@@ -176,8 +177,6 @@ class Game:
         # Modulo-Operator muss immer angewendet werden, auch wenn der Spielerindex nicht erhöht wurde, für den Fall
         # dass der letzte Spieler aus self.players entfernt wird
         self.currentPlayer %= len(self.players)
-
-        self.moveCounter += 1
 
     def isRunning(self) -> bool:
         return self.running

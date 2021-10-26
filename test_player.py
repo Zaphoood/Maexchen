@@ -13,13 +13,13 @@ class TestDummyPlayer(unittest.TestCase):
         throw = Throw(3, 1)
         while throw < Throw(2, 1):
             bigger = throw + 1
-            throwStated = dummy.getThrow(bigger, throw)
+            throwStated = dummy.getThrowStated(bigger, throw, 0)
             self.assertEqual(throwStated, bigger)
             throw += 1
 
         # Vorgänger, der Mäxchen gewürfelt hat, soll immer angezweifelt werden.
-        move = dummy.getDoubt(Throw(2, 1))
-        self.assertEqual(move, Move(c.ALL_MOVES.DOUBT))
+        move = dummy.getDoubt(Throw(2, 1), 0)
+        self.assertTrue(move)
 
 
 if __name__ == '__main__':

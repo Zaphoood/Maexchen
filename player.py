@@ -25,16 +25,24 @@ class Player:
         # das oben nicht erkannt, deswegen hier überprüfen.
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
-        """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
+    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
+        """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut
+
+        :param lastThrow: Wurf des vorherigen Spielrs
+        :param iRound: In der wievielten Runde befinden wir uns"""
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
         zufällig gewählt und dieser Funktion übergeben. Die Funktion muss None als Wert für lastThrow akzeptieren
-        können."""
+        können.
+
+        :param myThrow: Wurf dieses Spielers
+        :param lastThrow: Wurf des vorherigen Spielrs
+        :param iRound: In der wievielten Runde befinden wir uns
+"""
         raise NotImplementedError
 
 
@@ -47,13 +55,13 @@ class DummyPlayer(Player):
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
         if lastThrow is None:
             # Erste Runde
             return myThrow
@@ -76,16 +84,17 @@ class ShowOffPlayer(Player):
     def __init__(self, playerId=None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw) -> bool:
+    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
             return Throw(random.choice(c.THROW_VALUES[rank_11:]))
         else:
             return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))
+

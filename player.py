@@ -119,12 +119,13 @@ class ProbabilisticPlayer(Player):
             else:
                 return True
         else:
+            if lastThrow.isMaexchen:
+                return True
             return random.choice([True, False])
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int) -> Throw:
-        if iMove == 0:
-            print(myThrow, lastthrow)
-            # Erster Zug der Runde
+        if lastThrow is None:
+            # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
             if myThrow <= Throw(61):
                 return Throw(61)
             else:

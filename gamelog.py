@@ -1,4 +1,4 @@
-from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
+from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
 import contextlib
 import copy
 
@@ -11,19 +11,26 @@ class GameLog:
     players: list[Player]
     n_players: int  # Gesamtanzahl der Spieler zu Beginn des Spiels
 
+    winner_id: int  # ID des Siegers des Spiels
+
     def __init__(self, players: list[Player] = None):
         players = [] if players is None else players
         # Player-Liste kopieren, damit Player-Instanzen erhalten bleiben
         # wenn Player-Instanzen in Game() verändert werden
+        self.rounds = []
         self.players = [copy.copy(p) for p in players]
         self.n_players = len(players)
-        self.rounds = []
+
+        self.winner_id = None
 
     def happen(self, event):
         """Ein neues Ereignis zum Log hinzufügen"""
         if not self.rounds:
             self.newRound()
         self.rounds[-1].append(event)
+
+        if isinstance(event, EventFinish):
+            self.winner_id = event.winner_id
 
     def newRound(self):
         self.rounds.append([])

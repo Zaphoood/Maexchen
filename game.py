@@ -166,7 +166,7 @@ class Game:
             # Spiel ist vorbei
             logging.info(f"One player left, game is over")
             logging.info(f"{repr(self.players[0])} won")
-            self.log.happen(gameevent.EventFinish(self.players[0]))
+            self.log.happen(gameevent.EventFinish(self.players[0].id))
             self.running = False
         else:
             logging.info(f"{len(self.players)} players left")

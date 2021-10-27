@@ -23,6 +23,6 @@ if n_reps is None:
 print(f"Running simulation {n_reps} times...")
 
 if __name__ == '__main__':
-    eval = Evaluation([DummyPlayer(), DummyPlayer(), ShowOffPlayer(), ShowOffPlayer(), ProbabilisticPlayer()], n_reps, verbose=verbose)
+    eval = Evaluation([DummyPlayer(), ShowOffPlayer(), ShowOffPlayer(), ProbabilisticPlayer(), DummyPlayer()], n_reps, verbose=verbose)
     eval.run()
     print(eval.prettyResults())

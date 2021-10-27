@@ -1,4 +1,4 @@
-from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
+from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
 
 import contextlib
 from enum import Enum
@@ -113,11 +113,11 @@ class EventKick(Event):
 
 class EventFinish(Event):
     """Spiel wird ordnungsgemäß beendet."""
-    winner: Player
+    winner_id: int  # ID des Siegers des Spiels
 
-    def __init__(self, winner: Player) -> None:
+    def __init__(self, winner_id: int) -> None:
         super().__init__(EVENT_TYPES.FINISH, None)
-        self.winner = winner
+        self.winner_id = winner_id
 
     def __str__(self) -> str:
         return f"Game finished regularly. {str(self.winner)} won"

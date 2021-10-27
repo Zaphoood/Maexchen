@@ -13,3 +13,4 @@ THROW_VALUES = [
 THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
 
 LOGGING_LEVEL = WARN  # logging.WARN
+EVAL_PRG_STEPS = 20  # Genauigkeit der Fortschrittsanzeige beim Durchführen der Simulation 

@@ -8,6 +8,7 @@ from gamelog import GameLog
 from gameevent import EventKick
 from player import Player, DummyPlayer, ShowOffPlayer
 from game import Game
+import constants as c
 
 
 class IncompleteLogError(Exception):
@@ -54,8 +55,8 @@ class Evaluation:
         self.verbose = verbose
 
     def run(self) -> None:
-        prg_steps = 20
         prg = 0
+        prg_steps = c.EVAL_PRG_STEPS  
         if self.verbose:
             print("[" + "." * prg_steps + "]", end="\r")
         for i in range(self.repetitions):
@@ -69,9 +70,9 @@ class Evaluation:
             if game.isRunning():
                 print("Error: Game is still running but should have stopped.")
             else:
-                winner = getWinner(game.log)
-                self.gamesWon[winner.id] += 1
-                self.winRounds[winner.id].append(game.log.countRounds())
+                winner_id = game.log.winner_id
+                self.gamesWon[winner_id] += 1
+                self.winRounds[winner_id].append(game.log.countRounds())
 
         self.done = True
 

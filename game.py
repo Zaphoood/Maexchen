@@ -37,7 +37,7 @@ class Game:
                 p.id = next_id
             ids.add(p.id)
 
-        self.iRound = -1  # Gibt den Index der Runde an, in der sich das Spiel gerade befindet
+        self.iMove = -1  # Gibt den Index der Runde an, in der sich das Spiel gerade befindet
         self.currentPlayer = 0
         self.lastThrowStated = None
         self.lastThrowActual = None
@@ -81,8 +81,8 @@ class Game:
             logging.warning("Game.move() was called even though the game is already over")
             return
 
-        self.iRound = 0 if self.iRound == -1 else self.iRound + 1
-        logging.info(f"Round {self.iRound}")
+        self.iMove = 0 if self.iMove == -1 else self.iMove + 1
+        logging.info(f"Move {self.iMove}")
         self.log.newRound()
 
         # incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
@@ -94,7 +94,7 @@ class Game:
             doubtPred = False
         else:
             # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
-            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.iRound)
+            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.iMove)
 
         if doubtPred:
             # Der Spieler zweifelt das vorherige Ergebnis an
@@ -128,7 +128,7 @@ class Game:
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
-            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.iRound)
+            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.iMove)
             logging.info(
                 f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
             self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))

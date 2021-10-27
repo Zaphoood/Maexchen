@@ -26,14 +26,15 @@ class Player:
         # das oben nicht erkannt, deswegen hier überprüfen.
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int) -> bool:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut
 
         :param lastThrow: Wurf des vorherigen Spielrs
-        :param iRound: In der wievielten Runde befinden wir uns"""
+        :param iMove: Um den wievielten Zug der Runde handelt es sich
+        """
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int) -> Throw:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
@@ -42,7 +43,7 @@ class Player:
 
         :param myThrow: Wurf dieses Spielers
         :param lastThrow: Wurf des vorherigen Spielrs
-        :param iRound: In der wievielten Runde befinden wir uns
+        :param iMove: Um den wievielten Zug der Runde handelt es sich
 """
         raise NotImplementedError
 
@@ -56,13 +57,13 @@ class DummyPlayer(Player):
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int) -> Throw:
         if lastThrow is None:
             # Erste Runde
             return myThrow
@@ -85,13 +86,13 @@ class ShowOffPlayer(Player):
     def __init__(self, playerId=None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int) -> Throw:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
@@ -103,15 +104,16 @@ class ShowOffPlayer(Player):
 class ProbabilisticPlayer(Player):
     """Wahrscheinlichkeits-Spielerklasse
 
-    Handelt nach den Erkenntnissen aus 2.1 und 2.2
+    Handelt teilweise nach den Erkenntnissen aus 2.1 und 2.2, ansonsten ähnlich
+    wie DummyPlayer.
     """
     
-    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
-        if iRound == 0:
+    def getDoubt(self, lastThrow: Throw, iMove: int) -> bool:
+        if iMove == 0:
             # Sollte nie eintreten
-            logging.warn("Player.getDoubt() called on first round (iRound = 0)")
+            logging.warn("Player.getDoubt() called on first round (iMove = 0)")
             return
-        elif iRound == 1:
+        elif iMove == 1:
             if lastThrow <= Throw(61):
                 return False
             else:
@@ -119,17 +121,17 @@ class ProbabilisticPlayer(Player):
         else:
             return random.choice([True, False])
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
-        if iRound == 0:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int) -> Throw:
+        if iMove == 0:
             print(myThrow, lastthrow)
-            # Erster Spieler der Runde
+            # Erster Zug der Runde
             if myThrow <= Throw(61):
                 return Throw(61)
             else:
                 return myThrow
-        elif iRound == 1:
-            # Zweiter Spieler der Runde
+        elif iMove == 1:
+            # Zweiter Zug der Runde
             return myThrow
         else:
-            # Andere Position
+            # Anderer Zug
             return myThrow

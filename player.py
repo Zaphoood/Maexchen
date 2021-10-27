@@ -129,9 +129,9 @@ class ProbabilisticPlayer(Player):
                 return Throw(61)
             else:
                 return myThrow
-        elif iMove == 1:
-            # Zweiter Zug der Runde
-            return myThrow
         else:
             # Anderer Zug
-            return myThrow
+            if myThrow > lastThrow:
+                return myThrow
+            else:
+                return lastThrow + 1

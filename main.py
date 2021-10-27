@@ -9,7 +9,6 @@ import constants as c
 
 ARGS_TO_PLAYERS = {
     "dummy": "DummyPlayer",
-    "random": "RandomPlayer",
     "show-off": "ShowOffPlayer",
     "prob": "ProbabilisticPlayer",
     "probabilistic": "ProbabilisticPlayer"
@@ -38,9 +37,10 @@ for i, arg in enumerate(args):
         logging_level = logging.INFO
     elif arg.startswith("--"):
         try:
-            p = player.__getattribute__(ARGS_TO_PLAYERS[arg[2:]])
-        except:
+            player_class = ARGS_TO_PLAYERS[arg[2:]]
+        except KeyError:
             raise ValueError(f"Unexpected command line argument \"{arg}\"")
+        p = player.__getattribute__(player_class)
         n = 1
         with suppress(ValueError, IndexError):  # contextlib.suppress
             n = int(args[i + 1])

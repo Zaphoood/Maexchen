@@ -3,13 +3,10 @@ import copy
 import random
 from sys import maxsize
 
-from constants import LOGGING_LEVEL
 from gamelog import GameLog
 import gameevent
 from player import Player
 from throw import Throw
-
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=LOGGING_LEVEL)  # constants.LOGGING_LEVEL
 
 
 class Game:

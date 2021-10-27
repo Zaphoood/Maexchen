@@ -1,4 +1,5 @@
 import random
+import logging
 
 import constants as c
 from throw import Throw
@@ -98,3 +99,37 @@ class ShowOffPlayer(Player):
         else:
             return Throw(random.choice(c.THROW_VALUES[max(lastThrow.rank + 1, rank_11):]))
 
+
+class ProbabilisticPlayer(Player):
+    """Wahrscheinlichkeits-Spielerklasse
+
+    Handelt nach den Erkenntnissen aus 2.1 und 2.2
+    """
+    
+    def getDoubt(self, lastThrow: Throw, iRound: int) -> bool:
+        if iRound == 0:
+            # Sollte nie eintreten
+            logging.warn("Player.getDoubt() called on first round (iRound = 0)")
+            return
+        elif iRound == 1:
+            if lastThrow <= Throw(61):
+                return False
+            else:
+                return True
+        else:
+            return random.choice([True, False])
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iRound: int) -> Throw:
+        if iRound == 0:
+            print(myThrow, lastthrow)
+            # Erster Spieler der Runde
+            if myThrow <= Throw(61):
+                return Throw(61)
+            else:
+                return myThrow
+        elif iRound == 1:
+            # Zweiter Spieler der Runde
+            return myThrow
+        else:
+            # Andere Position
+            return myThrow

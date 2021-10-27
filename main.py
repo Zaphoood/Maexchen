@@ -2,7 +2,7 @@ import sys
 from contextlib import suppress
 
 from game import Game
-from player import DummyPlayer, ShowOffPlayer
+from player import DummyPlayer, ShowOffPlayer, ProbabilisticPlayer
 from evaluate import Evaluation
 
 args = sys.argv[1:]
@@ -23,6 +23,6 @@ if n_reps is None:
 print(f"Running simulation {n_reps} times...")
 
 if __name__ == '__main__':
-    eval = Evaluation([DummyPlayer(), DummyPlayer(), ShowOffPlayer(), ShowOffPlayer()], n_reps, verbose=verbose)
+    eval = Evaluation([DummyPlayer(), DummyPlayer(), ShowOffPlayer(), ShowOffPlayer(), ProbabilisticPlayer()], n_reps, verbose=verbose)
     eval.run()
     print(eval.prettyResults())

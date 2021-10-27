@@ -151,8 +151,8 @@ class Game:
                     # Vorgänger wurde nicht überboten
                     logging.info(
                         f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
-                    self.log.happen(gameevent.EventKick(self.players[self.currentPlayer].id),
-                                    gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR)
+                    self.log.happen(gameevent.EventKick(self.players[self.currentPlayer].id,
+                                    gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR))
                     self.players.pop(self.currentPlayer)
                     incrementCurrentPlayer = False
 

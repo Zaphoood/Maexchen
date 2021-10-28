@@ -10,6 +10,7 @@ import constants as c
 ARGS_TO_PLAYERS = {
     "dummy": "DummyPlayer",
     "show-off": "ShowOffPlayer",
+    "random": "RandomPlayer",
     "prob": "ProbabilisticPlayer",
     "probabilistic": "ProbabilisticPlayer"
 }

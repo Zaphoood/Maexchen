@@ -1,4 +1,4 @@
-from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
+from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
 
 import contextlib
 from enum import Enum
@@ -116,14 +116,14 @@ class EventKick(Event):
 
 class EventFinish(Event):
     """Spiel wird ordnungsgemäß beendet."""
-    winner: Player
+    winner_id: int  # ID des Siegers des Spiels
 
-    def __init__(self, winner: Player) -> None:
+    def __init__(self, winner_id: int) -> None:
         super().__init__(EVENT_TYPES.FINISH, None)
-        self.winner = winner
+        self.winner_id = winner_id
 
     def __str__(self) -> str:
-        return f"Game finished regularly. {str(self.winner)} won"
+        return f"Game finished regularly. Player with id={self.winner_id} won"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (winner={repr(self.winner)})"
@@ -134,7 +134,7 @@ class EventFinish(Event):
         # super().__eq__(other) wird hier nicht verwendet, da diese funktion auch die Gleichheit
         # von .playerId überprüft, welche hier aber irrelevant ist
         with contextlib.suppress(AttributeError):
-            return isinstance(other, EventFinish) and self.winner == other.winner
+            return isinstance(other, EventFinish) and self.winner_id == other.winner_id
 
 
 class EventAbort(Event):

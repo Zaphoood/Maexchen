@@ -12,11 +12,11 @@ class UserPlayer(Player):
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, rng: Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: Random) -> bool:
         gotAnsw, trust = self.getInputYesNo(f"Do you trust the previous player that they threw {lastThrow.value}? ")
         return not trust if gotAnsw else None
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: Random) -> Throw:
         beatsLast = myThrow > lastThrow
         truthPrompt = f"You threw {myThrow.value}, which " + ("doesn't beat" if not beatsLast else "beats") + \
                       f" the previous player, who threw {lastThrow}. Do you tell the truth? "

@@ -1,5 +1,6 @@
 from typing import Callable
 import random
+import logging
 
 import constants as c
 from throw import Throw
@@ -20,37 +21,52 @@ class Player:
         return f"<{self.__class__.__name__} (id={self.id})>"
 
     def __eq__(self, other):
+        # Falls other kein Player oder eine Unterklasse davon ist, Fehler ausgeben
         if not isinstance(other, Player):
             raise NotImplementedError
+        # Überprüfen, ob other von der gleiche Klasse oder einer Unterklasse wie self ist.
+        # Falls other und self Instanzen von verschiedenen Unterklassen von Player sind, wird
+        # das oben nicht erkannt, deswegen hier überprüfen.
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
-        """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut"""
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+        """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut
+
+        :param lastThrow: Wurf des vorherigen Spielrs
+        :param iMove: Um den wievielten Zug der Runde handelt es sich
+        """
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
         zufällig gewählt und dieser Funktion übergeben. Die Funktion muss None als Wert für lastThrow akzeptieren
-        können."""
+        können.
+
+        :param myThrow: Wurf dieses Spielers
+        :param lastThrow: Wurf des vorherigen Spielrs
+        :param iMove: Um den wievielten Zug der Runde handelt es sich
+"""
         raise NotImplementedError
 
 
 class DummyPlayer(Player):
-    """Sehr grundlegende Spielerklasse. Kann das eigene Ergebnis den Vorgänger
-    überbieten, wird dieses angegeben. Kann es das nicht, wird ein falsches Ergebnis verkündet"""
+    """Sehr grundlegende Spielerklasse.
+
+    Kann das eigene Ergebnis den Vorgänger überbieten, wird dieses angegeben.
+    Kann es das nicht, wird ein falsches Ergebnis verkündet"""
 
     def __init__(self, playerId: int = None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         if lastThrow is None:
             # Erste Runde
             return myThrow
@@ -73,13 +89,13 @@ class ShowOffPlayer(Player):
     def __init__(self, playerId=None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
@@ -95,8 +111,44 @@ class RandomPlayer(Player):
             raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
-    def getDoubt(self, lastThrow: Throw, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> bool:
         return rng.random() < self.doubtChance
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         return Throw(rng.choice(c.THROW_VALUES))
+
+class ProbabilisticPlayer(Player):
+    """Wahrscheinlichkeits-Spielerklasse
+
+    Handelt teilweise nach den Erkenntnissen aus 2.1 und 2.2, ansonsten ähnlich
+    wie DummyPlayer.
+    """
+    
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+        if iMove == 0:
+            # Sollte nie eintreten
+            logging.warn("Player.getDoubt() called on first round (iMove = 0)")
+            return
+        elif iMove == 1:
+            if lastThrow <= Throw(61):
+                return False
+            else:
+                return True
+        else:
+            if lastThrow.isMaexchen:
+                return True
+            return random.choice([True, False])
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+        if lastThrow is None:
+            # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
+            if myThrow <= Throw(61):
+                return Throw(61)
+            else:
+                return myThrow
+        else:
+            # Anderer Zug
+            if myThrow > lastThrow:
+                return myThrow
+            else:
+                return lastThrow + 1

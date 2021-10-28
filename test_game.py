@@ -68,9 +68,7 @@ class TestThreePlayers(unittest.TestCase):
 
     def test_game(self):
         self.game.init()
-        while self.game.isRunning():
-            self.game.move()
-
+        self.game.run()
 
 class TestLog(unittest.TestCase):
     def test_log(self):

@@ -1,15 +1,12 @@
 import logging
 import copy
 import random
+from sys import maxsize
 
 from gamelog import GameLog
 import gameevent
 from player import Player
 from throw import Throw
-
-
-# logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
-
 
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
@@ -36,17 +33,24 @@ class Game:
                 p.id = next_id
             ids.add(p.id)
 
-        self.rng = random.Random(seed)
 
-        self.currentPlayer = self.rng.randrange(0, len(self.players))
+        self.iMove = -1  # Gibt den Index der Runde an, in der sich das Spiel gerade befindet
         self.lastThrowStated = None
         self.lastThrowActual = None
-        self.moveCounter = 0
         self.initialized = False
         self.running = False
 
         self.log = GameLog(self.players)
 
+       # Pseudo-Zufallszahlengenerator (RNG) initialisieren. Falls ein Seed als Parameter angegeben ist, diesen
+        # verwenden, ansonsten einen neuen Seed generieren. Dadurch ist der Seed immer bekannt und kann verwendet
+        # werden, um Spiele zu reproduzieren
+        if seed is None:
+            seed = random.randrange(maxsize)  # From sys.maxsize
+        self._seed = seed
+        self.rng = random.Random(seed)
+        
+        self.currentPlayer = self.rng.randrange(0, len(self.players))
 
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""
@@ -75,7 +79,8 @@ class Game:
             logging.warning("Game.move() was called even though the game is already over")
             return
 
-        logging.info(f"Round {self.moveCounter}")
+        self.iMove = 0 if self.iMove == -1 else self.iMove + 1
+        logging.info(f"Move {self.iMove}")
         self.log.newRound()
 
         # incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
@@ -87,7 +92,7 @@ class Game:
             doubtPred = False
         else:
             # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
-            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.rng)
+            doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.iMove, self.rng)
 
         if doubtPred is None:
             self.log.happen(gameevent.EventKick(
@@ -126,40 +131,38 @@ class Game:
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
-            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.rng)
+            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.iMove, self.rng)
             if throwStated is None:
                 self.log.happen(gameevent.EventKick(
                     self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))
                 self.players.pop(self.currentPlayer)
                 incrementCurrentPlayer = False
+            logging.info(
+                f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
+            self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
+            # Den Zug auswerten
+            # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
+            if self.lastThrowStated is None:
+                # Es gibt keinen Vorgänger
+                logging.info("First round, automatically beats predecessor")
+                self.lastThrowStated = throwStated
+                self.lastThrowActual = currentThrow
             else:
-                logging.info(
-                    f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
-                self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
-                # Den Zug auswerten
-                # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
-                # TODO: with contextlib.suppress: if lastThrow is None or throwStated > lastThrow etc.
-                if self.lastThrowStated is None:
-                    # Es gibt keinen Vorgänger
-                    logging.info("First round, automatically beats predecessor")
+                if throwStated > self.lastThrowStated:
+                    # Vorgänger wurde überboten
+                    # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
+                    logging.info(
+                        f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
                     self.lastThrowStated = throwStated
                     self.lastThrowActual = currentThrow
                 else:
-                    if throwStated > self.lastThrowStated:
-                        # Vorgänger wurde überboten
-                        # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
-                        logging.info(
-                            f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
-                        self.lastThrowStated = throwStated
-                        self.lastThrowActual = currentThrow
-                    else:
-                        # Vorgänger wurde nicht überboten
-                        logging.info(
-                            f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
-                        self.log.happen(gameevent.EventKick(
-                            self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR))
-                        self.players.pop(self.currentPlayer)
-                        incrementCurrentPlayer = False
+                    # Vorgänger wurde nicht überboten
+                    logging.info(
+                        f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
+                    self.log.happen(gameevent.EventKick(
+                        self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR))
+                    self.players.pop(self.currentPlayer)
+                    incrementCurrentPlayer = False
 
         if len(self.players) == 0:
             # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
@@ -171,7 +174,7 @@ class Game:
             # Spiel ist vorbei
             logging.info(f"One player left, game is over")
             logging.info(f"{repr(self.players[0])} won")
-            self.log.happen(gameevent.EventFinish(self.players[0]))
+            self.log.happen(gameevent.EventFinish(self.players[0].id))
             self.running = False
         else:
             logging.info(f"{len(self.players)} players left")
@@ -183,10 +186,11 @@ class Game:
         # dass der letzte Spieler aus self.players entfernt wird
         self.currentPlayer %= len(self.players)
 
-        self.moveCounter += 1
-
     def isRunning(self) -> bool:
         return self.running
+
+    def getSeed(self):
+        return self._seed
 
     def randomThrow(self) -> Throw:
         """Gibt einen zufälligen Wurf zurück.

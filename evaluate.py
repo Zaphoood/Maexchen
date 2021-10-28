@@ -3,6 +3,7 @@
 Dient zum wiederholten durchführen eines Games und zur Auswertung"""
 
 import copy
+from contextlib import suppress
 
 from gamelog import GameLog
 from gameevent import EventKick
@@ -76,19 +77,31 @@ class Evaluation:
 
         self.done = True
 
+    def getPlayerStats(self, player_id) -> tuple[float, float]:
+        winRate = avgWinRound = 0
+        with suppress(ZeroDivisionError):  # contextlib.suppress
+            winRate = self.gamesWon[player_id] / self.repetitions
+            avgWinRound = sum(self.winRounds[player_id]) / len(self.winRounds[player_id])
+        return winRate, avgWinRound
+
     def prettyResults(self) -> str:
+        space = 3
         if not self.done:
             return "Simulation hasn't been evaluated yet. Run Evaluation.run() to evaluate."
 
-        prettyString = f"Simulation has been run {self.repetitions} times:\nThe players win rates were:\n"
-        playerNameStrings = [str(player) for player in
+        playerNameStrings = [repr(player) for player in
              self.players]
         maxPlayerLen = max([len(pStr) for pStr in playerNameStrings])
-        prettyString += "\n".join(
-            [f" - {pStr} {' '*((maxPlayerLen - len(pStr)) % 2)}{'. ' * (int((maxPlayerLen - len(pStr))/2) + 3)}{(self.gamesWon[player.id] / self.repetitions) * 100:.2f}%" for pStr, player in
-             zip(playerNameStrings, self.players)])
+        prettyList = [f"Simulation has been run {self.repetitions} times:", "Player" + " "*(maxPlayerLen + 2*space - 5) + "win rate  avg. win round"]
 
-        return prettyString
+        for pName, p in zip(playerNameStrings, self.players):
+            prettyList.append("{} {}{:.2f}      {:.2f}".format(
+                pName,
+                ' '*((maxPlayerLen - len(pName)) % 2) + '. ' * (int((maxPlayerLen - len(pName))/2) + space),
+                *self.getPlayerStats(p.id)[:2])
+            )
+
+        return "\n".join(prettyList)
 
     def assignIds(self, players) -> None:
         for i, player in enumerate(players):

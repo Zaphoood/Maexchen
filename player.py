@@ -46,8 +46,7 @@ class Player:
 
         :param myThrow: Wurf dieses Spielers
         :param lastThrow: Wurf des vorherigen Spielrs
-        :param iMove: Um den wievielten Zug der Runde handelt es sich
-"""
+        :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
 
 
@@ -116,6 +115,7 @@ class RandomPlayer(Player):
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         return Throw(rng.choice(c.THROW_VALUES))
+
 
 class ProbabilisticPlayer(Player):
     """Wahrscheinlichkeits-Spielerklasse

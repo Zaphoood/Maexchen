@@ -76,3 +76,7 @@ class Throw:
 
     def __sub__(self, other: int) -> Throw:
         return self.__add__(-other)
+
+def throwByRank(rank: int) -> Throw:
+    """Erzeugt ein Throw-Objekt, das den angegebenen Rang hat"""
+    return Throw(c.THROW_VALUES[rank])

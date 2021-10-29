@@ -17,7 +17,7 @@ class UserPlayer(Player):
         return not trust if gotAnsw else None
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: Random) -> Throw:
-        beatsLast = myThrow > lastThrow
+        beatsLast = lastThrow is None or myThrow > lastThrow
         truthPrompt = f"You threw {myThrow.value}, which " + ("doesn't beat" if not beatsLast else "beats") + \
                       f" the previous player, who threw {lastThrow}. Do you tell the truth? "
         gotAnsw, truth = self.getInputYesNo(truthPrompt)

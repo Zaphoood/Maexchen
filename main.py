@@ -19,7 +19,7 @@ ARGS_TO_PLAYERS = {
 logging_level = c.LOGGING_LEVEL
 args = sys.argv[1:]
 n_reps = None
-verbose = False
+quiet = False
 players = []
 
 if not args:
@@ -32,8 +32,8 @@ except (ValueError, IndexError) as e:
     print(f"\nExpected number of repetitions, got \"{args[0]}\"")
     sys.exit(1)
 for i, arg in enumerate(args):
-    if arg == "-p":
-        verbose = True
+    if arg == "-q":
+        quiet = True
     elif arg == "-v":
         logging_level = logging.INFO
     elif arg.startswith("--"):
@@ -53,6 +53,6 @@ logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging_level)
 print(f"Starting simulation (repetitions={n_reps})...")
 
 if __name__ == '__main__':
-    eval = Evaluation(players, n_reps, verbose=verbose)
+    eval = Evaluation(players, n_reps, showProgress=not quiet)
     eval.run()
     print(eval.prettyResults())

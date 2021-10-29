@@ -3,7 +3,7 @@ import random
 import logging
 
 import constants as c
-from throw import Throw
+from throw import Throw, throwByRank
 
 
 class Player:
@@ -151,4 +151,7 @@ class ProbabilisticPlayer(Player):
             if myThrow > lastThrow:
                 return myThrow
             else:
-                return lastThrow + 1
+                # Wenn schon lügen, dann richtig: Mittelwert zwischen zu überbietendem Wert und Mäxchen zurückgeben
+                lieRank = min(int((lastThrow.rank + c.THROW_RANK_BY_VALUE[21]) / 2),
+                    lastThrow.rank + 1)
+                return throwByRank(lieRank)

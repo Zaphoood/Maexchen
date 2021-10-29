@@ -20,7 +20,7 @@ class Game:
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
-    def __init__(self, players: list[Player], seed: int = None) -> None:
+    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False) -> None:
         # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
         # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
         self.players = [copy.copy(p) for p in players]
@@ -50,6 +50,7 @@ class Game:
         self._seed = seed
         self.rng = random.Random(seed)
         
+        self.rng.shuffle(self.players)
         self.currentPlayer = self.rng.randrange(0, len(self.players))
 
     def init(self) -> None:

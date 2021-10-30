@@ -92,10 +92,13 @@ class Evaluation:
 
     def getPlayerStats(self, player_id) -> tuple[float, float]:
         winRate = avgWinRound = 0
+        lossReason = [0 for _ in KICK_REASON]
         with suppress(ZeroDivisionError):  # contextlib.suppress
             winRate = self.gamesWon[player_id] / self.repetitions
             avgWinRound = sum(self.winRounds[player_id]) / len(self.winRounds[player_id])
-        return winRate, avgWinRound
+            lossReason = [self.lossReason[player_id][reason] / self.repetitions for reason in KICK_REASON]
+
+        return winRate, avgWinRound, *lossReason
 
     def prettyResults(self) -> str:
         space = 3
@@ -103,9 +106,14 @@ class Evaluation:
             return "Simulation hasn't been evaluated yet. Run Evaluation.run() to evaluate."
         prettyString = f"Simulation has been run {self.repetitions} times:\n"
         table = [
-            ["player", "win rate", "avg. win round"],
-            *[[repr(player), *[f"{el:.2f}" for el in self.getPlayerStats(player.id)[:2]]] for player in self.players]
+            ["player", "win rate", "avg. win round", "loss causes", "", "", ""],
+            ["", "", "", "lie", "false acc", "worse", "no rep"]
         ]
+        for player in self.players:
+            stats = self.getPlayerStats(player.id)[:6]
+            table.append([repr(player), *[f"{el:.2f}" for el in stats]])
+
+        print("\n".join([str(row) for row in table]))
         prettyString += formatTable(table)
         return prettyString
 

@@ -45,29 +45,52 @@ class Throw:
         return f"Throw (value={self.value})"
 
     def __eq__(self, other: Throw) -> bool:
-        # Ist von gleichem Rang
+        """Überprüfen, ob eine anderer Throw vom gleichen Rang ist
+
+        :param other: Zu vergleichender Throw"""
+        if not isinstance(other, Throw):
+            return False
         return self.rank == other.rank
 
-    def __ge__(self, other: Throw) -> bool:
-        # Ist von größerem oder gleichem Rang
-        return self.rank >= other.rank
-
     def __gt__(self, other: Throw) -> bool:
-        # Ist von größerem Rang
+        """Überprüfen, ob eine anderer Throw von höherem Rang ist
+
+        :param other: Zu vergleichender Throw"""
+        if not isinstance(other, Throw):
+            return False
         return self.rank > other.rank
 
-    def __le__(self, other: Throw) -> bool:
-        # Ist von kleinerem oder gleichen Rang
-        return self.rank <= other.rank
-
     def __lt__(self, other: Throw) -> bool:
-        # Ist von kleinerem Rang
+        """Überprüfen, ob eine anderer Throw von niedrigerem Rang ist
+
+        :param other: Zu vergleichender Throw"""
+        if not isinstance(other, Throw):
+            return False
         return self.rank < other.rank
 
+    def __ge__(self, other: Throw) -> bool:
+        """Überprüfen, ob eine anderer Throw von höherem oder gleichen Rang ist
+
+        :param other: Zu vergleichender Throw"""
+        # a !< b  <=>  a >= b
+        return not self < other
+
+    def __le__(self, other: Throw) -> bool:
+        """Überprüfen, ob eine anderer Throw von niedrigerem oder gleichen Rang ist
+
+        :param other: Zu vergleichender Throw"""
+        if not isinstance(other, Throw):
+            return False
+        # a !> b  <=>  a <= b
+        return not self > other
+
     def __add__(self, other: int) -> Throw:
-        """Gibt das nte nächstgrößere Wurfergebnis zurück. n ist als Parameter other gegeben.
-        Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren."""
-        assert isinstance(other, int)
+        """Gibt das nte nächstgrößere Wurfergebnis zurück.
+        Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren.
+
+        :param other: Um wie viel der Rang des zurückgegebenen Throws größer ist als der Rang von self"""
+        if not isinstance(other, int):
+            return False
         newRank = self.rank + other
         if 0 <= newRank < len(c.THROW_VALUES):
             return Throw(c.THROW_VALUES[newRank])
@@ -75,6 +98,10 @@ class Throw:
             raise OutOfBoundsError
 
     def __sub__(self, other: int) -> Throw:
+        """Gibt das nte nächstniedrigere Wurfergebnis zurück.
+        Meldet OutOfBoundsError, sollte dieses Ergebnis nicht existieren.
+
+        :param other: Um wie viel der Rang des zurückgegebenen Throws kleiner ist als der Rang von self"""
         return self.__add__(-other)
 
 def throwByRank(rank: int) -> Throw:

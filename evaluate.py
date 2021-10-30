@@ -9,6 +9,7 @@ from gamelog import GameLog
 from gameevent import EventKick
 from player import Player, DummyPlayer, ShowOffPlayer
 from game import Game
+from gameevent import KICK_REASON
 import constants as c
 
 
@@ -47,9 +48,12 @@ class Evaluation:
         self.repetitions = repetitions
         self.assignIds(self.players)
 
-        # Speichern, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
+        # Speichert, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
         self.gamesWon = [0 for _ in range(len(self.players))]
+        # Speichert, bei der wievielten Runde ein Spieler gewonnen hat
         self.winRounds = [[] for _ in range(len(self.players))]
+        # Speichert, aus welchem Grund der Spieler entfernt wurde
+        self.lossReason = [{reason: 0 for reason in KICK_REASON} for _ in range(len(self.players))]
 
         self.done = False
 
@@ -71,11 +75,19 @@ class Evaluation:
             if game.isRunning():
                 print("Error: Game is still running but should have stopped.")
             else:
-                winner_id = game.log.winner_id
-                self.gamesWon[winner_id] += 1
-                self.winRounds[winner_id].append(game.log.countRounds())
-
+                self.evalLog(game)
+                
         self.done = True
+
+    def evalLog(self, game: Game):
+        winner_id = game.log.winner_id
+        self.gamesWon[winner_id] += 1
+        self.winRounds[winner_id].append(game.log.countRounds())
+        for round in game.log.rounds:
+            for event in round:
+                if isinstance(event, EventKick):
+                    self.lossReason[event.playerId][event.reason] += 1
+
 
     def getPlayerStats(self, player_id) -> tuple[float, float]:
         winRate = avgWinRound = 0

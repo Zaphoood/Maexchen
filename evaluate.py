@@ -9,6 +9,7 @@ from gamelog import GameLog
 from gameevent import EventKick
 from player import Player, DummyPlayer, ShowOffPlayer
 from game import Game
+from format import formatTable
 import constants as c
 
 
@@ -88,20 +89,13 @@ class Evaluation:
         space = 3
         if not self.done:
             return "Simulation hasn't been evaluated yet. Run Evaluation.run() to evaluate."
-
-        playerNameStrings = [repr(player) for player in
-             self.players]
-        maxPlayerLen = max([len(pStr) for pStr in playerNameStrings])
-        prettyList = [f"Simulation has been run {self.repetitions} times:", "Player" + " "*(maxPlayerLen + 2*space - 5) + "win rate  avg. win round"]
-
-        for pName, p in zip(playerNameStrings, self.players):
-            prettyList.append("{} {}{:.2f}      {:.2f}".format(
-                pName,
-                ' '*((maxPlayerLen - len(pName)) % 2) + '. ' * (int((maxPlayerLen - len(pName))/2) + space),
-                *self.getPlayerStats(p.id)[:2])
-            )
-
-        return "\n".join(prettyList)
+        prettyString = f"Simulation has been run {self.repetitions} times:\n"
+        table = [
+            ["player", "win rate", "avg. win round"],
+            *[[repr(player), *[f"{el:.2f}" for el in self.getPlayerStats(player.id)[:2]]] for player in self.players]
+        ]
+        prettyString += formatTable(table)
+        return prettyString
 
     def assignIds(self, players) -> None:
         for i, player in enumerate(players):

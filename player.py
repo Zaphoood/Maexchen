@@ -110,7 +110,7 @@ class RandomPlayer(Player):
             raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
-    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         return rng.random() < self.doubtChance
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:

@@ -113,7 +113,6 @@ class Evaluation:
             stats = self.getPlayerStats(player.id)[:6]
             table.append([repr(player), *[f"{el:.2f}" for el in stats]])
 
-        print("\n".join([str(row) for row in table]))
         prettyString += formatTable(table)
         return prettyString
 

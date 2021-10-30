@@ -92,11 +92,13 @@ class Evaluation:
 
     def getPlayerStats(self, player_id) -> tuple[float, float]:
         winRate = avgWinRound = 0
+        roundsWon = len(self.winRounds[player_id])
+        roundsLost = self.repetitions - roundsWon
         lossReason = [0 for _ in KICK_REASON]
         with suppress(ZeroDivisionError):  # contextlib.suppress
             winRate = self.gamesWon[player_id] / self.repetitions
-            avgWinRound = sum(self.winRounds[player_id]) / len(self.winRounds[player_id])
-            lossReason = [self.lossReason[player_id][reason] / self.repetitions for reason in KICK_REASON]
+            avgWinRound = sum(self.winRounds[player_id]) / roundsWon
+            lossReason = [self.lossReason[player_id][reason] / roundsLost for reason in KICK_REASON]
 
         return winRate, avgWinRound, *lossReason
 

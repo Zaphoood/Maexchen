@@ -122,12 +122,15 @@ class Game:
             doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.iMove, self.rng)
 
         if doubtPred is None:
+            # Spieler hat nicht geantwortet
+            logging.info(
+                f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for doubt)")
             self.log.happen(gameevent.EventKick(
                 self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))
             self.players.pop(self.currentPlayer)
             incrementCurrentPlayer = False
         elif doubtPred:
-            # Der Spieler zweifelt das vorherige Ergebnis an
+            # Spieler hat geantwortet, zweifelt das vorherige Ergebnis an
             logging.info(f"{repr(self.players[self.currentPlayer])} chose to doubt their predecessor.")
             self.log.happen(gameevent.EventDoubt(self.players[self.currentPlayer].id))
             if self.lastThrowStated == self.lastThrowActual:
@@ -154,44 +157,49 @@ class Game:
             self.lastThrowStated = None
             self.lastThrowActual = None
         else:
-            # Der Spieler akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
+            # Der Spieler hat geantwortet, akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
             # Zufälligen Wurf generieren
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
-            # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
+            # Den Spieler fragen, welchen Wurf er angeben will, gewürfelt zu haben
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated,
                                                                           self.iMove, self.rng)
             if throwStated is None:
+                # Spieler hat nicht geantwortet
+                logging.info(
+                    f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
                 self.log.happen(gameevent.EventKick(
                     self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))
                 self.players.pop(self.currentPlayer)
                 incrementCurrentPlayer = False
-            logging.info(
-                f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
-            self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
-            # Den Zug auswerten
-            # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
-            if self.lastThrowStated is None:
-                # Es gibt keinen Vorgänger
-                logging.info("First round, automatically beats predecessor")
-                self.lastThrowStated = throwStated
-                self.lastThrowActual = currentThrow
             else:
-                if throwStated > self.lastThrowStated:
-                    # Vorgänger wurde überboten
-                    # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
-                    logging.info(
-                        f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
+                # Spieler hat geantwortet
+                logging.info(
+                    f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
+                self.log.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
+                # Den Zug auswerten
+                # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
+                if self.lastThrowStated is None:
+                    # Es gibt keinen Vorgänger
+                    logging.info("First round, automatically beats predecessor")
                     self.lastThrowStated = throwStated
                     self.lastThrowActual = currentThrow
                 else:
-                    # Vorgänger wurde nicht überboten
-                    logging.info(
-                        f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
-                    self.log.happen(gameevent.EventKick(
-                        self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR))
-                    self.players.pop(self.currentPlayer)
-                    incrementCurrentPlayer = False
+                    if throwStated > self.lastThrowStated:
+                        # Vorgänger wurde überboten
+                        # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
+                        logging.info(
+                            f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
+                        self.lastThrowStated = throwStated
+                        self.lastThrowActual = currentThrow
+                    else:
+                        # Vorgänger wurde nicht überboten
+                        logging.info(
+                            f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
+                        self.log.happen(gameevent.EventKick(
+                            self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR))
+                        self.players.pop(self.currentPlayer)
+                        incrementCurrentPlayer = False
 
         return incrementCurrentPlayer
 

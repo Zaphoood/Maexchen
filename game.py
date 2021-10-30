@@ -8,6 +8,7 @@ import gameevent
 from player import Player
 from throw import Throw
 
+
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
     players: list[Player]  # Liste aller Spieler
@@ -33,7 +34,6 @@ class Game:
                 p.id = next_id
             ids.add(p.id)
 
-
         self.iMove = -1  # Gibt den Index der Runde an, in der sich das Spiel gerade befindet
         self.lastThrowStated = None
         self.lastThrowActual = None
@@ -42,14 +42,14 @@ class Game:
 
         self.log = GameLog(self.players)
 
-       # Pseudo-Zufallszahlengenerator (RNG) initialisieren. Falls ein Seed als Parameter angegeben ist, diesen
+        # Pseudo-Zufallszahlengenerator (RNG) initialisieren. Falls ein Seed als Parameter angegeben ist, diesen
         # verwenden, ansonsten einen neuen Seed generieren. Dadurch ist der Seed immer bekannt und kann verwendet
         # werden, um Spiele zu reproduzieren
         if seed is None:
             seed = random.randrange(maxsize)  # From sys.maxsize
         self._seed = seed
         self.rng = random.Random(seed)
-        
+
         self.rng.shuffle(self.players)
         self.currentPlayer = self.rng.randrange(0, len(self.players))
 
@@ -84,6 +84,32 @@ class Game:
         logging.info(f"Move {self.iMove}")
         self.log.newRound()
 
+        incrementCurrentPlayer = self.handlePlayerMove()
+
+        if len(self.players) == 0:
+            # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
+            # Das Spiel ist bereits vorbei, wenn nur ein Spieler übrig bleibt.
+            logging.warning("Zero players left, game is over. (How did we get here?)")
+            self.log.happen(gameevent.EventAbort(message="Zero players left, game is over. (How did we get here?)"))
+            self.running = False
+        elif len(self.players) == 1:
+            # Spiel ist vorbei
+            logging.info(f"One player left, game is over")
+            logging.info(f"{repr(self.players[0])} won")
+            self.log.happen(gameevent.EventFinish(self.players[0].id))
+            self.running = False
+        else:
+            logging.info(f"{len(self.players)} players left")
+
+        # Den Index, der angibt, welcher Spieler an der Reihe ist, nur erhöhen, falls kein Spieler gelöscht wurde
+        if incrementCurrentPlayer:
+            self.currentPlayer += 1
+        # Modulo-Operator muss immer angewendet werden, auch wenn der Spielerindex nicht erhöht wurde, für den Fall
+        # dass der letzte Spieler aus self.players entfernt wird
+        self.currentPlayer %= len(self.players)
+
+    def handlePlayerMove(self) -> bool:
+        """Regelt die Interaktion mit der Spielerklasse"""
         # incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
         # Dadurch wird currentPlayer am Ende von move() nicht erhöht
         incrementCurrentPlayer = True
@@ -105,19 +131,20 @@ class Game:
             logging.info(f"{repr(self.players[self.currentPlayer])} chose to doubt their predecessor.")
             self.log.happen(gameevent.EventDoubt(self.players[self.currentPlayer].id))
             if self.lastThrowStated == self.lastThrowActual:
-                # Spieler hat nicht Recht, Vorgänger hat die Wahrheit gesagt -> Aktuellen Spieler entfernen
+                # Aktueller Spieler ist im Unrecht, Vorgänger hat die Wahrheit gesagt -> Aktuellen Spieler entfernen
                 playerToKick = self.currentPlayer
                 logging.info(
-                    f"Previous player was wrongfully doubted, {repr(self.players[self.currentPlayer])} will be removed")
+                    f"Previous player was wrongfully doubted, {repr(self.players[playerToKick])} will be removed")
                 self.log.happen(gameevent.EventKick(
                     self.players[playerToKick].id, gameevent.KICK_REASON.FALSE_ACCUSATION))
             else:
-                # Spieler hat Recht, Vorgänger hat gelogen -> Vorherigen Spieler entfernen
+                # Aktueller Spieler hat Recht, Vorgänger hat gelogen -> Vorherigen Spieler entfernen
                 playerToKick = self.currentPlayer - 1
                 logging.info(
                     f"Previous player was rightfully doubted, {repr(self.players[playerToKick % len(self.players)])} will be removed")
                 self.log.happen(gameevent.EventKick(
                     self.players[playerToKick].id, gameevent.KICK_REASON.LYING))
+            # Spieler, der im Unrecht war, entfernen
             self.players.pop(playerToKick)
             incrementCurrentPlayer = False
 
@@ -132,7 +159,8 @@ class Game:
             logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
             # Den Spieler, der an der Reihe ist, nach dem Wurf fragen, den er angeben will
-            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated, self.iMove, self.rng)
+            throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated,
+                                                                          self.iMove, self.rng)
             if throwStated is None:
                 self.log.happen(gameevent.EventKick(
                     self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))
@@ -165,27 +193,7 @@ class Game:
                     self.players.pop(self.currentPlayer)
                     incrementCurrentPlayer = False
 
-        if len(self.players) == 0:
-            # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
-            # Das Spiel ist bereits vorbei, wenn nur ein Spieler übrig bleibt.
-            logging.warning("Zero players left, game is over. (How did we get here?)")
-            self.log.happen(gameevent.EventAbort(message="Zero players left, game is over. (How did we get here?)"))
-            self.running = False
-        elif len(self.players) == 1:
-            # Spiel ist vorbei
-            logging.info(f"One player left, game is over")
-            logging.info(f"{repr(self.players[0])} won")
-            self.log.happen(gameevent.EventFinish(self.players[0].id))
-            self.running = False
-        else:
-            logging.info(f"{len(self.players)} players left")
-
-        # Den Index, der angibt, welcher Spieler an der Reihe ist, nur erhöhen, falls kein Spieler gelöscht wurde
-        if incrementCurrentPlayer:
-            self.currentPlayer += 1
-        # Modulo-Operator muss immer angewendet werden, auch wenn der Spielerindex nicht erhöht wurde, für den Fall
-        # dass der letzte Spieler aus self.players entfernt wird
-        self.currentPlayer %= len(self.players)
+        return incrementCurrentPlayer
 
     def isRunning(self) -> bool:
         return self.running

@@ -124,9 +124,9 @@ class ProbabilisticPlayer(Player):
     wie DummyPlayer.
     """
     
-    def __init__(self, playerId: int = None):
+    def __init__(self, playerId: int = None, threshold = 61):
         super().__init__(playerId)
-        self.treshold = 44
+        self.threshold = threshold
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if iMove == 0:
@@ -134,7 +134,7 @@ class ProbabilisticPlayer(Player):
             logging.warn("Player.getDoubt() called on first round (iMove = 0)")
             return
         elif iMove == 1:
-            if lastThrow <= Throw(self.treshold):
+            if lastThrow <= Throw(self.threshold):
                 return False
             else:
                 return True
@@ -146,8 +146,8 @@ class ProbabilisticPlayer(Player):
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         if lastThrow is None:
             # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
-            if myThrow <= Throw(self.treshold):
-                return Throw(self.treshold)
+            if myThrow <= Throw(self.threshold):
+                return Throw(self.threshold)
             else:
                 return myThrow
         else:

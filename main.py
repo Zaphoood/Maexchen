@@ -4,6 +4,8 @@ import logging
 
 from game import Game
 import player
+# Import individually for now
+from player import DummyPlayer, ProbabilisticPlayer
 from evaluate import Evaluation
 import constants as c
 
@@ -22,6 +24,8 @@ n_reps = None
 quiet = False
 players = []
 
+# Don't need args now
+"""
 if not args:
     print(c.START_SIM_USAGE)
     sys.exit(1)
@@ -47,12 +51,23 @@ for i, arg in enumerate(args):
             n = int(args[i + 1])
 
         players.extend([p() for _ in range(n)])
+"""
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging_level)
+
+# Use custom config for now
+n_reps = 1000
+players = [DummyPlayer(), DummyPlayer(), ProbabilisticPlayer(), ProbabilisticPlayer()]
 
 print(f"Starting simulation (repetitions={n_reps})...")
 
 if __name__ == '__main__':
-    eval = Evaluation(players, n_reps, showProgress=not quiet)
-    eval.run()
-    print(eval.prettyResults())
+    for t in c.THROW_VALUES:
+        # Set new treshold
+        for p in players:
+            if isinstance(p, ProbabilisticPlayer):
+                p.thershold = t
+        eval = Evaluation(players, n_reps, showProgress=not quiet)
+        eval.run()
+        print(f"Results for threshold={t}")
+        print(eval.prettyResults())

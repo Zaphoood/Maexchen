@@ -1,5 +1,6 @@
 from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
 from typing import Callable
+from contextlib import suppress
 import random
 import logging
 
@@ -26,7 +27,7 @@ class Player:
     def __eq__(self, other):
         # Falls other kein Player oder eine Unterklasse davon ist, Fehler ausgeben
         if not isinstance(other, Player):
-            raise NotImplementedError
+            raise NotImplementedError(f"Can't compare Player to non-Player ({type(other)})")
         # Überprüfen, ob other von der gleiche Klasse oder einer Unterklasse wie self ist.
         # Falls other und self Instanzen von verschiedenen Unterklassen von Player sind, wird
         # das oben nicht erkannt, deswegen hier überprüfen.
@@ -52,7 +53,7 @@ class Player:
         :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
 
-   def onInit(self, players: list[Player]) -> None:
+    def onInit(self, players: list[Player]) -> None:
         """Wird von Evaluation vor dem beginn einer Simulation aufgerufen.
 
         :param players: Liste aller Spieler die am Spiel teilnehmen"""
@@ -172,7 +173,7 @@ class ProbabilisticPlayer(Player):
                 return throwByRank(lieRank)
 
 
-class TrackingPlayer(self):
+class TrackingPlayer(Player):
     """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
     def __init__(self, playerId: int):
         super().__init__(playerId)
@@ -197,7 +198,7 @@ class TrackingPlayer(self):
 
     def onInit(self, players: list[Player]) -> None:
         # Leere Statistik erstellen
-        self.playerStats = {player.id: [0, 0] for player in players}
+        self.playerStats = {player.id: [0, 0] for player in players if player is not self}
 
     def onEvent(self, event: gameevent.Event) -> None:
         if event.eventType == gameevent.EVENT_TYPES.THROW:
@@ -233,4 +234,5 @@ class TrackingPlayer(self):
         """Gibt zurück, ob für einen Spieler bereits etwas in dessen Statistik aufgezeichnet wurde.
 
         :param playerId: Die ID des Spielers, dessen Statistik überprüft werden soll."""
-        return truths + lies > 0
+        with suppress(KeyError):  # contextlib.suppress
+            return sum(self.playerStats[playerId]) > 0

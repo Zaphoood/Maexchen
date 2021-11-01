@@ -7,7 +7,7 @@ import logging
 import constants as c
 import gameevent
 from throw import Throw, throwByRank
-import utils
+from utils import probLT, probGE
 
 
 class Player:
@@ -15,9 +15,9 @@ class Player:
 
     # zugewiesen
 
-    def __init__(self, playerId: int = None):
+    def __init__(self, playerId: int = None, listensToEvents: bool = False):
         self.id = playerId
-        self.listensToEvents = False
+        self.listensToEvents = listensToEvents
 
     def __str__(self):
         return f"{self.__class__.__name__} with id {self.id}"
@@ -73,8 +73,8 @@ class DummyPlayer(Player):
     Kann das eigene Ergebnis den Vorgänger überbieten, wird dieses angegeben.
     Kann es das nicht, wird ein falsches Ergebnis verkündet"""
 
-    def __init__(self, playerId: int = None) -> None:
-        super().__init__(playerId)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
@@ -121,8 +121,8 @@ class ShowOffPlayer(Player):
 
 
 class RandomPlayer(Player):
-    def __init__(self, playerId: int = None, doubtChance: float = 0.5) -> None:
-        super().__init__(playerId)
+    def __init__(self, *args, doubtChance: float = 0.5, **kwargs):
+        super().__init__(*args, **kwargs)
         if not 0 <= doubtChance <= 1:
             raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
@@ -140,7 +140,7 @@ class ProbabilisticPlayer(Player):
     Handelt teilweise nach den Erkenntnissen aus 2.1 und 2.2, ansonsten ähnlich
     wie DummyPlayer.
     """
-    
+
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if iMove == 0:
             # Sollte nie eintreten
@@ -170,16 +170,15 @@ class ProbabilisticPlayer(Player):
             else:
                 # Wenn schon lügen, dann richtig: Mittelwert zwischen zu überbietendem Wert und Mäxchen zurückgeben
                 lieRank = min(int((lastThrow.rank + c.THROW_RANK_BY_VALUE[21]) / 2),
-                    lastThrow.rank + 1)
+                        lastThrow.rank + 1)
                 return throwByRank(lieRank)
 
 
 class TrackingPlayer(Player):
     """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
-    def __init__(self, playerId: int):
-        super().__init__(playerId)
-        self.listensToEvents = True
-        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, listensToEvents=True, **kwargs)
+
         # Statistik über die Wahrheitstreue der anderen Spieler. Das Format ist:
         # {player0Id: [anzahl_wahrheit0, anzahl_wahrheit0],
         #  player1Id: [anzahl_wahrheit1, anzahl_wahrheit1],
@@ -192,10 +191,16 @@ class TrackingPlayer(Player):
         self.lastPlayerId = None
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
-        pass
+        if lastThrow.isMaexchen:
+            return True
+        else:
+            return self.shouldDoubt(lastThrow)
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
-        pass
+        if myThrow > lastThrow:
+            return myThrow
+        else:
+            return lastThrow + 1
 
     def onInit(self, players: list[Player]) -> None:
         # Leere Statistik erstellen
@@ -223,7 +228,7 @@ class TrackingPlayer(Player):
 
     def getPlayerCredibility(self, playerId: int) -> float:
         """Errechnet anhand der Statistik über einen Spieler dessen Glaubwürdigkeit.
-        
+
         Die Glaubwürdigkeit berechnet sich wie folgt:
             glaubw = anzahl_wahrheit / (anzahl_wahrheit + anzahl_lüge)
 
@@ -238,7 +243,7 @@ class TrackingPlayer(Player):
         with suppress(KeyError):  # contextlib.suppress
             return sum(self.playerStats[playerId]) > 0
 
-    def shouldTrust(self, playerId: int, playerThrow: int) -> bool:
+    def shouldTrust(self, playerThrow: int) -> bool:
         """Einschätzen, ob dem vorherigen Spieler vertraut werden soll.
         Das geschieht auf folgende Weise: Zuerst wird die Wahrscheinlichkeit, dass der Spieler lügt,
         eingeschätzt. Diese errechnet sich aus der Wahrscheinlichkeit, den vorletzten Wurf mit einem zufälligen
@@ -248,11 +253,22 @@ class TrackingPlayer(Player):
         Anschließend wird die Wahrscheinlichkeit, dass der Spieler die Wahrheit sagt, eingeschätzt:
         Wahrscheinlichkeit, den vorletyten Wurf mit einem zufällgien Wurf zu übertreffen mal der Wahrscheinlichkeit,
         dass der Spieler die Wahrheit sagt.
-            P_Wahrheit = P_zufällig_erreich(Vorletzter Wurf) * P_Wahrheit
+            P_Wahrheit = P_zufällig_erreichen(Vorletzter Wurf) * P_Wahrheit
 
 
 
         :param playerId: ID des vorherigen Spielers
         :param playerThrow: Wurf des vorherigen Spielers"""
-        assert playerId == self.lastPlayerId
         assert playerThrow == self.lastPlayerThrow
+
+        if self.secondLastThrow is None:
+            # Zweiter Zug der "Runde" (nach letzterm Zurücksetzung des zu überbietenden Wertes)
+            return self.getPlayerCredibility(playerId)
+
+        else:
+            # Späterer Zug
+            p_lie = probGT(self.secondLastThrow) * (1 - self.getPlayerCredibility(playerId)) + probLT(self.secondLastThrow) 
+            p_truth = probGT(self.secondLastThrow) * self.getPlayerCredibility(playerId)
+
+            return p_truth > p_lie
+

@@ -7,6 +7,7 @@ import logging
 import constants as c
 import gameevent
 from throw import Throw, throwByRank
+import utils
 
 
 class Player:
@@ -236,3 +237,22 @@ class TrackingPlayer(Player):
         :param playerId: Die ID des Spielers, dessen Statistik überprüft werden soll."""
         with suppress(KeyError):  # contextlib.suppress
             return sum(self.playerStats[playerId]) > 0
+
+    def shouldTrust(self, playerId: int, playerThrow: int) -> bool:
+        """Einschätzen, ob dem vorherigen Spieler vertraut werden soll.
+        Das geschieht auf folgende Weise: Zuerst wird die Wahrscheinlichkeit, dass der Spieler lügt,
+        eingeschätzt. Diese errechnet sich aus der Wahrscheinlichkeit, den vorletzten Wurf mit einem zufälligen
+        Wurf zu übertreffen mal der Tendenz des Spielers zum Lügen (1 - Glaubwürdigkeit) plus die Wahrscheinlichkeit,
+        den vorletzten Wurf mit einem zufälligen Wurf nicht zu übertreffen.
+            P_Lüge = P_zufällig_erreichen(Vorletzter Wurf) * P_Lüge + P_nicht_zufällig_erreichen
+        Anschließend wird die Wahrscheinlichkeit, dass der Spieler die Wahrheit sagt, eingeschätzt:
+        Wahrscheinlichkeit, den vorletyten Wurf mit einem zufällgien Wurf zu übertreffen mal der Wahrscheinlichkeit,
+        dass der Spieler die Wahrheit sagt.
+            P_Wahrheit = P_zufällig_erreich(Vorletzter Wurf) * P_Wahrheit
+
+
+
+        :param playerId: ID des vorherigen Spielers
+        :param playerThrow: Wurf des vorherigen Spielers"""
+        assert playerId == self.lastPlayerId
+        assert playerThrow == self.lastPlayerThrow

@@ -3,6 +3,7 @@ import random
 import logging
 
 import constants as c
+import gameevent
 from throw import Throw, throwByRank
 
 

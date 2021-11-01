@@ -51,7 +51,7 @@ class Player:
         :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
 
-    def onEvent(event: gameevent.Event):
+    def onEvent(event: gameevent.Event) -> None:
         pass
 
 
@@ -164,8 +164,35 @@ class ProbabilisticPlayer(Player):
 
 class TrackingPlayer(self):
     """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
+    def __init__(self, playerId: int):
+        super().__init__(playerId)
+        self.listensToEvents = True
+        
+        # Den letzten und vorletzten Wurf abspeichern
+        self.secondLastThrow = None
+        self.lastThrow = None
+        # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
+        self.lastPlayerId = None
+
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         pass
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         pass
+
+    def onEvent(self, event: gameevent.Event) -> None:
+        if event.eventType == gameevent.EVENT_TYPES.THROW:
+            self.secondLastThrow = self.lastThrow
+            self.lastThrow = event.throwStated
+            self.lastPlayerId = event.playerId
+        elif event.eventType == gameevent.EVENT_TYPES.KICK:
+            if event.reason == gameevent.KICK_REASON.LYING:
+                # tracken, dass spieler gelogen hat
+                pass
+            elif event.reason == gameevent.KICK_REASON.FALSE_ACCUSATION:
+                # tracken, dass vorheriger spieler (-> self.lastPlayer) die wahrheit gesagt hat
+                pass
+            # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
+            # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
+            self.lastThrow = self.secondLastThrow = self.lastPlayerId = None
+

@@ -2,9 +2,10 @@ import unittest
 from random import Random
 
 import constants as c
-from player import DummyPlayer, RandomPlayer
+from player import DummyPlayer, RandomPlayer, TrackingPlayer
 from throw import Throw
 from move import Move
+import gameevent
 
 
 class TestDummyPlayer(unittest.TestCase):
@@ -63,6 +64,62 @@ class TestRandomPlayer(unittest.TestCase):
                 last_throw = throw
             else:
                 self.assertEqual(throw, last_throw)
+
+class TestTrackingPlayer(unittest.TestCase):
+    def setUp(self):
+        self.n_dummies = 10
+        self.dummies = [DummyPlayer(playerId=i) for i in range(self.n_dummies)]
+        self.tr = TrackingPlayer(playerId=self.n_dummies)
+        self.tr.onInit([self.tr, *self.dummies])
+
+    def test_stats_creation(self):
+        # Überprüfen, dass leere Statistik korrekt erzeugt wird
+        self.assertEqual(list(self.tr.playerStats.keys()), [p.id for p in self.dummies])
+
+    def test_track_last_throw(self):
+        # Überprüfen, dass TrackingPlayer den letzten und vorletzten Wurf abspeichert
+        throw1 = Throw(3,3)
+        throw2 = Throw(2,1)
+        # Spieler 0 wirft 33
+        self.tr.onEvent(gameevent.EventThrow(0, None, throw1))
+        self.assertEqual(self.tr.lastThrow, throw1)
+        # Spieler 1 wirft 21
+        self.tr.onEvent(gameevent.EventThrow(1, None, throw2))
+        self.assertEqual(self.tr.secondLastThrow, throw1)
+        self.assertEqual(self.tr.lastThrow, throw2)
+ 
+    def test_track_lying(self):
+        # Überprüfen, dass TrackingPlayer bei lügenden Mitspielern eine entsprechende Statistik anlegt
+        throw1 = Throw(3,3)
+        throw2 = Throw(2,1)
+        # Spieler 0 wirft 33
+        self.tr.onEvent(gameevent.EventThrow(0, None, throw1))
+        # Spieler 1 'wirft' 21 (lügt)
+        self.tr.onEvent(gameevent.EventThrow(1, None, throw2))
+        # Spieler 2 misstraut Spieler 1, Spieler 2 im Recht -> Spieler 1 wird gekickt
+        # Statistik über Spieler 1 sollte jetzt 100% lügen sein, d. h. seine Glaubwürdigkeit sollte 0 sein
+        kickEvent = gameevent.EventKick(1, gameevent.KICK_REASON.LYING) 
+        self.tr.onEvent(kickEvent)
+        self.assertEqual(self.tr.getPlayerCredibility(1), 0)
+        # Überprüfen, dass für die anderen Spieler keine Statistik erstellt wurde
+        for i in range(self.n_dummies + 1):
+            if i != 1:
+                self.assertFalse(self.tr.existPlayerStats(i))
+
+    def test_track_truth(self):
+        # Überprüfen, dass TrackingPlayer bei lügenden Mitspielern eine entsprechende Statistik anlegt
+        throw1 = Throw(3,3)
+        throw2 = Throw(4,4)
+        # Spieler 0 wirft 33
+        self.tr.onEvent(gameevent.EventThrow(0, None, throw1))
+        # Spieler 1 wirft 44 (sagt die Wahrheit)
+        self.tr.onEvent(gameevent.EventThrow(1, None, throw2))
+        # Spieler 2 misstraut Spieler 1, Spieler 1 im Recht -> Spieler 1 wird gekickt
+        # Statistik über Spieler 1 sollte jetzt 100% wahrheitsgetreu sein, d. h. seine Glaubwürdigkeit sollte 1 sein
+        kickEvent = gameevent.EventKick(2, gameevent.KICK_REASON.FALSE_ACCUSATION) 
+        self.tr.onEvent(kickEvent)
+        self.assertEqual(self.tr.getPlayerCredibility(1), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-from __future__ import annotations  # Notwendig für type hints die die eigene Klasse beinhalten
+from __future__ import annotations  # Notwendig für type hints die, die eigene Klasse beinhalten
 
 import constants as c
 

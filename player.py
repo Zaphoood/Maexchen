@@ -1,3 +1,4 @@
+from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
 from typing import Callable
 import random
 import logging
@@ -51,7 +52,16 @@ class Player:
         :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
 
-    def onEvent(event: gameevent.Event) -> None:
+   def onInit(self, players: list[Player]):
+        """Wird von Evaluation vor dem beginn einer Simulation aufgerufen.
+
+        :param players: Liste aller Spieler die am Spiel teilnehmen"""
+        pass
+
+    def onEvent(self, event: gameevent.Event):
+        """Wird von Game aufgerufen, wenn ein Ereignis im Spiel passiert und self.listensToEvents==True.
+
+        :param event: Das Ereignis, das passiert ist"""
         pass
 
 

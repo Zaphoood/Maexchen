@@ -3,6 +3,7 @@ import random
 import logging
 
 import constants as c
+import gameevent
 from throw import Throw, throwByRank
 
 
@@ -13,6 +14,7 @@ class Player:
 
     def __init__(self, playerId: int = None):
         self.id = playerId
+        self.listensToEvents = False
 
     def __str__(self):
         return f"{self.__class__.__name__} with id {self.id}"
@@ -45,9 +47,12 @@ class Player:
         können.
 
         :param myThrow: Wurf dieses Spielers
-        :param lastThrow: Wurf des vorherigen Spielrs
+        :param lastThrow: Wurf des vorherigen Spielers
         :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
+
+    def onEvent(event: gameevent.Event):
+        pass
 
 
 class DummyPlayer(Player):

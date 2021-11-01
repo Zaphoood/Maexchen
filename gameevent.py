@@ -4,7 +4,6 @@ import contextlib
 from enum import Enum
 
 from throw import Throw
-from player import Player
 
 
 class EVENT_TYPES(Enum):
@@ -74,10 +73,13 @@ class EventThrow(Event):
         super().__init__(EVENT_TYPES.THROW, playerId)
         self.throwActual = throwActual
         self.throwStated = throwStated
-        self.isTruthful = throwActual == throwStated
+        self.isTruthful = None if None in (throwActual, throwStated) else throwActual == throwStated
 
     def __str__(self) -> str:
-        return f"Player with id {self.playerId} threw {self.throwActual}, states they threw {self.throwStated}"
+        if self.throwActual:
+            return f"Player with id {self.playerId} threw {self.throwActual}, states they threw {self.throwStated}"
+        else:
+            return f"Player with id {self.playerId} states they threw {self.throwStated}"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (playerId={self.playerId}, throwActual={self.throwActual}, throwStated={self.throwStated})>"

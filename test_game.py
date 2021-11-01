@@ -2,7 +2,7 @@ import unittest
 import logging
 
 from game import Game
-from player import Player, DummyPlayer, ShowOffPlayer
+from player import Player, DummyPlayer, ShowOffPlayer, RandomPlayer
 from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
@@ -119,6 +119,25 @@ class TestGameUser(unittest.TestCase):
         game.init()
         game.run()
 
+class EventListenerPlayer(Player):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.listensToEvents = True
+
+    def getDoubt(lastThrow, *args, **kwargs):
+        return False
+
+    def getThrowStated(myThrow, lastThrow, *args, **kwargs):
+        return lastThrow + 1
+
+    def onEvent(self, event):
+        print(f"EventListenerPlayer got Event: {event}")
+
+class TestEventListening(unittest.TestCase):
+    def test_event_listening(self):
+        game = Game([RandomPlayer(), EventListenerPlayer()])
+        game.init()
+        game.run()
 
 if __name__ == '__main__':
     unittest.main()

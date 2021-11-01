@@ -2,7 +2,7 @@ import unittest
 import logging
 
 from game import Game
-from player import Player, DummyPlayer, ShowOffPlayer, RandomPlayer
+from player import Player, DummyPlayer, ShowOffPlayer, RandomPlayer, ProbabilisticPlayer, TrackingPlayer
 from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
@@ -136,6 +136,15 @@ class EventListenerPlayer(Player):
 class TestEventListening(unittest.TestCase):
     def test_event_listening(self):
         game = Game([RandomPlayer(), EventListenerPlayer()])
+        game.init()
+        game.run()
+
+class TestTrackingPlayer(unittest.TestCase):
+    def test_normal_functionality(self):
+        players = [DummyPlayer(), RandomPlayer(), ProbabilisticPlayer(), TrackingPlayer()]
+        for i, player in enumerate(players):
+            player.id = i
+        game = Game(players)
         game.init()
         game.run()
 

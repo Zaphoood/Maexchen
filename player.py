@@ -49,6 +49,9 @@ class Player:
         :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
 
+    def onEvent(event: gameevent.PLAYER_EVENT):
+        pass
+
 
 class DummyPlayer(Player):
     """Sehr grundlegende Spielerklasse.

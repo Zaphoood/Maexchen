@@ -155,3 +155,12 @@ class ProbabilisticPlayer(Player):
                 lieRank = min(int((lastThrow.rank + c.THROW_RANK_BY_VALUE[21]) / 2),
                     lastThrow.rank + 1)
                 return throwByRank(lieRank)
+
+
+class TrackingPlayer(self):
+    """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+        pass
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+        pass

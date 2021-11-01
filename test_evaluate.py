@@ -2,7 +2,7 @@ import unittest
 
 from evaluate import getWinner
 from game import Game
-from player import DummyPlayer, ShowOffPlayer, RandomPlayer
+from player import Player, DummyPlayer, RandomPlayer
 from gamelog import GameLog
 from evaluate import Evaluation
 
@@ -19,6 +19,21 @@ class TestEvaluate(unittest.TestCase):
         ev.run()
         print(ev.prettyResults())
 
+class TestOnInitPlayer(Player):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.playersReceived = None
+
+    def onInit(self, players: list[Player]):
+        print("TestOnInitPlayer got these players:")
+        print("\n".join([repr(player) for player in players]))
+        self.playersReceived = players
+
+class TestOnInit(unittest.TestCase):
+    def test_player_on_init(self):
+        test_player = TestOnInitPlayer()
+        ev = Evaluation([DummyPlayer(), test_player], 1, disableDeepcopy = True)
+        self.assertEqual(ev.players, test_player.playersReceived)
 
 if __name__ == '__main__':
     unittest.main()

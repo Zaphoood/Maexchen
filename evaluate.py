@@ -37,17 +37,22 @@ def getWinner(log: GameLog) -> Player:
 class Evaluation:
     """Führt wiederholte Spielsimulationen durch."""
 
-    def __init__(self, players: list[Player], repetitions: int, showProgress: bool = False) -> None:
+    def __init__(self, players: list[Player], repetitions: int, showProgress: bool = False, disableDeepcopy: bool = False) -> None:
         """
         :param players: Liste der Spielerklassen die simuliert werden sollen
         :param repetitions: Anzahl der Durchführungen der Simulation
         """
 
-        # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
-        # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
-        self.players = [copy.copy(p) for p in players]
+        if disableDeepcopy:
+            self.players = players
+        else:
+            # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
+            # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
+            self.players = [copy.copy(p) for p in players]
         self.repetitions = repetitions
         self.assignIds(self.players)
+        for player in self.players:
+            player.onInit(self.players)
 
         # Speichert, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
         self.gamesWon = [0 for _ in range(len(self.players))]

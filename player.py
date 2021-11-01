@@ -52,13 +52,13 @@ class Player:
         :param iMove: Um den wievielten Zug der Runde handelt es sich"""
         raise NotImplementedError
 
-   def onInit(self, players: list[Player]):
+   def onInit(self, players: list[Player]) -> None:
         """Wird von Evaluation vor dem beginn einer Simulation aufgerufen.
 
         :param players: Liste aller Spieler die am Spiel teilnehmen"""
         pass
 
-    def onEvent(self, event: gameevent.Event):
+    def onEvent(self, event: gameevent.Event) -> None:
         """Wird von Game aufgerufen, wenn ein Ereignis im Spiel passiert und self.listensToEvents==True.
 
         :param event: Das Ereignis, das passiert ist"""
@@ -178,6 +178,11 @@ class TrackingPlayer(self):
         super().__init__(playerId)
         self.listensToEvents = True
         
+        # Statistik über die Wahrheitstreue der anderen Spieler. Das Format ist:
+        # {player0Id: [anzahl_wahrheit0, anzahl_wahrheit0],
+        #  player1Id: [anzahl_wahrheit1, anzahl_wahrheit1],
+        #  ...}
+        self.playerStats = {}
         # Den letzten und vorletzten Wurf abspeichern
         self.secondLastThrow = None
         self.lastThrow = None
@@ -190,6 +195,10 @@ class TrackingPlayer(self):
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         pass
 
+    def onInit(self, players: list[Player]) -> None:
+        # Leere Statistik erstellen
+        self.playerStats = {player.id: [0, 0] for player in players}
+
     def onEvent(self, event: gameevent.Event) -> None:
         if event.eventType == gameevent.EVENT_TYPES.THROW:
             self.secondLastThrow = self.lastThrow
@@ -197,12 +206,31 @@ class TrackingPlayer(self):
             self.lastPlayerId = event.playerId
         elif event.eventType == gameevent.EVENT_TYPES.KICK:
             if event.reason == gameevent.KICK_REASON.LYING:
-                # tracken, dass spieler gelogen hat
-                pass
+                # Tracken, dass Spieler gelogen hat
+                self.playerStats[event.playerId][1] += 1
+                logging.info(f"Tracking: Player with id={event.playerId} lied")
             elif event.reason == gameevent.KICK_REASON.FALSE_ACCUSATION:
-                # tracken, dass vorheriger spieler (-> self.lastPlayer) die wahrheit gesagt hat
-                pass
+                # Tracken, dass vorheriger Spieler (-> self.lastPlayerId) die Wahrheit gesagt hat
+                # Es wird angenommen dass lastPlayerId!=None, da sonst eine falsche Anschludigung sonst
+                # nicht möglich ist
+                self.playerStats[self.lastPlayerId][0] += 1
+                logging.info(f"Tracking: Player with id={event.playerId} told the truth")
             # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = self.lastPlayerId = None
 
+    def getPlayerCredibility(self, playerId: int) -> float:
+        """Errechnet anhand der Statistik über einen Spieler dessen Glaubwürdigkeit.
+        
+        Die Glaubwürdigkeit berechnet sich wie folgt:
+            glaubw = anzahl_wahrheit / (anzahl_wahrheit + anzahl_lüge)
+
+        :param playerId: Die ID des Spielers, dessen Glaubwürdigkeit berechnet werden soll."""
+        truths, lies = self.playerStats[playerId]
+        return truths / (truths + lies) if truths + lies > 0 else None 
+
+    def existPlayerStats(self, playerId: int) -> bool:
+        """Gibt zurück, ob für einen Spieler bereits etwas in dessen Statistik aufgezeichnet wurde.
+
+        :param playerId: Die ID des Spielers, dessen Statistik überprüft werden soll."""
+        return truths + lies > 0

@@ -11,10 +11,10 @@ def probEQ(throw: Throw) -> bool:
     """Wahrscheinlichkeit, dass ein zufällig gewählter Wurf gleich throw ist."""
     return PROB_BY_NUM[throw.rank]
 
-def probBelow(throw: Throw) -> bool:
+def probLT(throw: Throw) -> bool:
     """Wahrscheinlichkeit, dass ein zufällig gewählter Wurf niedriger als throw ist."""
     return PROB_BY_NUM_CUM[throw.rank - 1]
 
-def probAbove(throw: Throw) -> bool:
-    """Wahrscheinlichkeit, dass ein zufällig gewählter Wurf höher als throw ist."""
+def probGE(throw: Throw) -> bool:
+    """Wahrscheinlichkeit, dass ein zufällig gewählter Wurf höher als oder gleich hoch wie throw ist."""
     return 1 - probAbove(throw)

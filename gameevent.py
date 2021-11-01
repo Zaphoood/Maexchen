@@ -76,7 +76,10 @@ class EventThrow(Event):
         self.isTruthful = None if None in (throwActual, throwStated) else throwActual == throwStated
 
     def __str__(self) -> str:
-        return f"Player with id {self.playerId} threw {self.throwActual}, states they threw {self.throwStated}"
+        if self.throwActual:
+            return f"Player with id {self.playerId} threw {self.throwActual}, states they threw {self.throwStated}"
+        else:
+            return f"Player with id {self.playerId} states they threw {self.throwStated}"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (playerId={self.playerId}, throwActual={self.throwActual}, throwStated={self.throwStated})>"

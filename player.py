@@ -197,7 +197,7 @@ class TrackingPlayer(Player):
             return self.shouldDoubt(lastThrow)
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
-        if myThrow > lastThrow:
+        if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
             return lastThrow + 1
@@ -214,17 +214,34 @@ class TrackingPlayer(Player):
         elif event.eventType == gameevent.EVENT_TYPES.KICK:
             if event.reason == gameevent.KICK_REASON.LYING:
                 # Tracken, dass Spieler gelogen hat
-                self.playerStats[event.playerId][1] += 1
-                logging.info(f"Tracking: Player with id={event.playerId} lied")
+                if event.playerId != self.id:
+                    self.trackPlayerLie(event.playerId)
             elif event.reason == gameevent.KICK_REASON.FALSE_ACCUSATION:
                 # Tracken, dass vorheriger Spieler (-> self.lastPlayerId) die Wahrheit gesagt hat
                 # Es wird angenommen dass lastPlayerId!=None, da sonst eine falsche Anschludigung sonst
                 # nicht möglich ist
-                self.playerStats[self.lastPlayerId][0] += 1
-                logging.info(f"Tracking: Player with id={event.playerId} told the truth")
+                if self.lastPlayerId != self.id:
+                    self.trackPlayerTruth(self.lastPlayerId)
             # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = self.lastPlayerId = None
+
+    def trackPlayerLie(self, playerId: int) -> None:
+        self.savePlayerStat(playerId, 1)
+
+    def trackPlayerTruth(self, playerId: int) -> None:
+        self.savePlayerStat(playerId, 0)
+
+    def savePlayerStat(self, playerId: int, event: int) -> None:
+        """Abspeichern, dass ein Spieler gelogen hat bzw. die Wahrheit gesagt hat.
+
+        :param playerId: Die ID des Spielers, um den es sich handelt
+        :param event: event==0 => Spieler hat die Wahrheit gesagt
+                      event==1 => Spieler hat gelogen"""
+        if self.playerStats == {}:
+            logging.warning(f"TrackingPlayer: No player statistics created (i.e. onInit() wasn't called) for {self.__repr__()}")
+        else:
+            self.playerStats[playerId][event] += 1
 
     def getPlayerCredibility(self, playerId: int) -> float:
         """Errechnet anhand der Statistik über einen Spieler dessen Glaubwürdigkeit.
@@ -234,7 +251,7 @@ class TrackingPlayer(Player):
 
         :param playerId: Die ID des Spielers, dessen Glaubwürdigkeit berechnet werden soll."""
         truths, lies = self.playerStats[playerId]
-        return truths / (truths + lies) if truths + lies > 0 else None 
+        return truths / (truths + lies) if self.existPlayerStats(playerId) else None 
 
     def existPlayerStats(self, playerId: int) -> bool:
         """Gibt zurück, ob für einen Spieler bereits etwas in dessen Statistik aufgezeichnet wurde.
@@ -242,9 +259,10 @@ class TrackingPlayer(Player):
         :param playerId: Die ID des Spielers, dessen Statistik überprüft werden soll."""
         with suppress(KeyError):  # contextlib.suppress
             return sum(self.playerStats[playerId]) > 0
+        return False
 
-    def shouldTrust(self, playerThrow: int) -> bool:
-        """Einschätzen, ob dem vorherigen Spieler vertraut werden soll.
+    def shouldDoubt(self, playerThrow: Throw) -> bool:
+        """Einschätzen, ob dem vorherigen Spieler misstraut werden soll.
         Das geschieht auf folgende Weise: Zuerst wird die Wahrscheinlichkeit, dass der Spieler lügt,
         eingeschätzt. Diese errechnet sich aus der Wahrscheinlichkeit, den vorletzten Wurf mit einem zufälligen
         Wurf zu übertreffen mal der Tendenz des Spielers zum Lügen (1 - Glaubwürdigkeit) plus die Wahrscheinlichkeit,
@@ -255,20 +273,23 @@ class TrackingPlayer(Player):
         dass der Spieler die Wahrheit sagt.
             P_Wahrheit = P_zufällig_erreichen(Vorletzter Wurf) * P_Wahrheit
 
-
-
         :param playerId: ID des vorherigen Spielers
         :param playerThrow: Wurf des vorherigen Spielers"""
-        assert playerThrow == self.lastPlayerThrow
-
         if self.secondLastThrow is None:
-            # Zweiter Zug der "Runde" (nach letzterm Zurücksetzung des zu überbietenden Wertes)
-            return self.getPlayerCredibility(playerId)
+            # Zweiter Zug der "Runde" (nach letztem Zurücksetzen des zu überbietenden Wertes)
+            if self.existPlayerStats(self.lastPlayerId):
+                return self.getPlayerCredibility(self.lastPlayerId)
+            else:
+                return False
 
         else:
             # Späterer Zug
-            p_lie = probGT(self.secondLastThrow) * (1 - self.getPlayerCredibility(playerId)) + probLT(self.secondLastThrow) 
-            p_truth = probGT(self.secondLastThrow) * self.getPlayerCredibility(playerId)
+            if self.existPlayerStats(self.lastPlayerId):
+                p_lie = probGE(self.secondLastThrow) * (1 - self.getPlayerCredibility(self.lastPlayerId)) + probLT(self.secondLastThrow) 
+                p_truth = probGE(self.secondLastThrow) * self.getPlayerCredibility(self.lastPlayerId)
+            else:
+                p_lie = probGE(self.secondLastThrow)
+                p_truth = probLT(self.secondLastThrow)
 
-            return p_truth > p_lie
+            return p_lie > p_truth
 

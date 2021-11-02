@@ -17,4 +17,4 @@ def probLT(throw: Throw) -> bool:
 
 def probGE(throw: Throw) -> bool:
     """Wahrscheinlichkeit, dass ein zufällig gewählter Wurf höher als oder gleich hoch wie throw ist."""
-    return 1 - probAbove(throw)
+    return 1 - probLT(throw)

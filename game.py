@@ -21,10 +21,13 @@ class Game:
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
-    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False) -> None:
-        # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
-        # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
-        self.players = [copy.copy(p) for p in players]
+    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False, disableDeepcopy: bool = False) -> None:
+        if disableDeepcopy:
+            self.players = players
+        else:
+            # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
+            # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
+            self.players = [copy.copy(p) for p in players]
         # Jedem Spieler eine eindeutige ID zuweisen
         ids = set()
         for p in self.players:
@@ -34,7 +37,8 @@ class Game:
                 p.id = next_id
             ids.add(p.id)
 
-        self.iMove = -1  # Gibt den Index der Runde an, in der sich das Spiel gerade befindet
+        self.iMove = -1  # Gibt den Zug seit dem Anfang der Runde bzw. dem letzten zurücksetzten des zu überbietenden Wertes an
+        # TODO: Auch so wie beschrieben implementieren!
         self.lastThrowStated = None
         self.lastThrowActual = None
         self.initialized = False

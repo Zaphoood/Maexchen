@@ -6,6 +6,7 @@ from player import DummyPlayer, RandomPlayer, TrackingPlayer
 from throw import Throw
 from move import Move
 import gameevent
+import logging
 
 
 class TestDummyPlayer(unittest.TestCase):

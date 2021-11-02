@@ -119,6 +119,7 @@ class TestGameUser(unittest.TestCase):
         game.init()
         game.run()
 
+
 class EventListenerPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -133,20 +134,23 @@ class EventListenerPlayer(Player):
     def onEvent(self, event):
         print(f"EventListenerPlayer got Event: {event}")
 
+
 class TestEventListening(unittest.TestCase):
     def test_event_listening(self):
         game = Game([RandomPlayer(), EventListenerPlayer()])
         game.init()
         game.run()
 
+
 class TestTrackingPlayer(unittest.TestCase):
     def test_normal_functionality(self):
-        players = [DummyPlayer(), RandomPlayer(), ProbabilisticPlayer(), TrackingPlayer()]
-        for i, player in enumerate(players):
-            player.id = i
-        game = Game(players)
+        tr = TrackingPlayer()
+        players = [DummyPlayer(), RandomPlayer(), ProbabilisticPlayer(), tr]
+        game = Game(players, disableDeepcopy=True)
+        tr.onInit(game.players)
         game.init()
         game.run()
+
 
 if __name__ == '__main__':
     unittest.main()

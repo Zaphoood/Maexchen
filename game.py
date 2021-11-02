@@ -144,12 +144,6 @@ class Game:
                 playerToKick = (self.currentPlayer - 1) % len(self.players)
                 self.kickPlayer(playerToKick, gameevent.KICK_REASON.LYING, message=f"Previous player was rightfully doubted, {repr(self.players[playerToKick % len(self.players)])} will be removed")
 
-
-            # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
-            # kann irgendein Ergebnis würfeln und musst niemanden überbieten
-            logging.info("Value to be beaten is reset.")
-            self.lastThrowStated = None
-            self.lastThrowActual = None
         else:
             # Der Spieler hat geantwortet, akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
             # Zufälligen Wurf generieren
@@ -189,6 +183,11 @@ class Game:
         self.happen(gameevent.EventKick(playerId, reason))
         self.players.pop(self.currentPlayer)
         self.incrementCurrentPlayer = False
+        # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
+        # kann irgendein Ergebnis würfeln und musst niemanden überbieten
+        logging.info("Value to be beaten is reset.")
+        self.lastThrowStated = None
+        self.lastThrowActual = None 
         if message:
             logging.info(message)
 

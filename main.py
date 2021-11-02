@@ -12,7 +12,8 @@ ARGS_TO_PLAYERS = {
     "show-off": "ShowOffPlayer",
     "random": "RandomPlayer",
     "prob": "ProbabilisticPlayer",
-    "probabilistic": "ProbabilisticPlayer"
+    "probabilistic": "ProbabilisticPlayer",
+    "tracking": "TrackingPlayer"
 }
 
 

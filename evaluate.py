@@ -95,7 +95,7 @@ class Evaluation:
             return "Simulation hasn't been evaluated yet. Run Evaluation.run() to evaluate."
         prettyString = f"Simulation has been run {self.repetitions} times:\n"
         table = [
-            ["player", "win rate", "avg. win round", "loss causes", "", "", ""],
+            ["player", "win rate", "avg. win move", "loss causes", "", "", ""],
             ["", "", "", "lie", "false acc", "worse", "no rep"]
         ]
         for player in self.players:

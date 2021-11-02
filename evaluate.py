@@ -6,7 +6,7 @@ import copy
 from contextlib import suppress
 
 from gamelog import GameLog
-from gameevent import EventKick
+from gameevent import EventKick, EventFinish
 from player import Player, DummyPlayer, ShowOffPlayer
 from game import Game
 from gameevent import KICK_REASON
@@ -63,7 +63,7 @@ class Evaluation:
             game.init()
             game.run()
             if game.isRunning():
-                print("Error: Game is still running but should have stopped.")
+                logging.warn("Error: Game is still running but should have stopped.")
             else:
                 self.evalLog(game)
                 
@@ -73,11 +73,9 @@ class Evaluation:
         winner_id = game.log.winner_id
         self.gamesWon[winner_id] += 1
         self.winRounds[winner_id].append(game.log.countRounds())
-        for round in game.log.rounds:
-            for event in round:
-                if isinstance(event, EventKick):
-                    self.lossReason[event.playerId][event.reason] += 1
-
+        for event in game.log.getEvents():
+            if isinstance(event, EventKick):
+                self.lossReason[event.playerId][event.reason] += 1
 
     def getPlayerStats(self, player_id) -> tuple[float, float]:
         winRate = avgWinRound = 0

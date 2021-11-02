@@ -130,7 +130,7 @@ class Game:
             # Spieler hat nicht geantwortet
             logging.info(
                     f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for doubt)")
-            self.kickPlayer(self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE)
+            self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.NO_RESPONSE)
         elif doubtPred:
             # Spieler hat geantwortet, zweifelt das vorherige Ergebnis an
             logging.info(f"{repr(self.players[self.currentPlayer])} chose to doubt their predecessor.")
@@ -154,7 +154,7 @@ class Game:
                     self.iMove, self.rng)
             if throwStated is None:
                 # Spieler hat nicht geantwortet
-                self.kickPlayer(self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE, message=f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
+                self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.NO_RESPONSE, message=f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
             else:
                 # Spieler hat geantwortet
                 logging.info(
@@ -177,11 +177,16 @@ class Game:
                         self.lastThrowActual = currentThrow
                     else:
                         # Vorgänger wurde nicht überboten
-                        self.kickPlayer(self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR, message=f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
+                        self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR, message=f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
 
-    def kickPlayer(self, playerId: int, reason: gameevent.KICK_REASON, message: str = "") -> None:
-        self.happen(gameevent.EventKick(playerId, reason))
-        self.players.pop(self.currentPlayer)
+    def kickPlayer(self, i: int, reason: gameevent.KICK_REASON, message: str = "") -> None:
+        """Einen Spieler aus der Runde entfernen.
+
+        :param i: Index des Spielers, der entfernt werden soll
+        :param reason: Grund für das ausscheiden des Spielers
+        :param message: Nachricht, die im log ausgegeben werden soll."""
+        self.happen(gameevent.EventKick(self.players[i].id, reason))
+        self.players.pop(i)
         self.incrementCurrentPlayer = False
         # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
         # kann irgendein Ergebnis würfeln und musst niemanden überbieten

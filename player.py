@@ -95,6 +95,35 @@ class DummyPlayer(Player):
                 # Lügen und nächsthöheres Würfelergebnis angeben
                 return lastThrow + 1
 
+class CounterDummyPlayer(Player):
+    """Möglichst erfolgreich gegen DummyPlayer"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, listensToEvents=True, **kwargs)
+
+        # Den letzten und vorletzten Wurf abspeichern
+        self.secondLastThrow = None
+        self.lastThrow = None
+        # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
+        self.lastPlayerId = None
+
+    def onEvent(self, event: gameevent.Event) -> None:
+        if event.eventType == gameevent.EVENT_TYPES.THROW:
+            self.secondLastThrow = self.lastThrow
+            self.lastThrow = event.throwStated
+        elif event.eventType == gameevent.EVENT_TYPES.KICK:
+            # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
+            # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
+            self.lastThrow = self.secondLastThrow = None
+
+    def getDoubt(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+        if lastThrow.isMaexchen:
+            return myThrow
+        elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
+            # Letzter Wurf ist genau eins höher als der vorletzte -> letzter Spieler ist wahrscheinlich
+            # lügender DummyPlayer
+            return True
+        else:
+            return False
 
 class ShowOffPlayer(Player):
     """Angeber-Spielerklasse.

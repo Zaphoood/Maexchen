@@ -117,7 +117,7 @@ class CounterDummyPlayer(Player):
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
-            return myThrow
+            return True
         elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
             # Letzter Wurf ist genau eins höher als der vorletzte -> letzter Spieler ist wahrscheinlich
             # lügender DummyPlayer
@@ -126,11 +126,13 @@ class CounterDummyPlayer(Player):
             return False
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
-        if myThrow > lastThrow:
+        if lastThrow is None or myThrow > lastThrow:
             if myThrow.isMaexchen:
                 return myThrow
             else:
-                return lastThrow + 1
+                return Throw(66)
+        else:
+            return lastThrow + 1
 
 class ShowOffPlayer(Player):
     """Angeber-Spielerklasse.

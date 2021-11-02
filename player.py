@@ -127,12 +127,10 @@ class CounterDummyPlayer(Player):
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
         if lastThrow is None or myThrow > lastThrow:
-            if myThrow.isMaexchen:
-                return myThrow
-            else:
-                return Throw(66)
+            return myThrow
         else:
-            return lastThrow + 1
+            # Wenn zum Lügen gezwungen: 66 angeben, sodass der nächste Spieler Mäxchen angeben muss -> übernächster Spieler misstraut
+            return Throw(66)
 
 class ShowOffPlayer(Player):
     """Angeber-Spielerklasse.

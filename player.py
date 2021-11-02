@@ -115,7 +115,7 @@ class CounterDummyPlayer(Player):
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = None
 
-    def getDoubt(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
             return myThrow
         elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
@@ -124,6 +124,13 @@ class CounterDummyPlayer(Player):
             return True
         else:
             return False
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+        if myThrow > lastThrow:
+            if myThrow.isMaexchen:
+                return myThrow
+            else:
+                return lastThrow + 1
 
 class ShowOffPlayer(Player):
     """Angeber-Spielerklasse.

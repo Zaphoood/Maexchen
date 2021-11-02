@@ -95,6 +95,25 @@ class DummyPlayer(Player):
                 # Lügen und nächsthöheres Würfelergebnis angeben
                 return lastThrow + 1
 
+class AdvancedDummyPlayer(Player):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+        if lastThrow.isMaexchen or lastThrow == Throw(66):
+            return True
+        else:
+            return False
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+        if lastThrow is None or myThrow > lastThrow:
+            return myThrow
+        else:
+            if lastThrow == Throw(66):
+                return Throw(21)
+            else:
+                return Throw(rng.choice(c.THROW_VALUES[lastThrow.rank + 1:-1]))
+
 class CounterDummyPlayer(Player):
     """Möglichst erfolgreich gegen DummyPlayer"""
     def __init__(self, *args, **kwargs):

@@ -14,7 +14,8 @@ ARGS_TO_PLAYERS = {
     "random": "RandomPlayer",
     "prob": "ProbabilisticPlayer",
     "probabilistic": "ProbabilisticPlayer",
-    "tracking": "TrackingPlayer"
+    "tracking": "TrackingPlayer",
+    "adv-dummy": "AdvancedDummyPlayer"
 }
 
 

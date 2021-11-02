@@ -13,6 +13,7 @@ class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
     players: list[Player]  # Liste aller Spieler
     currentPlayer: int  # Index des Spielers der gerade an der Reihe ist
+    incrementCurrentPlayer: bool  # Ob currentPlayer nach dem aktuellen Zug erhöht werden soll (wird ein Spieler entfernt, soll dies nicht geschehen)
     lastThrowStated: Throw  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
     lastThrowActual: Throw  # Tatsächlicher Wurf des letzten Spielers
     moveCounter: int  # Zählt die Züge
@@ -60,7 +61,7 @@ class Game:
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""
         if len(self.players) > 1:
-            logging.info("Game initialized")
+            logging.info("=== Game initialized ===")
             self.initialized = True
             self.running = True
         else:
@@ -88,7 +89,7 @@ class Game:
         logging.info(f"Move {self.iMove}")
         self.log.newRound()
 
-        incrementCurrentPlayer = self.handlePlayerMove()
+        self.handlePlayerMove()
 
         if len(self.players) == 0:
             # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
@@ -106,7 +107,7 @@ class Game:
             logging.info(f"{len(self.players)} players left")
 
         # Den Index, der angibt, welcher Spieler an der Reihe ist, nur erhöhen, falls kein Spieler gelöscht wurde
-        if incrementCurrentPlayer:
+        if self.incrementCurrentPlayer:
             self.currentPlayer += 1
         # Modulo-Operator muss immer angewendet werden, auch wenn der Spielerindex nicht erhöht wurde, für den Fall
         # dass der letzte Spieler aus self.players entfernt wird
@@ -114,9 +115,9 @@ class Game:
 
     def handlePlayerMove(self) -> bool:
         """Regelt die Interaktion mit der Spielerklasse"""
-        # incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
+        # self.incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
         # Dadurch wird currentPlayer am Ende von move() nicht erhöht
-        incrementCurrentPlayer = True
+        self.incrementCurrentPlayer = True
 
         if self.lastThrowStated is None:
             # Erste Runde -> Es gibt keinen Vorgänger
@@ -128,11 +129,8 @@ class Game:
         if doubtPred is None:
             # Spieler hat nicht geantwortet
             logging.info(
-                f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for doubt)")
-            self.happen(gameevent.EventKick(
-                self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))
-            self.players.pop(self.currentPlayer)
-            incrementCurrentPlayer = False
+                    f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for doubt)")
+            self.kickPlayer(self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE)
         elif doubtPred:
             # Spieler hat geantwortet, zweifelt das vorherige Ergebnis an
             logging.info(f"{repr(self.players[self.currentPlayer])} chose to doubt their predecessor.")
@@ -140,20 +138,12 @@ class Game:
             if self.lastThrowStated == self.lastThrowActual:
                 # Aktueller Spieler ist im Unrecht, Vorgänger hat die Wahrheit gesagt -> Aktuellen Spieler entfernen
                 playerToKick = self.currentPlayer
-                logging.info(
-                    f"Previous player was wrongfully doubted, {repr(self.players[playerToKick])} will be removed")
-                self.happen(gameevent.EventKick(
-                    self.players[playerToKick].id, gameevent.KICK_REASON.FALSE_ACCUSATION))
+                self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.FALSE_ACCUSATION, message=f"Previous {repr(self.players[(self.currentPlayer - 1) % len(self.players)])} was wrongfully doubted, {repr(self.players[playerToKick])} will be removed")
             else:
                 # Aktueller Spieler hat Recht, Vorgänger hat gelogen -> Vorherigen Spieler entfernen
-                playerToKick = self.currentPlayer - 1
-                logging.info(
-                    f"Previous player was rightfully doubted, {repr(self.players[playerToKick % len(self.players)])} will be removed")
-                self.happen(gameevent.EventKick(
-                    self.players[playerToKick].id, gameevent.KICK_REASON.LYING))
-            # Spieler, der im Unrecht war, entfernen
-            self.players.pop(playerToKick)
-            incrementCurrentPlayer = False
+                playerToKick = (self.currentPlayer - 1) % len(self.players)
+                self.kickPlayer(playerToKick, gameevent.KICK_REASON.LYING, message=f"Previous player was rightfully doubted, {repr(self.players[playerToKick % len(self.players)])} will be removed")
+
 
             # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
             # kann irgendein Ergebnis würfeln und musst niemanden überbieten
@@ -167,19 +157,14 @@ class Game:
             currentThrow = self.randomThrow()
             # Den Spieler fragen, welchen Wurf er angeben will, gewürfelt zu haben
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated,
-                                                                          self.iMove, self.rng)
+                    self.iMove, self.rng)
             if throwStated is None:
                 # Spieler hat nicht geantwortet
-                logging.info(
-                    f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
-                self.happen(gameevent.EventKick(
-                    self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE))
-                self.players.pop(self.currentPlayer)
-                incrementCurrentPlayer = False
+                self.kickPlayer(self.players[self.currentPlayer].id, gameevent.KICK_REASON.NO_RESPONSE, message=f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
             else:
                 # Spieler hat geantwortet
                 logging.info(
-                    f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
+                        f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
                 self.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
                 # Den Zug auswerten
                 # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
@@ -193,19 +178,19 @@ class Game:
                         # Vorgänger wurde überboten
                         # Den angegebenen und tatsächlichen Wurf für die nächste Runde speichern
                         logging.info(
-                            f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
+                                f"Stated current throw {throwStated} beats stated previous throw {self.lastThrowStated}")
                         self.lastThrowStated = throwStated
                         self.lastThrowActual = currentThrow
                     else:
                         # Vorgänger wurde nicht überboten
-                        logging.info(
-                            f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
-                        self.happen(gameevent.EventKick(
-                            self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR))
-                        self.players.pop(self.currentPlayer)
-                        incrementCurrentPlayer = False
+                        self.kickPlayer(self.players[self.currentPlayer].id, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR, message=f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
 
-        return incrementCurrentPlayer
+    def kickPlayer(self, playerId: int, reason: gameevent.KICK_REASON, message: str = "") -> None:
+        self.happen(gameevent.EventKick(playerId, reason))
+        self.players.pop(self.currentPlayer)
+        self.incrementCurrentPlayer = False
+        if message:
+            logging.info(message)
 
     def happen(self, event: gameevent.Event) -> None:
         """Schreibt ein Event in den log und benachrichtigt Spieler mit listensToEvents==True davon.

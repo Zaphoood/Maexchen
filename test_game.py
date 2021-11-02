@@ -129,7 +129,7 @@ class EventListenerPlayer(Player):
         return False
 
     def getThrowStated(myThrow, lastThrow, *args, **kwargs):
-        return lastThrow + 1
+        return Throw(2, 1) if lastThrow.isMaexchen else lastThrow + 1
 
     def onEvent(self, event):
         print(f"EventListenerPlayer got Event: {event}")

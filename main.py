@@ -26,6 +26,7 @@ quiet = False
 save_to_disk = True
 plot_win_rate = False
 plot_loss_reason = False
+sort_results = True
 players = []
 
 if not args:
@@ -51,6 +52,8 @@ for i, arg in enumerate(args):
     elif arg == "-p":
         plot_win_rate = True
         plot_loss_reason = True
+    elif arg == "-u":
+        sort_results = False
     elif arg == "--no-write":
         save_to_disk = False
     elif arg == "--plot-win-rate":
@@ -79,7 +82,7 @@ if __name__ == '__main__':
     ev.run()
     if save_to_disk:
         ev.saveResultsToDisk()
-    print(ev.prettyResults())
+    print(ev.prettyResults(sort_by_winrate=sort_results))
     if plot_win_rate:
         ev.plotWinRate()
     if plot_loss_reason:

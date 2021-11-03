@@ -53,6 +53,7 @@ class Evaluation:
         self.showProgress = showProgress
 
         self.t_start = -1  # Zeitpunkt an dem die Simulation gestartet wurde
+        self.t_end = -1
 
     def run(self) -> None:
         self.t_start = time.time()
@@ -73,6 +74,7 @@ class Evaluation:
             else:
                 self.evalLog(game)
                 
+        self.t_end = time.time()
         self.done = True
 
     def evalLog(self, game: Game):
@@ -105,6 +107,7 @@ class Evaluation:
         if not self.assertFinished():
             return
         space = 3
+        output = f"Ran simulation in {self.t_end-self.t_start:.3f} seconds\n"
         table = [
             ["player", "win rate", "avg. win move", "loss causes", "", "", ""],
             ["", "", "", "lie", "false acc", "worse", "no rep"]
@@ -112,8 +115,8 @@ class Evaluation:
         for player in self.players:
             stats = self.getPlayerStats(player.id)[:6]
             table.append([repr(player), *[f"{el:.2f}" for el in stats]])
-
-        return formatTable(table)
+        output += formatTable(table)
+        return output
 
     def saveResultsToDisk(self):
         if not self.assertFinished():

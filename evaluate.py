@@ -3,12 +3,12 @@
 Dient zum wiederholten durchführen eines Games und zur Auswertung"""
 
 import copy
-from contextlib import suppress
 import time
+from contextlib import suppress
+import logging
 
-from gamelog import GameLog
-from gameevent import EventKick, EventFinish
-from player import Player, DummyPlayer, ShowOffPlayer
+from gameevent import EventKick
+from player import Player
 from game import Game
 from gameevent import KICK_REASON
 from format import formatTable

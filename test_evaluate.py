@@ -1,8 +1,7 @@
 import unittest
 
-from evaluate import getWinner
 from game import Game
-from player import Player, DummyPlayer, RandomPlayer
+from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer
 from gamelog import GameLog
 from evaluate import Evaluation
 
@@ -34,6 +33,14 @@ class TestOnInit(unittest.TestCase):
         test_player = TestOnInitPlayer()
         ev = Evaluation([DummyPlayer(), test_player], 1, disableDeepcopy = True)
         self.assertEqual(ev.players, test_player.playersReceived)
+
+class TestAll(unittest.TestCase):
+    def test_all(self):
+        players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), TrackingPlayer()]
+        ev = Evaluation(players, 1000, showProgress = True)
+        ev.run()
+        print(ev.prettyResults())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -32,4 +32,4 @@ START_SIM_USAGE = """Usage: python3.10 run_sim.py [NUMBER-OF-ITERATIONS] [OPTION
         --plot-win-rate     Show plot for win rate
         --plot-loss-reason  Show plot for loss reason
         --<player-class> [n]  Add (n) Player(s) to simulation. Possible values for <player-class> are
-            dummy, c-dummy, adv-dummy, random, show-off, prob[abilistic], tracking"""
+            dummy, c-dummy, adv-dummy, random, show-off, thres[hold], tracking"""

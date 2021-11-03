@@ -4,6 +4,8 @@ import logging
 
 from game import Game
 import player
+# Import individually for now
+from player import DummyPlayer, ProbabilisticPlayer
 from evaluate import Evaluation
 import constants as c
 
@@ -69,9 +71,6 @@ for i, arg in enumerate(args):
     else:
         raise ValueError(f"Unexpected command line argument \"{arg}\"")
 
-
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging_level)
-
 print(f"Starting simulation (repetitions={n_reps})...")
 
 if __name__ == '__main__':
@@ -84,3 +83,4 @@ if __name__ == '__main__':
         ev.plotWinRate()
     if plot_loss_reason:
         ev.plotLossReason()
+

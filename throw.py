@@ -21,7 +21,7 @@ class Throw:
             # Ein Argument wurde gegeben, also der Wert des Wurfs (self.value)
             self.value = args[0]
             if self.value not in c.THROW_VALUES:
-                raise ValueError(f"Value of {self.value} is not valid.")
+                raise ValueError(f"Got invalid value for initializing Throw: {self.value}.")
             num0 = self.value // 10
             num1 = self.value % 10
         elif len(args) == 2:
@@ -39,7 +39,7 @@ class Throw:
         self.isMaexchen = self.value == c.MAEXCHEN  # Mäxchen
 
     def __str__(self) -> str:
-        return str(self.value)
+        return f"Throw (str(self.value))"
 
     def __repr__(self) -> str:
         return f"Throw (value={self.value})"

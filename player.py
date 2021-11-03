@@ -192,42 +192,43 @@ class RandomPlayer(Player):
 class ThresholdPlayer(Player):
     """Schwellenwert-Spielerklasse
 
-    Misstraut und lügt ab bestimmten Schwellenwerten
+    Misstraut und lügt ab bestimmten Schwellenwerten.
+    Ist das Ergebnis des Vorgängers größer oder gleich doubtThreshold, wird dem Vorgänger misstraut.
+    Ist das eigene Eregebnis höher als dass des Vorgängers und niedriger als lieThreshold, wird gelogen und
+    lieThreshold als eigener Wurf zurückgegeben.
     """
     
     def __init__(self, playerId: int = None, doubtThreshold: int = 61, lieThreshold: int = 61):
         super().__init__(playerId)
-        self.doubtThreshold = doubtThreshold
-        self.lieThreshold = lieThreshold
+        if isinstance(doubtThreshold, int):
+            self.doubtThreshold = Throw(doubtThreshold)
+        elif isinstance(doubtThreshold, Throw):
+            self.doubtThreshold = doubtThreshold
+        else:
+            raise TypeError(f"doubtThreshold must be of type int or Throw (got {type(doubtThreshold)})")
+        if isinstance(lieThreshold, int):
+            self.lieThreshold = Throw(lieThreshold)
+        elif isinstance(lieThreshold, Throw):
+            self.lieThreshold = lieThreshold
+        else:
+            raise TypeError(f"lieThreshold must be of type int or Throw (got {type(lieThreshold)})")
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
-        if iMove == 0:
-            # Sollte nie eintreten
-            logging.warn("Player.getDoubt() called on first round (iMove = 0)")
-            return
-        elif iMove == 1:
-            if lastThrow <= Throw(self.doubtThreshold):
-                return False
-            else:
-                return True
+        if self.doubtThreshold:
+            return lastThrow >= self.doubtThreshold
         else:
-            if lastThrow.isMaexchen:
-                return True
-            return random.choice([True, False])
+            return lastThrow.isMaexchen
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
-        if lastThrow is None:
+        if lastThrow is None or myThrow > lastThrow:
             # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
-            if myThrow <= Throw(self.lieThreshold):
-                return Throw(self.lieThreshold)
+            if myThrow <= self.lieThreshold:
+                return self.lieThreshold
             else:
                 return myThrow
         else:
             # Anderer Zug
-            if myThrow > lastThrow:
-                return myThrow
-            else:
-                return lastThrow + 1
+            return lastThrow + 1
 
 
 class TrackingPlayer(Player):

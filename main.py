@@ -12,8 +12,8 @@ ARGS_TO_PLAYERS = {
     "c-dummy": "CounterDummyPlayer",
     "show-off": "ShowOffPlayer",
     "random": "RandomPlayer",
-    "prob": "ProbabilisticPlayer",
-    "probabilistic": "ProbabilisticPlayer",
+    "tres": "ThresholdPlayer",
+    "threshold": "ThresholdPlayer",
     "tracking": "TrackingPlayer",
     "adv-dummy": "AdvancedDummyPlayer"
 }

@@ -189,11 +189,10 @@ class RandomPlayer(Player):
         return Throw(rng.choice(c.THROW_VALUES))
 
 
-class ProbabilisticPlayer(Player):
-    """Wahrscheinlichkeits-Spielerklasse
+class ThresholdPlayer(Player):
+    """Schwellenwert-Spielerklasse
 
-    Handelt teilweise nach den Erkenntnissen aus 2.1 und 2.2, ansonsten ähnlich
-    wie DummyPlayer.
+    Misstraut und lügt ab bestimmten Schwellenwerten
     """
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:

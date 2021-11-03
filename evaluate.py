@@ -106,13 +106,13 @@ class Evaluation:
         """Die Gründe fürs Ausscheiden für alle Spieler zurückgeben."""
         return [self.getPlayerStats(p.id)[2:] for p in self.players]
 
-    def prettyResults(self, force_rerender=False) -> str:
+    def prettyResults(self, sort_by_winrate=True, force_rerender=False) -> str:
         if force_rerender or not self._prettyResultsCached:
-            self._prettyResultsCached = self._renderPrettyResults()
+            self._prettyResultsCached = self._renderPrettyResults(sort_by_winrate=sort_by_winrate)
 
         return self._prettyResultsCached
 
-    def _renderPrettyResults(self) -> str:
+    def _renderPrettyResults(self, sort_by_winrate=True) -> str:
         if not self.assertFinished():
             return
         space = 3
@@ -121,9 +121,14 @@ class Evaluation:
                 ["player", "win rate", "avg. win move", "loss causes", "", "", ""],
                 ["", "", "", "lie", "false acc", "worse", "no rep"]
                 ]
+        players_stats = []
         for player in self.players:
             stats = self.getPlayerStats(player.id)[:6]
-            table.append([repr(player), *[f"{el:.2f}" for el in stats]])
+            players_stats.append([repr(player), *stats])
+        if sort_by_winrate:
+            players_stats.sort(key=lambda row: row[1], reverse=True)
+        players_stats = [[row[0], *[f"{el:.2f}" for el in row[1:]]] for row in players_stats]
+        table.extend(players_stats)
         output += formatTable(table)
         return output
 

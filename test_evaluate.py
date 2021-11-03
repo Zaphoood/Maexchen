@@ -1,6 +1,5 @@
 import unittest
 
-from evaluate import getWinner
 from game import Game
 from player import Player, DummyPlayer, RandomPlayer
 from gamelog import GameLog

@@ -66,6 +66,7 @@ class TestRandomPlayer(unittest.TestCase):
             else:
                 self.assertEqual(throw, last_throw)
 
+
 class TestTrackingPlayer(unittest.TestCase):
     def setUp(self):
         self.n_dummies = 10

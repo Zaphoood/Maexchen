@@ -2,7 +2,7 @@ import unittest
 import logging
 
 from game import Game
-from player import Player, DummyPlayer, ShowOffPlayer, RandomPlayer, ProbabilisticPlayer, TrackingPlayer
+from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer
 from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
@@ -146,6 +146,16 @@ class TestTrackingPlayer(unittest.TestCase):
     def test_normal_functionality(self):
         tr = TrackingPlayer()
         players = [DummyPlayer(), RandomPlayer(), ProbabilisticPlayer(), tr]
+        game = Game(players, disableDeepcopy=True)
+        tr.onInit(game.players)
+        game.init()
+        game.run()
+
+
+class TestAll(unittest.TestCase):
+    def test_all(self):
+        tr = TrackingPlayer()
+        players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
         game = Game(players, disableDeepcopy=True)
         tr.onInit(game.players)
         game.init()

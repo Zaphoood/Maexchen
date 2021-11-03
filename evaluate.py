@@ -13,6 +13,7 @@ from game import Game
 from gameevent import KICK_REASON
 from format import formatTable
 from disk import writeLog
+from plot import plotWinRate, plotLossReason
 import constants as c
 
 
@@ -73,7 +74,7 @@ class Evaluation:
                 logging.warn("Error: Game is still running but should have stopped.")
             else:
                 self.evalLog(game)
-                
+
         self.t_end = time.time()
         self.done = True
 
@@ -97,6 +98,14 @@ class Evaluation:
 
         return winRate, avgWinRound, *lossReason
 
+    def getWinRates(self) -> list[float]:
+        """Die Gewinnraten für alle Spieler zurückgeben."""
+        return [self.getPlayerStats(p.id)[0] for p in self.players]
+
+    def getLossReasons(self) -> list[list[float]]:
+        """Die Gründe fürs Ausscheiden für alle Spieler zurückgeben."""
+        return [self.getPlayerStats(p.id)[2:] for p in self.players]
+
     def prettyResults(self, force_rerender=False) -> str:
         if force_rerender or not self._prettyResultsCached:
             self._prettyResultsCached = self._renderPrettyResults()
@@ -109,9 +118,9 @@ class Evaluation:
         space = 3
         output = f"Ran simulation in {self.t_end-self.t_start:.3f} seconds\n"
         table = [
-            ["player", "win rate", "avg. win move", "loss causes", "", "", ""],
-            ["", "", "", "lie", "false acc", "worse", "no rep"]
-        ]
+                ["player", "win rate", "avg. win move", "loss causes", "", "", ""],
+                ["", "", "", "lie", "false acc", "worse", "no rep"]
+                ]
         for player in self.players:
             stats = self.getPlayerStats(player.id)[:6]
             table.append([repr(player), *[f"{el:.2f}" for el in stats]])
@@ -123,9 +132,15 @@ class Evaluation:
             return
         writeLog(self.t_start, self.players, self.n_repetitions, self.prettyResults())
 
+    def plotWinRate(self):
+        plotWinRate([f"{p.__class__.__name__} {p.id}" for p in self.players], self.getWinRates())
+
+    def plotLossReason(self):
+        plotLossReason([f"{p.__class__.__name__} {p.id}" for p in self.players], self.getLossReasons())
+
     def assignIds(self, players) -> None:
-        for i, player in enumerate(players):
-            player.id = i
+       for i, player in enumerate(players):
+           player.id = i
 
     def assertFinished(self) -> bool:
         if not self.done:

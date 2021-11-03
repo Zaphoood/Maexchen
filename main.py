@@ -23,6 +23,8 @@ args = sys.argv[1:]
 n_reps = None
 quiet = False
 save_to_disk = True
+plot_win_rate = False
+plot_loss_reason = False
 players = []
 
 if not args:
@@ -39,9 +41,16 @@ for i, arg in enumerate(args):
         quiet = True
     elif arg == "-v":
         logging_level = logging.INFO
+    elif arg == "-p":
+        plot_win_rate = True
+        plot_loss_reason = True
     elif arg.startswith("--"):
         if arg == "--no-write":
             write_to_disk = False
+        elif arg == "--plot-win-rate":
+            plot_win_rate = True
+        elif arg == "--plot-loss-reason":
+            plot_loss_reason = True
         elif arg[2:] in ARGS_TO_PLAYERS.keys():
             player_class = ARGS_TO_PLAYERS[arg[2:]]
             p = player.__getattribute__(player_class)
@@ -58,8 +67,12 @@ logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging_level)
 print(f"Starting simulation (repetitions={n_reps})...")
 
 if __name__ == '__main__':
-    eval = Evaluation(players, n_reps, showProgress=not quiet)
-    eval.run()
+    ev = Evaluation(players, n_reps, showProgress=not quiet)
+    ev.run()
     if save_to_disk:
-        eval.saveResultsToDisk()
-    print(eval.prettyResults())
+        ev.saveResultsToDisk()
+    print(ev.prettyResults())
+    if plot_win_rate:
+        ev.plotWinRate()
+    if plot_loss_reason:
+        ev.plotLossReason()

@@ -4,8 +4,6 @@ import logging
 
 from game import Game
 import player
-# Import individually for now
-from player import DummyPlayer, ProbabilisticPlayer
 from evaluate import Evaluation
 import constants as c
 
@@ -14,7 +12,7 @@ ARGS_TO_PLAYERS = {
     "c-dummy": "CounterDummyPlayer",
     "show-off": "ShowOffPlayer",
     "random": "RandomPlayer",
-    "tres": "ThresholdPlayer",
+    "thres": "ThresholdPlayer",
     "threshold": "ThresholdPlayer",
     "tracking": "TrackingPlayer",
     "adv-dummy": "AdvancedDummyPlayer"
@@ -65,11 +63,12 @@ for i, arg in enumerate(args):
         n = 1
         with suppress(ValueError, IndexError):  # contextlib.suppress
             n = int(args[i + 1])
+            # Next arg is number of players -> skip next arg
+            skip_arg = True
         players.extend([p() for _ in range(n)])
-        # Skip next arg
-        skip_arg = True
     else:
-        raise ValueError(f"Unexpected command line argument \"{arg}\"")
+        print(f"Unexpected command line argument \"{arg}\"")
+        sys.exit(1)
 
 print(f"Starting simulation (repetitions={n_reps})...")
 

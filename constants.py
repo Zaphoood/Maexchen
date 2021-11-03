@@ -1,5 +1,8 @@
 from logging import WARN
 
+LOG_PATH = "results.log"
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 MAEXCHEN = 21
 
 # Alle möglichen Ergebnisse für einen Wurf (mit der höheren Zahl als erste Stelle),

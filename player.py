@@ -252,7 +252,7 @@ class CounterThresPlayer(Player):
         # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
         self.lastPlayerId = None
 
-     def onInit(self, players: list[Player]) -> None:
+    def onInit(self, players: list[Player]) -> None:
         # Leere Statistik erstellen
         self.throwStats = {player.id: [] for player in players if player is not self}
         self.throwStatsCounted = {player.id: None for player in players if player is not self}

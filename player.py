@@ -252,6 +252,9 @@ class CounterThresPlayer(Player):
         # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
         self.lastPlayerId = None
 
+        self.minDataPoints = 5
+        self.freqThres = 0.3
+
     def onInit(self, players: list[Player]) -> None:
         # Leere Statistik erstellen
         self.throwStats = {player.id: [] for player in players if player is not self}
@@ -260,7 +263,9 @@ class CounterThresPlayer(Player):
 
     def onEvent(self, event: gameevent.Event) -> None:
         if event.eventType == gameevent.EVENT_TYPES.THROW:
-            self.throwStats[event.playerId].append(event.throwStated.value)
+            if event.playerId != self.id:
+                self.throwStats[event.playerId].append(event.throwStated.value)
+                self.lastPlayerId = event.playerId
         elif event.eventType == gameevent.EVENT_TYPES.KICK:
             # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
@@ -269,7 +274,7 @@ class CounterThresPlayer(Player):
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
         if lastThrow.isMaexchen:
             return True
-        elif self.existValidPlayerStats(self.lastPlayerId):
+        elif self.existThresSuggestion(self.lastPlayerId):
             # Entscheidung Anhand von Statistik über Spieler treffen
             if self.mostFreqThrow(self.lastPlayerId) == lastThrow:
                 # Spieler hat entsprechend der Vermutung gehandelt
@@ -298,7 +303,7 @@ class CounterThresPlayer(Player):
 
         :param playerId: Die ID des zu beurteilenden Spielers
         """
-        return self.countDataPoints(playerId) > self.minDataPoints and self.mostFreqThrow(playerId) > self.percThres
+        return self.countDataPoints(playerId) > self.minDataPoints and self.mostFreqThrow(playerId) > self.freqThres
 
     def getPlayerStatsCounted(self, playerId: int):
         if self.recalcCounted[playerId] or self.throwStatsCounted[playerId] is None:

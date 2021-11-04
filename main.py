@@ -14,6 +14,7 @@ ARGS_TO_PLAYERS = {
     "random": "RandomPlayer",
     "thres": "ThresholdPlayer",
     "threshold": "ThresholdPlayer",
+    "c-thres": "CounterThresPlayer",
     "tracking": "TrackingPlayer",
     "adv-dummy": "AdvancedDummyPlayer"
 }

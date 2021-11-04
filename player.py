@@ -253,7 +253,7 @@ class CounterThresPlayer(Player):
         self.lastPlayerId = None
 
         self.minDataPoints = 5
-        self.freqThres = 0.3
+        self.freqThres = 0.4
 
     def onInit(self, players: list[Player]) -> None:
         # Leere Statistik erstellen
@@ -303,7 +303,7 @@ class CounterThresPlayer(Player):
 
         :param playerId: Die ID des zu beurteilenden Spielers
         """
-        return self.countDataPoints(playerId) > self.minDataPoints and self.mostFreqThrow(playerId) > self.freqThres
+        return self.countDataPoints(playerId) > self.minDataPoints and self.mostFreqThrowFreq(playerId) > self.freqThres
 
     def getPlayerStatsCounted(self, playerId: int):
         if self.recalcCounted[playerId] or self.throwStatsCounted[playerId] is None:

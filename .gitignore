@@ -5,3 +5,4 @@ __pycache__/
 *.swp
 
 results.log
+count_lines.py

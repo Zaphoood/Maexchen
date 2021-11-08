@@ -2,7 +2,7 @@ import unittest
 from random import Random
 
 import constants as c
-from player import DummyPlayer, RandomPlayer, TrackingPlayer
+from player import DummyPlayer, RandomPlayer, TrackingPlayer, CounterThresPlayer
 from throw import Throw
 from move import Move
 import gameevent
@@ -122,6 +122,26 @@ class TestTrackingPlayer(unittest.TestCase):
         self.tr.onEvent(kickEvent)
         self.assertEqual(self.tr.getPlayerCredibility(1), 1)
 
+
+class TestCounterThresPlayer(unittest.TestCase):
+    def setUp(self):
+        self.n_dummies = 2
+        self.dummies = [DummyPlayer(i) for i in range(self.n_dummies)]
+        self.ctp = CounterThresPlayer(self.n_dummies)
+        players = [self.ctp, *self.dummies]
+        self.ctp.onInit(players)
+
+    def test_init(self):
+        for dummy in self.dummies:
+            self.assertEqual(self.ctp.throwStats[dummy.id], [])
+
+    def test_tracking(self):
+        throw1 = Throw(3,3)
+        throw2 = Throw(4,4)
+
+        # Spieler 0 wirft 33
+        self.ctp.onEvent(gameevent.EventThrow(0, None, throw1))
+        print(self.ctp.throwStats)
 
 if __name__ == '__main__':
     unittest.main()

@@ -11,7 +11,7 @@ class OutOfBoundsError(Exception):
 
 class Throw:
     """Stellt ein Würfelergebnis dar."""
-    value: int
+    value: int  # Das Zahlergebnis, das der Wurf repräsentiert
     rank: int
     isDouble: bool
     isMaexchen: bool

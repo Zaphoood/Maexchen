@@ -1,6 +1,7 @@
 from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
 from typing import Callable
 from contextlib import suppress
+from collections import Counter
 import random
 import logging
 
@@ -230,9 +231,101 @@ class ThresholdPlayer(Player):
             # Anderer Zug
             return lastThrow + 1
 
+class CounterThresPlayer(Player):
+    """Möglichst effektiv gegen CounterPlayer.
+
+    Speichert die angegebenen Ergebnisse der Mitspieler ab. Wird ein Muster
+    erkannt, das dem Verhalten eines CounterPlayer entspricht, wird diesem beim vermuteten
+    Schwellenwert immer misstraut"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, listensToEvents=True, **kwargs)
+
+        # Statistik über die Würfe der anderen Spieler. Das Format ist:
+        # { player0Id: [wurf0, wurf1, ...],
+        #   player1Id: [wurf0, wurf1, ...],
+        #   ... }
+        self.throwStats = {}
+        # Dasselbe, aber als Counter-Objekt, d. h. kategorisiert und gezählt
+        self.throwStatsCounted = {}
+        self.recalcCounted = {}
+        # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
+        self.lastPlayerId = None
+
+        self.minDataPoints = 5
+        self.freqThres = 0.4
+
+    def onInit(self, players: list[Player]) -> None:
+        # Leere Statistik erstellen
+        self.throwStats = {player.id: [] for player in players if player is not self}
+        self.throwStatsCounted = {player.id: None for player in players if player is not self}
+        self.recalcCounted = {player.id: True for player in players if player is not self}
+
+    def onEvent(self, event: gameevent.Event) -> None:
+        if event.eventType == gameevent.EVENT_TYPES.THROW:
+            if event.playerId != self.id:
+                self.throwStats[event.playerId].append(event.throwStated.value)
+                self.lastPlayerId = event.playerId
+        elif event.eventType == gameevent.EVENT_TYPES.KICK:
+            # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
+            # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
+            self.lastPlayerId = None
+
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+        if lastThrow.isMaexchen:
+            return True
+        elif self.existThresSuggestion(self.lastPlayerId):
+            # Entscheidung Anhand von Statistik über Spieler treffen
+            if self.mostFreqThrow(self.lastPlayerId) == lastThrow:
+                # Spieler hat entsprechend der Vermutung gehandelt
+                return True
+        # Vermutung existiert nicht oder konnte nicht bestätigt werden
+        return False
+
+
+    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+        """Verhalten ist dasselbe wie DummyPlayer."""
+        if lastThrow is None:
+            return myThrow
+        else:
+            if myThrow > lastThrow:
+                return myThrow
+            else:
+                return lastThrow + 1
+
+    def existThresSuggestion(self, playerId: int):
+        """Beurteilen, ob von einem Spieler hinreichend aussagekräftige Statistik existiert,
+        um eine Vermutung über dessen Schwellenwert aufzustellen.
+
+        Die Vorraussetzung dafür ist, dass die Anzahl Datenpunkte über diesen Spieler > self.minDataPoints
+        und dass ein Ergebnis einen Anteil an allen von diesem Spieler verkündeten Ergebnisse ausmacht,
+        der größer als self.freqThres ist.
+
+        :param playerId: Die ID des zu beurteilenden Spielers
+        """
+        return self.countDataPoints(playerId) > self.minDataPoints and self.mostFreqThrowFreq(playerId) > self.freqThres
+
+    def getPlayerStatsCounted(self, playerId: int):
+        if self.recalcCounted[playerId] or self.throwStatsCounted[playerId] is None:
+            self.throwStatsCounted[playerId] = Counter(self.throwStats[playerId])
+        return self.throwStatsCounted[playerId]
+
+    def mostFreqThrow(self, playerId: int):
+        """Den von einem Spieler am häufigsten angegebenen Wurf zurückgeben."""
+        return self.getPlayerStatsCounted(playerId).most_common(1)[0][0]
+
+    def mostFreqThrowFreq(self, playerId: int):
+        """Die Frequenz des am häufigsten angegebenen Wurfs eines Spielers berechenen."""
+        total_occs = self.getPlayerStatsCounted(playerId).most_common(1)[0][1]
+        return total_occs / self.countDataPoints(playerId)
+
+    def countDataPoints(self, playerId: int):
+        """Die Anzahl von aufgezeichneten Datenpunkten über einen bestimmten Spieler zurückgeben."""
+        return len(self.throwStats[playerId])
 
 class TrackingPlayer(Player):
     """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, listensToEvents=True, **kwargs)
 

@@ -19,6 +19,9 @@ ARGS_TO_PLAYERS = {
     "adv-dummy": "AdvancedDummyPlayer"
 }
 
+# Wenn True, immer beide Plots gleichzeitig anzeigen
+PRESENTATION_MODE = True
+
 
 logging_level = c.LOGGING_LEVEL
 args = sys.argv[1:]
@@ -80,8 +83,12 @@ if __name__ == '__main__':
     if save_to_disk:
         ev.saveResultsToDisk()
     print(ev.prettyResults(sort_by_winrate=sort_results, force_rerender=True))
-    if plot_win_rate:
+    if PRESENTATION_MODE:
         ev.plotWinRate()
-    if plot_loss_reason:
         ev.plotLossReason()
+    else:
+        if plot_win_rate:
+            ev.plotWinRate()
+        if plot_loss_reason:
+            ev.plotLossReason()
 

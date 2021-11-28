@@ -13,7 +13,7 @@ from game import Game
 from gameevent import KICK_REASON
 from format import formatTable
 from disk import writeLog
-from plot import plotWinRate, plotLossReason
+from plot import plotWinRate, plotLossReason, plotWRandLR
 import constants as c
 
 
@@ -138,11 +138,18 @@ class Evaluation:
         writeLog(self.t_start, self.players, self.n_repetitions, self.prettyResults())
 
     def plotWinRate(self):
+        # Using plot.plotWinRate
         plotWinRate([f"{p.__class__.__name__} {p.id}" for p in self.players], self.getWinRates())
-
+        
     def plotLossReason(self):
+        # Using plot.plotLossReason
         plotLossReason([f"{p.__class__.__name__} {p.id}" for p in self.players], self.getLossReasons())
 
+    def plotWRandLR(self):
+        # Using plot.plotWRandLR
+        player_names = [f"{p.__class__.__name__} {p.id}" for p in self.players]
+        plotWRandLR(player_names, self.getWinRates(), self.getLossReasons())
+        
     def assignIds(self, players) -> None:
        for i, player in enumerate(players):
            player.id = i

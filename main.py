@@ -27,6 +27,7 @@ quiet = False
 save_to_disk = True
 plot_win_rate = False
 plot_loss_reason = False
+plot_all_simul = False
 sort_results = True
 players = []
 
@@ -55,6 +56,8 @@ for i, arg in enumerate(args):
     elif arg in ["-p", "--plot-all"]:
         plot_win_rate = True
         plot_loss_reason = True
+    elif arg in ["-s", "--plot-simul"]:
+        plot_all_simul = True
     elif arg == "--plot-win-rate":
         plot_win_rate = True
     elif arg == "--plot-loss-reason":
@@ -80,8 +83,11 @@ if __name__ == '__main__':
     if save_to_disk:
         ev.saveResultsToDisk()
     print(ev.prettyResults(sort_by_winrate=sort_results, force_rerender=True))
-    if plot_win_rate:
-        ev.plotWinRate()
-    if plot_loss_reason:
-        ev.plotLossReason()
+    if plot_all_simul:
+        ev.plotWRandLR()
+    else:
+        if plot_win_rate:
+            ev.plotWinRate()
+        if plot_loss_reason:
+            ev.plotLossReason()
 

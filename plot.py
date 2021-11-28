@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pylab
 import numpy as np
 
 loss_categories = ["Lügen", "Falsch beschuldigt", "Vorgänger nicht überboten"]
@@ -22,6 +23,8 @@ def plotWRandLR(player_names: list[str], win_rates: list[float], loss_reasons: l
     
 def _winRateFig(player_names: list[str], values: list[float], y_range=None, fig_index=None) -> None:
     fig = plt.figure(fig_index)
+    window = pylab.gcf()
+    window.canvas.manager.set_window_title('Gewinnrate je Spieler')
     ax = fig.add_axes(axis_rect)
     x_positions = np.arange(0, len(player_names)*1.25, 1.25)
     plt.xticks(x_positions, player_names)
@@ -39,6 +42,8 @@ def _lossReasonFig(player_names: list[str], values: list[float], y_range=[0, 1],
     values = [row for row in zip(*values)]
 
     fig = plt.figure(fig_index)
+    window = pylab.gcf()
+    window.canvas.manager.set_window_title('Gründe fürs Ausscheiden je Spieler')
     ax = fig.add_axes(axis_rect)
     positions = np.arange(0, len(player_names)*4, 4)
     plt.yticks(np.arange(0, 1.1, 0.1))

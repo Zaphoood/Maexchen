@@ -3,19 +3,26 @@
 Simulate Mäxchen games between pre-defined player types.
 
 ## Installation
-This project uses Python 3.9.x and the matplotlib module. It is optional but recommended to use a virtual environment for installing matplotlib.
+This project uses Python 3.9.x and the matplotlib library. It is optional but recommended to use a virtual environment for installing matplotlib.
 
-Install matplotlib using pip:
+Create and activate virtualenv
+```
+virtualenv --python=<path-to-python3.9> venv
+source venv/bin/activate
+```
+
+Install matplotlib with:
 ```
 python3.9 -m pip install matplotlib
 ```
 
 ## Usage
-Start a simulation with
+Run a simulation with:
 ```
-python3.9 main.py n_reps [OPTIONS]
+python3.9 main.py [NUM_REPS] [OPTIONS]
 ```
-`n_reps` specifies the number of times a simulation will be run. Options let you specify the players to be simulated. These are
+The number of time the simulation will be repeated is specified by `NUM_REPS`.
+`OPTIONS` lets you specify the players to be simulated. The following player types are available:
 
 Command line argument | Class name | Description
 ----------------------|------------|------------
@@ -28,12 +35,11 @@ Command line argument | Class name | Description
 `--c-thres` | `CounterThresholdPlayer` | Effective against `CounterThresholdPlayer`
 `--tracking` | `TrackingPlayer` | Tracks other players' behavior
 
-The number of players can be specified as well, for example
+The number of players can be specified as well.
+For example, in order to start a simulation with two players of type `DummyPlayer`, and three of type `CounterDummyPlayer`, run
 ```
-python3.9 main.py n_reps --dummy 2
+python3.9 main.py n_reps --dummy 2 --c-dummy 3
 ```
-would start a simulation with 2 players of type `DummyPlayer`.
-
 
 Other options are:
 

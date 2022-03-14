@@ -3,7 +3,7 @@
 Simulate Mäxchen games between pre-defined player types.
 
 ## Installation
-This project uses Python 3.9.x and the matplotlib library. It is optional but recommended to use a virtual environment for installing matplotlib.
+This project uses Python 3.9 and the matplotlib library. It is optional but recommended to use a virtual environment for installing matplotlib.
 
 Create and activate virtualenv
 ```
@@ -19,7 +19,7 @@ python3.9 -m pip install matplotlib
 ## Usage
 Run a simulation with:
 ```
-python3.9 main.py [NUM_REPS] [OPTIONS]
+python3.9 main.py NUM_REPS [OPTIONS]
 ```
 The number of time the simulation will be repeated is specified by `NUM_REPS`.
 `OPTIONS` lets you specify the players to be simulated. The following player types are available:

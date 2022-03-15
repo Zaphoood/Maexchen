@@ -1,9 +1,19 @@
+# Python-related directories
 venv/
 __pycache__/
+
+# PyCharm folder
 .idea/
 
+# Swapfiles
 *.swp
 
+# Simulation output
 results.log
 results_test.log
+
+# Helper file for counting the total number of lines
 count_lines.py
+
+# To-do list
+todo.txt

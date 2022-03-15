@@ -2,8 +2,12 @@
 venv/
 __pycache__/
 
-# PyCharm folder
+# PyCharm
 .idea/
+
+# Visual Studio Code
+.vscode/
+init-terminal.sh
 
 # Swapfiles
 *.swp

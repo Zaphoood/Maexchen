@@ -1,7 +1,7 @@
 import logging
 import copy
 import random
-from sys import maxsize
+import sys
 
 from gamelog import GameLog
 import gameevent
@@ -51,22 +51,23 @@ class Game:
         # verwenden, ansonsten einen neuen Seed generieren. Dadurch ist der Seed immer bekannt und kann verwendet
         # werden, um Spiele zu reproduzieren
         if seed is None:
-            seed = random.randrange(maxsize)  # From sys.maxsize
+            seed = random.randrange(sys.maxsize)
         self._seed = seed
         self.rng = random.Random(seed)
 
         self.rng.shuffle(self.players)
-        self.currentPlayer = self.rng.randrange(0, len(self.players))
 
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""
         if len(self.players) > 1:
             logging.info("=== Game initialized ===")
+            self.currentPlayer = self.rng.randrange(0, len(self.players))
             self.initialized = True
             self.running = True
         else:
             logging.error("Game can't be initialized with only one player.")
             self.happen(gameevent.EventAbort(message="Game can't be initialized with only one player."))
+            sys.exit(1)
 
     def run(self) -> None:
         """Führt so lange Iterationen des Spiels durch, bis es beendet ist"""

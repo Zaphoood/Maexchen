@@ -1,31 +1,30 @@
-import sys
-from contextlib import suppress
-import logging
-
-from game import Game
 from evaluate import Evaluation
-import constants as c
 from argp import ArgumentParser
+import player
 
 # Wenn True, immer beide Plots gleichzeitig anzeigen
 PRESENTATION_MODE = True
 
 parser = ArgumentParser()
-
-print(f"Starting simulation (repetitions={parser.n_reps})...")
+parser.parseArgs()
 
 if __name__ == '__main__':
-    ev = Evaluation(parser.players, parser.n_reps,
-                    showProgress=not parser.quiet)
-    ev.run()
-    if parser.save_to_disk:
-        ev.saveResultsToDisk()
-    print(ev.prettyResults(sort_by_winrate=parser.sort_results, force_rerender=True))
+    players = []
+    for player_flag, player_class in player.FLAGS_TO_PLAYERS.items():
+        print(f"{player_flag}: {parser.getFlag(player_flag)}")
+        players.extend([player_class() for _ in range(parser.getFlag(player_flag) or 0)])
 
-    if parser.plot_all_simul or PRESENTATION_MODE:
+    ev = Evaluation(players, parser.n_reps,
+                    showProgress=not parser.getFlag("quiet"))
+    ev.run()
+    if not parser.getFlag("no-write"):
+        ev.saveResultsToDisk()
+    print(ev.prettyResults(sort_by_winrate=not parser.getFlag("no-sort"), force_rerender=True))
+
+    if parser.getFlag("plot-all") or PRESENTATION_MODE:
         ev.plotWRandLR()
     else:
-        if parser.plot_win_rate:
+        if parser.getFlag("plot-win-rate"):
             ev.plotWinRate()
-        if parser.plot_loss_reason:
+        if parser.getFlag("plot-loss-reason"):
             ev.plotLossReason()

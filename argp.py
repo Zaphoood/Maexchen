@@ -1,60 +1,61 @@
+from dataclasses import dataclass
 import sys
-import logging
-from contextlib import suppress
+from typing import List, Optional, Any
 
+from player import FLAGS_TO_PLAYERS
 import constants as c
-import player
 
-ARGS_TO_PLAYERS = {
-    "dummy": "DummyPlayer",
-    "c-dummy": "CounterDummyPlayer",
-    "show-off": "ShowOffPlayer",
-    "random": "RandomPlayer",
-    "thres": "ThresholdPlayer",
-    "threshold": "ThresholdPlayer",
-    "c-thres": "CounterThresPlayer",
-    "tracking": "TrackingPlayer",
-    "adv-dummy": "AdvancedDummyPlayer"
-}
+@dataclass
+class Flag:
+    name: str
+    aliases: List[str]
+    help_str: str
+    # Whether this flag must be followed by a value.
+    # A value of 0 indicates it must not be followed by a value,
+    # 1 means optional and 2 means obligatory
+    value_after: int = 0
+    # What the type the value after the flag should have
+    value_after_type: Any = None
+    # Name for the flag to use in the help section instead of its actual name
+    help_alias: Optional[str] = None
+    # Whether to omit this flag in the help section
+    hidden: bool = False
+    value: Any = None
 
-USAGE = "Usage: python3.10 run_sim.py [NUM_REPS] [OPTIONS]"
+
+player_flags = ", ".join(FLAGS_TO_PLAYERS.keys())
+
+PROG = "python3.9 main.py"
+USAGE = f"Usage: {PROG} NUM_REPS [OPTIONS]"
 DESCRIPTION = "The number of the times the simulation will be run \
-can be specified with NUM_REPS"
-OPTIONS = [
-    (["-h", "--help"], "Show this help message and exit"),
-    (["-v", "--verbose"], "Enable verbose output"),
-    (["-q", "--quuiet"], "Quiet output, i.e. no progress bar"),
-    (["-x", "--no-write"], "Don't write to log file"),
-    (["-u", "--no-sort"], "Don't sort results by player win rate"),
-    (["-p", "--plot-all"], "Show plots for win rate and loss reason"),
-    (["--plot-win-rate"], "Show plot for win rate"),
-    (["--plot-loss-reason"], "Show plot for loss reason"),
-    (["--<PLAYER_CLASS> [N]"], "Add Player(s) to simulation. \
-Possible values for PLAYER_CLASS are dummy, c-dummy, adv-dummy, \
-random, show-off, thres[hold], tracking"),
+is specified by NUM_REPS"
+
+FLAGS = [
+    Flag("help", ["-h", "--help"], "Show this help message and exit"),
+    Flag("verbose", ["-v", "--verbose"], "Enable verbose output"),
+    Flag("quiet", ["-q", "--quiet"], "Quiet output, i.e. no progress bar"),
+    Flag("no-write", ["-x", "--no-write"], "Don't write to log file"),
+    Flag("no-sort", ["-u", "--no-sort"], "Don't sort results by player win rate"),
+    Flag("plot-all", ["-p", "--plot-all"], "Show plots for win rate and loss reason"),
+    Flag("plot-win-rate", ["--plot-win-rate"], "Show plot for win rate"),
+    Flag("plot-loss-reason", ["--plot-loss-reason"], "Show plot for loss reason"),
+    # Only used in help section
+    Flag("player-class-dummy", [], help_alias="--<PLAYER_CLASS> [N]",
+        help_str=f"Add N Player(s) of PLAYER_CLASS to simulation. Possible values for PLAYER_CLASS are: {player_flags}."),
 ]
+# Add a flag for each player
+FLAGS += [Flag(player_arg, [f"--{player_arg}"], "", hidden=True, value_after=1, value_after_type=int) for player_arg in FLAGS_TO_PLAYERS.keys()]
+ 
 MAX_LINE_LEN = 70
 INDENT = 4
-
-
-def printIndented(text, indent):
-    print("    " * indent + text)
-
 
 class ArgumentParser:
     def __init__(self) -> None:
         self.logging_level = c.LOGGING_LEVEL
         self.args = sys.argv
         self.n_reps = None
-        self.quiet = False
-        self.save_to_disk = True
-        self.plot_win_rate = False
-        self.plot_loss_reason = False
-        self.plot_all_simul = False
-        self.sort_results = True
         self.players = []
-
-        self.parseArgs()
+        self.flags = FLAGS
 
     def parseArgs(self):
         self.args = self.args[1:]
@@ -72,65 +73,92 @@ class ArgumentParser:
             if skip_arg:
                 skip_arg = False
                 continue
-            if arg in ["-q", "--quiet"]:
-                quiet = True
-            elif arg in ["-v", "--verbose"]:
-                logging_level = logging.INFO
-            elif arg in ["-x", "--no-write"]:
-                save_to_disk = False
-            elif arg in ["-u", "--no-sort"]:
-                sort_results = False
-            elif arg in ["-p", "--plot-all"]:
-                plot_win_rate = True
-                plot_loss_reason = True
-            elif arg in ["-s", "--plot-simul"]:
-                plot_all_simul = True
-            elif arg == "--plot-win-rate":
-                plot_win_rate = True
-            elif arg == "--plot-loss-reason":
-                plot_loss_reason = True
-            elif arg.startswith("--") and arg[2:] in ARGS_TO_PLAYERS.keys():
-                player_class = ARGS_TO_PLAYERS[arg[2:]]
-                p = player.__getattribute__(player_class)
-                n = 1
-                with suppress(ValueError, IndexError):  # contextlib.suppress
-                    n = int(self.args[i + 1])
-                    # Next arg is number of players -> skip next arg
-                    skip_arg = True
-                self.players.extend([p() for _ in range(n)])
+            if arg in ["-h", "--help"]:
+                self.printHelp()
+                # Note that here we exit with code 0, compared to when no arguments are passed
+                # in which case the exit code is 1
+                sys.exit(0)
             else:
-                print(f"Unexpected command line argument \"{arg}\"")
-                sys.exit(1)
+                for flag in self.flags:
+                    if arg in flag.aliases:
+                        flag.set = True
+                        if flag.value_after > 0:
+                            # Try to convert the next flag to the specified type `flag.value_after_type`
+                            try:
+                                flag.value = flag.value_after_type(self.args[i + 1])
+                                skip_arg = True
+                            except (IndexError, ValueError):
+                                # If value_after is 2, a value *must* follow the flag.
+                                if flag.value_after == 2:
+                                    print(f"Flag `{flag.name}` must be followed by a value of type {flag.value_after_type.__name__}")
+                        break
+                else:
+                    print(f"Unexpected command line argument \"{arg}\"")
+                    sys.exit(1)
+
+    def getFlag(self, name):
+        try:
+            return next(filter(lambda flag: flag.name == name, self.flags)).value
+        except StopIteration:
+            return None
+
 
     def printHelp(self):
         out = []
-        out.extend([(USAGE, 0), ("", 0)])
-        options_joined = [[", ".join(op), help] for op, help in OPTIONS]
-        max_len = max([len(op) for op, _ in options_joined])
+        out.append((USAGE, 0))
+        out.append(("", 0))
+        out.append(("Options are:", 0))
+        out.append(("", 0))
+        alias_strs = [flag.help_alias or ", ".join(flag.aliases) for flag in FLAGS]
+        # Get length of longest alias str
+        max_len = len(max(alias_strs, key=lambda a: len(a)))
+        # Calculate position of help text to be offset by at least one INDENT
         help_pos = (max_len // INDENT + 1) * INDENT
-        for op, help_text in options_joined:
-            out.append((op + " " * (help_pos - len(op)) + help_text, 1))
+        for flag, alias in zip(FLAGS, alias_strs):
+            if not flag.hidden:
+                out.append((alias + " " * (help_pos - len(alias)) + flag.help_str, 1))
 
-        out = splitLines(out, MAX_LINE_LEN)
+        out = breakLines(out, MAX_LINE_LEN)
         for line, ind in out:
             printIndented(line, ind)
 
 
-def splitLines(lines, max_len):
+def breakLines(lines, max_len):
     """Split the given input of lines so that each line's length is less than max_len"""
     i = 0
     while i < len(lines):
         line, ind = lines[i]
         if ind * INDENT + len(line) > max_len:
-            total_len = 0
-            for j, word in enumerate(line.split()):
-                if total_len + len(word) > max_len:
-                    break
-                else:
-                    total_len += len(word) + 1
+            # Split current line across multiple lines
             lines.pop(i)
-            lines.insert(i, (line[:total_len - 1], ind))
-            lines.insert(i + 1, (line[total_len - 1:], ind + 1))
-            i += 1
+            additional_indent = 0
+            while line:
+                total_len = 0
+                col = findPred(line, 0, lambda x: not x.isspace())
+                while col < len(line):
+                    col_end = findPred(line, col + 1, lambda x: x.isspace())
+                    if col_end > max_len:
+                        break
+                    else:
+                        total_len = col_end
+                    col = findPred(line, col_end + 1,
+                                   lambda x: not x.isspace())
+                lines.insert(i, (line[:total_len], ind + additional_indent))
+                line = line[col:]
+                additional_indent = 1
+                i += 1
         i += 1
     return lines
+
+
+def printIndented(text, n_indents):
+    # <Space> * <Spaces per indent> * <Number of indents>
+    print(" " * (INDENT * n_indents) + text)
+
+
+def findPred(text, start, pred):
+    """Return the position of the first char of the given str that satisfies the predicate"""
+    for i in range(start, len(text)):
+        if pred(text[i]):
+            return i
+    return len(text)

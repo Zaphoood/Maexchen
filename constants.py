@@ -16,20 +16,4 @@ THROW_VALUES = [
 THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
 
 LOGGING_LEVEL = WARN  # logging.WARN
-EVAL_PRG_STEPS = 20  # Genauigkeit der Fortschrittsanzeige beim Durchführen der Simulation 
-
-START_SIM_USAGE = """Usage: python3.10 run_sim.py [NUMBER-OF-ITERATIONS] [OPTIONS]
-
-    The number of the times the simulation will be run can be specified with NUMBER-OF-ITERATIONS
-
-    Options:
-
-        -v[erbose]          Enable verbose output
-        -q[uiet]            Quiet output, i.e. no progress bar
-        -x|--no-write       Don't write to log file
-        -u|--no-sort        Don't sort results by player win rate
-        -p[lot-all]         Show plots for win rate and loss reason
-        --plot-win-rate     Show plot for win rate
-        --plot-loss-reason  Show plot for loss reason
-        --<player-class> [n]  Add (n) Player(s) to simulation. Possible values for <player-class> are
-            dummy, c-dummy, adv-dummy, random, show-off, thres[hold], tracking"""
+EVAL_PRG_STEPS = 20  # Genauigkeit der Fortschrittsanzeige beim Durchführen der Simulation

@@ -443,3 +443,16 @@ class TrackingPlayer(Player):
 
             return p_lie > p_truth
 
+
+# Conversion from command line flags to Player classes
+FLAGS_TO_PLAYERS = {
+    "dummy": DummyPlayer,
+    "c-dummy": CounterDummyPlayer,
+    "show-off": ShowOffPlayer,
+    "random": RandomPlayer,
+    "thres": ThresholdPlayer,
+    "threshold": ThresholdPlayer,
+    "c-thres": CounterThresPlayer,
+    "tracking": TrackingPlayer,
+    "adv-dummy": AdvancedDummyPlayer
+}

@@ -1,6 +1,6 @@
 import unittest
 
-from plot import plotWinRate, plotLossReason, plotBoth
+from plot import plotWinRate, plotLossReason
 
 
 class TestPlot(unittest.TestCase):

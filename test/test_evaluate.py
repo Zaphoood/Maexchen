@@ -37,7 +37,7 @@ class TestOnInit(unittest.TestCase):
 class TestAll(unittest.TestCase):
     def test_all(self):
         players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), TrackingPlayer(), CounterThresPlayer()]
-        ev = Evaluation(players, 10000, showProgress = True)
+        ev = Evaluation(players, 1000, showProgress = True)
         ev.run()
         print(ev.prettyResults())
         ev.plotWinRate()

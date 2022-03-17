@@ -1,12 +1,12 @@
 import unittest
 import logging
 
-from game import Game
+from game import Game, TooFewPlayers
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer
 from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
-import throw
+from throw import Throw
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
@@ -14,14 +14,11 @@ logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 class TestOnePlayer(unittest.TestCase):
     """Testet ein Spiel mit nur einem Spieler"""
 
-    def setUp(self):
-        players = [DummyPlayer()]
-        self.game = Game(players)
-
-    def test_move(self):
-        self.game.init()
-        self.game.move()
-        self.assertFalse(self.game.isRunning())
+    def test_raises(self):
+        game = Game([])
+        self.assertRaises(TooFewPlayers, game.init)
+        game = Game([DummyPlayer()])
+        self.assertRaises(TooFewPlayers, game.init)
 
 
 class TestPlayerIds(unittest.TestCase):
@@ -94,8 +91,8 @@ class TestGameWithLog(unittest.TestCase):
 
 class TestGameEvent(unittest.TestCase):
     def test_gameevent_equals(self):
-        e1 = gameevent.EventThrow(1, throw.Throw(1, 2), throw.Throw(1, 2))
-        e2 = gameevent.EventThrow(1, throw.Throw(1, 2), throw.Throw(1, 2))
+        e1 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
+        e2 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
         self.assertEqual(e1, e2)
         e1 = gameevent.EventDoubt(1)
         e2 = gameevent.EventDoubt(1)
@@ -110,14 +107,6 @@ class TestGameEvent(unittest.TestCase):
         e1 = gameevent.EventAbort()
         e2 = gameevent.EventAbort()
         self.assertEqual(e1, e2)
-
-
-class TestGameUser(unittest.TestCase):
-    def test_game_w_user(self):
-        up = UserPlayer()
-        game = Game([DummyPlayer()] * 2 + [ShowOffPlayer(), up])
-        game.init()
-        game.run()
 
 
 class EventListenerPlayer(Player):
@@ -136,7 +125,10 @@ class EventListenerPlayer(Player):
 
 
 class TestEventListening(unittest.TestCase):
-    def test_event_listening(self):
+    def test_methods(self):
+        p = EventListenerPlayer()
+        p.getDoubt(Throw(2, 1))
+    def test_game(self):
         game = Game([RandomPlayer(), EventListenerPlayer()])
         game.init()
         game.run()
@@ -144,10 +136,10 @@ class TestEventListening(unittest.TestCase):
 
 class TestTrackingPlayer(unittest.TestCase):
     def test_normal_functionality(self):
-        tr = TrackingPlayer()
-        players = [DummyPlayer(), RandomPlayer(), ProbabilisticPlayer(), tr]
+        tracking_player = TrackingPlayer()
+        players = [DummyPlayer(), RandomPlayer(), ThresholdPlayer(), tracking_player]
         game = Game(players, disableDeepcopy=True)
-        tr.onInit(game.players)
+        tracking_player.onInit(game.players)
         game.init()
         game.run()
 

@@ -8,6 +8,14 @@ import gameevent
 from player import Player
 from throw import Throw
 
+class TooFewPlayers(Exception):
+    """Is raised when too few players have been provided to the Game class"""
+    def __init__(self, *args):
+        if args:
+            self.n_players = args[0]
+        else:
+            self.n_players = None
+
 
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
@@ -65,9 +73,8 @@ class Game:
             self.initialized = True
             self.running = True
         else:
-            logging.error("Game can't be initialized with only one player.")
-            self.happen(gameevent.EventAbort(message="Game can't be initialized with only one player."))
-            sys.exit(1)
+            self.happen(gameevent.EventAbort(message="Too few players for game (at least 2 are required)"))
+            raise TooFewPlayers(len(self.players))
 
     def run(self) -> None:
         """Führt so lange Iterationen des Spiels durch, bis es beendet ist"""

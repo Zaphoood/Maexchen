@@ -30,13 +30,11 @@ class Game:
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
-    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False, disableDeepcopy: bool = False) -> None:
-        if disableDeepcopy:
-            self.players = players
-        else:
-            # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
-            # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
-            self.players = [copy.copy(p) for p in players]
+    # TODO: Shuffle players if specified
+    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = False) -> None:
+        # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
+        # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
+        self.players = [copy.copy(p) for p in players] if deepcopy else players
         # Jedem Spieler eine eindeutige ID zuweisen
         ids = set()
         for p in self.players:
@@ -47,21 +45,18 @@ class Game:
             ids.add(p.id)
 
         self.iMove = -1  # Gibt den Zug seit dem Anfang der Runde bzw. dem letzten zurücksetzten des zu überbietenden Wertes an
-        # TODO: Auch so wie beschrieben implementieren!
         self.lastThrowStated = None
         self.lastThrowActual = None
         self.initialized = False
-        self.running = False
+        self._running = False
 
         self.log = GameLog(self.players)
 
         # Pseudo-Zufallszahlengenerator (RNG) initialisieren. Falls ein Seed als Parameter angegeben ist, diesen
         # verwenden, ansonsten einen neuen Seed generieren. Dadurch ist der Seed immer bekannt und kann verwendet
         # werden, um Spiele zu reproduzieren
-        if seed is None:
-            seed = random.randrange(sys.maxsize)
-        self._seed = seed
-        self.rng = random.Random(seed)
+        self._seed = seed if seed else random.randrange(sys.maxsize)
+        self.rng = random.Random(self._seed)
 
         self.rng.shuffle(self.players)
 
@@ -71,7 +66,7 @@ class Game:
             logging.info("=== Game initialized ===")
             self.currentPlayer = self.rng.randrange(0, len(self.players))
             self.initialized = True
-            self.running = True
+            self._running = True
         else:
             self.happen(gameevent.EventAbort(message="Too few players for game (at least 2 are required)"))
             raise TooFewPlayers(len(self.players))
@@ -81,7 +76,7 @@ class Game:
         if not self.initialized:
             logging.error("Game.run() was called even though the game is not yet initialized")
             return
-        while self.running:
+        while self._running:
             self.move()
 
     def move(self) -> None:
@@ -89,28 +84,28 @@ class Game:
         if not self.initialized:
             logging.error("Game.move() was called even though the game is not yet initialized")
             return
-        if not self.running:
+        if not self._running:
             logging.warning("Game.move() was called even though the game is already over")
             return
 
-        self.iMove = 0 if self.iMove == -1 else self.iMove + 1
+        self.iMove += 1
         logging.info(f"Move {self.iMove}")
         self.log.newRound()
 
         self.handlePlayerMove()
 
-        if len(self.players) == 0:
+        if not self.players:
             # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
             # Das Spiel ist bereits vorbei, wenn nur ein Spieler übrig bleibt.
             logging.warning("Zero players left, game is over. (How did we get here?)")
             self.happen(gameevent.EventAbort(message="Zero players left, game is over. (How did we get here?)"))
-            self.running = False
+            self._running = False
         elif len(self.players) == 1:
             # Spiel ist vorbei
             logging.info(f"One player left, game is over")
             logging.info(f"{repr(self.players[0])} won")
             self.happen(gameevent.EventFinish(self.players[0].id))
-            self.running = False
+            self._running = False
         else:
             logging.info(f"{len(self.players)} players left")
 
@@ -219,10 +214,12 @@ class Game:
             if player.listensToEvents:
                 player.onEvent(event)
 
-    def isRunning(self) -> bool:
-        return self.running
+    @property
+    def running(self) -> bool:
+        return self._running
 
-    def getSeed(self):
+    @property
+    def seed(self):
         return self._seed
 
     def randomThrow(self) -> Throw:

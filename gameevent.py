@@ -96,10 +96,10 @@ class EventKick(Event):
         self.reason = reason
 
     def __str__(self) -> str:
-        return f"Player {self.playerId} was removed. Reason: {[self.reason.value]}"
+        return f"Player {self.playerId} was removed. Reason: {self.reason.value}"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (playerId={self.playerId}, reason=\"{str(self.reason)}\")>"
+        return f"<{self.__class__.__name__} (playerId={self.playerId}, reason=\"{self.reason.value}\")>"
 
     def __eq__(self, other: Event) -> bool:
         return super().__eq__(other) and self.reason == other.reason

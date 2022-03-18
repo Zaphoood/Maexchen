@@ -26,23 +26,22 @@ class Game:
     lastThrowActual: Throw  # Tatsächlicher Wurf des letzten Spielers
     moveCounter: int  # Zählt die Züge
     initialized: bool  # Gibt an, ob das Spiel initialisiert wurde
-    running: bool  # Gibt an, ob das Spiel noch läuft
+    _running: bool  # Gibt an, ob das Spiel noch läuft
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
     # TODO: Shuffle players if specified
-    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = False) -> None:
+    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = True) -> None:
         # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
         # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
         self.players = [copy.copy(p) for p in players] if deepcopy else players
         # Jedem Spieler eine eindeutige ID zuweisen
-        ids = set()
+        used_ids = set()
         for p in self.players:
-            if p.id is None or p.id in ids:
+            if not p.id or (p.id in used_ids):
                 # 0 als anfängliche ID verwenden falls noch keine zugewiesen wurden
-                next_id = max(ids) + 1 if ids else 0
-                p.id = next_id
-            ids.add(p.id)
+                p.id = max(used_ids) + 1 if used_ids else 0
+            used_ids.add(p.id)
 
         self.iMove = -1  # Gibt den Zug seit dem Anfang der Runde bzw. dem letzten zurücksetzten des zu überbietenden Wertes an
         self.lastThrowStated = None
@@ -65,6 +64,8 @@ class Game:
         if len(self.players) > 1:
             logging.info("=== Game initialized ===")
             self.currentPlayer = self.rng.randrange(0, len(self.players))
+            for p in self.players:
+                p.onInit(self.players)
             self.initialized = True
             self._running = True
         else:

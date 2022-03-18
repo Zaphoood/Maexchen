@@ -3,12 +3,11 @@ import logging
 
 from game import Game, TooFewPlayers
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer
-from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
 from throw import Throw
 
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 
 
 class TestInit(unittest.TestCase):
@@ -99,7 +98,6 @@ class TestGameWithLog(unittest.TestCase):
         game2.init()
         game2.run()
         self.assertEqual(game1.log, game2.log)
-        print(game1.log.pretty())
 
 
 class TestGameEvent(unittest.TestCase):
@@ -134,7 +132,7 @@ class EventListenerPlayer(Player):
         return Throw(2, 1) if lastThrow.isMaexchen else lastThrow + 1
 
     def onEvent(self, event):
-        print(f"EventListenerPlayer got Event: {event}")
+        logging.info(f"EventListenerPlayer got Event: {event}")
 
 
 class TestEventListening(unittest.TestCase):

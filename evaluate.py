@@ -70,7 +70,7 @@ class Evaluation:
             game = Game(self.players)
             game.init()
             game.run()
-            if game.isRunning():
+            if game.running:
                 logging.warn("Error: Game is still running but should have stopped.")
             else:
                 self.evalLog(game)
@@ -160,5 +160,4 @@ class Evaluation:
             return False
         else:
             return True
-
 

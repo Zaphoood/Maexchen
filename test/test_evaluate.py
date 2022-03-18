@@ -1,8 +1,6 @@
 import unittest
 
-from game import Game
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer, CounterThresPlayer
-from gamelog import GameLog
 from evaluate import Evaluation
 
 

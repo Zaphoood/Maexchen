@@ -12,9 +12,9 @@ from utils import probLT, probGE
 
 
 class Player:
-    id: int  # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss; wird von Game
-
-    # zugewiesen
+    # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss.
+    # Wird von Game zugewiesen
+    id: int
 
     def __init__(self, playerId: int = None, listensToEvents: bool = False):
         self.id = playerId

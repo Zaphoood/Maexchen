@@ -39,7 +39,7 @@ class Throw:
         self.isMaexchen = self.value == c.MAEXCHEN  # Mäxchen
 
     def __str__(self) -> str:
-        return f"Throw (str(self.value))"
+        return f"Throw {self.value}"
 
     def __repr__(self) -> str:
         return f"Throw (value={self.value})"

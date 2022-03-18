@@ -136,8 +136,8 @@ class TestCounterThresPlayer(unittest.TestCase):
             self.assertEqual(self.ctp.throwStats[dummy.id], [])
 
     def test_tracking(self):
+        # TODO: Finish implementing this test case
         throw1 = Throw(3,3)
-        throw2 = Throw(4,4)
 
         # Spieler 0 wirft 33
         self.ctp.onEvent(gameevent.EventThrow(0, None, throw1))

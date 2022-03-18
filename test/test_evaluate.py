@@ -70,8 +70,3 @@ class TestCounterThres(unittest.TestCase):
                 print(f"  {repr(p)} Is a ThresPlayer: lieThres={self.ctp.mostFreqThrow(p.id)}\t({self.ctp.mostFreqThrowFreq(p.id):.3f})")
             else:
                 print(f"  {repr(p)} Is not a ThresPlayer\t\t\t({self.ctp.mostFreqThrowFreq(p.id):.3f})")
-
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -25,7 +25,3 @@ class TestUserPlayer(unittest.TestCase):
     def test_get_throw_stated_doesnt_beat(self):
         p = UserPlayer()
         print(p.getThrowStated(Throw(5, 4), Throw(2, 1), 1, self.rng))
-
-
-if __name__ == "__main__":
-    unittest.main()

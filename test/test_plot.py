@@ -19,7 +19,3 @@ class TestPlot(unittest.TestCase):
         ]
 
         plotLossReason(player_names, loss_reaons)
-
-
-if __name__ == "__main__":
-    unittest.main()

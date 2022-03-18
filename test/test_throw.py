@@ -35,7 +35,3 @@ class TestRankDict(TestThrow):
         # Größtmöglicher Wert
         big = Throw(2, 1)
         self.assertRaises(OutOfBoundsError, big.__add__, 1)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -152,7 +152,3 @@ class TestAll(unittest.TestCase):
         tr.onInit(game.players)
         game.init()
         game.run()
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -141,6 +141,3 @@ class TestCounterThresPlayer(unittest.TestCase):
 
         # Spieler 0 wirft 33
         self.ctp.onEvent(gameevent.EventThrow(0, None, throw1))
-
-if __name__ == '__main__':
-    unittest.main()

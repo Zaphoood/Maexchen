@@ -11,14 +11,40 @@ from throw import Throw
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
-class TestOnePlayer(unittest.TestCase):
-    """Testet ein Spiel mit nur einem Spieler"""
+class TestInit(unittest.TestCase):
+    def test_seed(self):
+        Game([DummyPlayer()], seed=123)
 
-    def test_raises(self):
+    def test_deepcopy(self):
+        # No deepcopy, a and b should be references to the same object
+        a, b = [DummyPlayer()] * 2
+        game = Game([a, b], deepcopy=False)
+        self.assertTrue(game.players[0] is game.players[1])
+
+        # No deepcopy, a and b should individual objects
+        a, b = [DummyPlayer()] * 2
+        game = Game([a, b], deepcopy=True)
+        self.assertFalse(game.players[0] is game.players[1])
+
+    # TODO: When shuffling players is implemented, activate this test
+    #def test_shuffle(self):
+    #    Game([DummyPlayer()], shufflePlayers=False)
+    #    Game([DummyPlayer()], shufflePlayers=True)
+
+class TestNPlayers(unittest.TestCase):
+    """Testet Spiele mit verschiedenen Spielerzahlen"""
+
+    def test_one(self):
         game = Game([])
         self.assertRaises(TooFewPlayers, game.init)
         game = Game([DummyPlayer()])
         self.assertRaises(TooFewPlayers, game.init)
+
+    def test_three(self):
+        players = [DummyPlayer()] * 3
+        self.game = Game(players)
+        self.game.init()
+        self.game.run()
 
 
 class TestPlayerIds(unittest.TestCase):
@@ -53,19 +79,6 @@ class TestPlayerIds(unittest.TestCase):
         self.assert_unique_ids(game)
 
 
-class TestThreePlayers(unittest.TestCase):
-    """Testet ein Spiel mit drei Spielern.
-
-    Es gibt kein erwartetes Ergebnis, nur, dass nach einer Runde ein Spieler übrig ist, der gewonnen hat.
-    """
-
-    def setUp(self):
-        players = [DummyPlayer()] * 3
-        self.game = Game(players)
-
-    def test_game(self):
-        self.game.init()
-        self.game.run()
 
 class TestLog(unittest.TestCase):
     def test_log(self):
@@ -138,7 +151,7 @@ class TestTrackingPlayer(unittest.TestCase):
     def test_normal_functionality(self):
         tracking_player = TrackingPlayer()
         players = [DummyPlayer(), RandomPlayer(), ThresholdPlayer(), tracking_player]
-        game = Game(players, disableDeepcopy=True)
+        game = Game(players, deepcopy=True)
         tracking_player.onInit(game.players)
         game.init()
         game.run()
@@ -148,7 +161,7 @@ class TestAll(unittest.TestCase):
     def test_all(self):
         tr = TrackingPlayer()
         players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
-        game = Game(players, disableDeepcopy=True)
+        game = Game(players, deepcopy=True)
         tr.onInit(game.players)
         game.init()
         game.run()

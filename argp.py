@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import sys
 from typing import List, Optional, Any
 
-from player import FLAGS_TO_PLAYERS
+from player import Player, FLAGS_TO_PLAYERS
 import constants as c
 
 @dataclass
@@ -54,7 +54,7 @@ class ArgumentParser:
         self.logging_level = c.LOGGING_LEVEL
         self.args = sys.argv
         self.n_reps = None
-        self.players = []
+        self.players: List[Player] = []
         self.flags = FLAGS
 
     def parseArgs(self):

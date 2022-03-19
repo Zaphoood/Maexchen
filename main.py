@@ -3,9 +3,6 @@ from argp import ArgumentParser
 import player
 from game import TooFewPlayers
 
-# Wenn True, immer beide Plots gleichzeitig anzeigen
-PRESENTATION_MODE = True
-
 parser = ArgumentParser()
 parser.parseArgs()
 
@@ -23,7 +20,7 @@ if __name__ == '__main__':
             ev.saveResultsToDisk()
         print(ev.prettyResults(sort_by_winrate=not parser.getFlag("no-sort"), force_rerender=True))
 
-        if parser.getFlag("plot-all") or PRESENTATION_MODE:
+        if parser.getFlag("plot-all"):
             ev.plotWRandLR()
         else:
             if parser.getFlag("plot-win-rate"):

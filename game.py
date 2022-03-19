@@ -2,11 +2,12 @@ import logging
 import copy
 import random
 import sys
+from typing import List, Set, Optional
 
 from gamelog import GameLog
 import gameevent
 from player import Player
-from throw import Throw
+from throw import Throw, NoneThrow
 
 class TooFewPlayers(Exception):
     """Is raised when too few players have been provided to the Game class"""
@@ -19,11 +20,11 @@ class TooFewPlayers(Exception):
 
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
-    players: list[Player]  # Liste aller Spieler
+    players: List[Player]  # Liste aller Spieler
     currentPlayer: int  # Index des Spielers der gerade an der Reihe ist
     incrementCurrentPlayer: bool  # Ob currentPlayer nach dem aktuellen Zug erhöht werden soll (wird ein Spieler entfernt, soll dies nicht geschehen)
-    lastThrowStated: Throw  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
-    lastThrowActual: Throw  # Tatsächlicher Wurf des letzten Spielers
+    lastThrowStated: Optional[Throw]  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
+    lastThrowActual: Optional[Throw]  # Tatsächlicher Wurf des letzten Spielers
     moveCounter: int  # Zählt die Züge
     initialized: bool  # Gibt an, ob das Spiel initialisiert wurde
     _running: bool  # Gibt an, ob das Spiel noch läuft
@@ -31,12 +32,12 @@ class Game:
     rng: random.Random  # Pseudozufallszahlengenerator
 
     # TODO: Shuffle players if specified
-    def __init__(self, players: list[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = True) -> None:
+    def __init__(self, players: List[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = True) -> None:
         # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
         # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
         self.players = [copy.copy(p) for p in players] if deepcopy else players
         # Jedem Spieler eine eindeutige ID zuweisen
-        used_ids = set()
+        used_ids: Set[int] = set()
         for p in self.players:
             if not p.id or (p.id in used_ids):
                 # 0 als anfängliche ID verwenden falls noch keine zugewiesen wurden
@@ -105,6 +106,7 @@ class Game:
             # Spiel ist vorbei
             logging.info(f"One player left, game is over")
             logging.info(f"{repr(self.players[0])} won")
+            assert isinstance(self.players[0].id, int)
             self.happen(gameevent.EventFinish(self.players[0].id))
             self._running = False
         else:
@@ -117,7 +119,7 @@ class Game:
         # dass der letzte Spieler aus self.players entfernt wird
         self.currentPlayer %= len(self.players)
 
-    def handlePlayerMove(self) -> bool:
+    def handlePlayerMove(self) -> None:
         """Regelt die Interaktion mit der Spielerklasse"""
         # self.incrementCurrentPlayer wird auf False gesetzt, sollte ein Spieler gelöscht werden.
         # Dadurch wird currentPlayer am Ende von move() nicht erhöht
@@ -138,7 +140,7 @@ class Game:
         elif doubtPred:
             # Spieler hat geantwortet, zweifelt das vorherige Ergebnis an
             logging.info(f"{repr(self.players[self.currentPlayer])} chose to doubt their predecessor.")
-            self.happen(gameevent.EventDoubt(self.players[self.currentPlayer].id))
+            self.happen(gameevent.EventDoubt(self.players[self.currentPlayer].id)) # type: ignore
             if self.lastThrowStated == self.lastThrowActual:
                 # Aktueller Spieler ist im Unrecht, Vorgänger hat die Wahrheit gesagt -> Aktuellen Spieler entfernen
                 playerToKick = self.currentPlayer
@@ -163,7 +165,10 @@ class Game:
                 # Spieler hat geantwortet
                 logging.info(
                         f"{repr(self.players[self.currentPlayer])} threw {str(currentThrow)}, states they threw {throwStated}")
-                self.happen(gameevent.EventThrow(self.players[self.currentPlayer].id, currentThrow, throwStated))
+                # This is the only way mypy will accept that self.players[self.currentPlayer].id is not None....
+                id_ = self.players[self.currentPlayer].id
+                assert isinstance(id_, int)
+                self.happen(gameevent.EventThrow(id_, currentThrow, throwStated))
                 # Den Zug auswerten
                 # Überprüfen, ob der Spieler die Angabe seines Vorgängers überboten hat
                 if self.lastThrowStated is None:
@@ -189,15 +194,17 @@ class Game:
         :param i: Index des Spielers, der entfernt werden soll
         :param reason: Grund für das ausscheiden des Spielers
         :param message: Nachricht, die im log ausgegeben werden soll."""
-        self.happen(gameevent.EventKick(self.players[i].id, reason))
+        id_ = self.players[i].id
+        assert isinstance(id_, int)
+        self.happen(gameevent.EventKick(id_, reason))
         # TODO: Don't pop players! We need them for knowledge across mutltiple games in an evaluation
         self.players.pop(i)
         self.incrementCurrentPlayer = False
         # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
         # kann irgendein Ergebnis würfeln und musst niemanden überbieten
         logging.info("Value to be beaten is reset.")
-        self.lastThrowStated = None
-        self.lastThrowActual = None 
+        self.lastThrowStated: Optional[Throw] = None
+        self.lastThrowActual: Optional[Throw] = None 
         if message:
             logging.info(message)
 
@@ -209,9 +216,9 @@ class Game:
         self.log.happen(event)
 
         # Andere Spieler benachrichtigen
-        if event.eventType == gameevent.EVENT_TYPES.THROW:
-            # Neues Event ohne event.throwActual erzeugen
-            event = gameevent.EventThrow(event.playerId, None, event.throwStated)
+        if isinstance(event, gameevent.EventThrow):
+            # Create new event with throwActual deleted, so that other players can't know what the actual Throw was
+            event.throwActual = NoneThrow()
         for player in self.players:
             if player.listensToEvents:
                 player.onEvent(event)

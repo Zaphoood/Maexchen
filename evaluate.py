@@ -6,6 +6,7 @@ import copy
 import time
 from contextlib import suppress
 import logging
+from typing import List, Tuple, Optional, Union
 
 from gameevent import EventKick
 from player import Player
@@ -24,7 +25,7 @@ class IncompleteLogError(Exception):
 class Evaluation:
     """Führt wiederholte Spielsimulationen durch."""
 
-    def __init__(self, players: list[Player], n_repetitions: int, showProgress: bool = False, deepcopy: bool = True) -> None:
+    def __init__(self, players: List[Player], n_repetitions: int, showProgress: bool = False, deepcopy: bool = True) -> None:
         """
         :param players: Liste der Spielerklassen die simuliert werden sollen
         :param n_repetitions: Anzahl der Durchführungen der Simulation
@@ -41,20 +42,22 @@ class Evaluation:
         # Speichert, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
         self.gamesWon = [0 for _ in range(len(self.players))]
         # Speichert, bei der wievielten Runde ein Spieler gewonnen hat
-        self.winRounds = [[] for _ in range(len(self.players))]
+        self.winRounds: List[List[int]] = [[] for _ in range(len(self.players))]
         # Speichert, aus welchem Grund der Spieler entfernt wurde
         self.lossReason = [{reason: 0 for reason in KICK_REASON}
                            for _ in range(len(self.players))]
 
         self.done = False
-        self._prettyResultsCached = None
+        self._prettyResultsCached: Optional[str] = None
 
         self.showProgress = showProgress
 
-        self.t_start = -1  # Zeitpunkt an dem die Simulation gestartet wurde
-        self.t_end = -1
+        self.t_start: float = -1.0  # Zeitpunkt an dem die Simulation gestartet wurde
+        self.t_end: float = -1.0
 
     def run(self) -> None:
+        if len(self.players) < 2:
+            logging.warn("Running evaluation with only {len(self.players)} players.")
         def printProgress(prg: int, total: int, end: str = "\n"):
             print("[" + "#"*prg + "."*(total-prg) + "]", end=end)
 
@@ -70,7 +73,6 @@ class Evaluation:
                     printProgress(prg, prg_steps, end=(
                         "\r" if i < self.n_repetitions - 1 else "\n"))
             # No need to deepcopy here since we already did that in __init__
-            print(self.players)
             game = Game(self.players, deepcopy=False)
             game.init()
             game.run()
@@ -78,72 +80,66 @@ class Evaluation:
                 logging.warn(
                     "Error: Game is still running but should have stopped.")
             else:
-                print(self.players)
                 self.evalLog(game)
 
         self.t_end = time.time()
         self.done = True
 
     def evalLog(self, game: Game):
-        winner_id = game.log.winner_id
-        self.gamesWon[winner_id] += 1
-        self.winRounds[winner_id].append(game.log.countRounds())
+        if (winner_id := game.log.winner_id):
+            self.gamesWon[winner_id] += 1
+            self.winRounds[winner_id].append(game.log.countRounds())
         for event in game.log.getEvents():
             if isinstance(event, EventKick):
                 self.lossReason[event.playerId][event.reason] += 1
 
-    def getPlayerStats(self, player_id) -> tuple[float, float]:
-        winRate = avgWinRound = 0
+    def getPlayerStats(self, player_id) -> Tuple[float, ...]:
+        winRate: float = 0.
+        avgWinRound: float = 0.
         roundsWon = len(self.winRounds[player_id])
         roundsLost = self.n_repetitions - roundsWon
-        lossReason = [0 for _ in KICK_REASON]
+        lossReasonPerc: List[float] = [0.0 for _ in KICK_REASON]
         with suppress(ZeroDivisionError):  # contextlib.suppress
             winRate = self.gamesWon[player_id] / self.n_repetitions
             avgWinRound = sum(self.winRounds[player_id]) / roundsWon
-            lossReason = [self.lossReason[player_id]
-                          [reason] / roundsLost for reason in KICK_REASON]
+            lossReasonPerc = [self.lossReason[player_id][reason] / roundsLost for reason in KICK_REASON]
 
-        return winRate, avgWinRound, *lossReason
+        return winRate, avgWinRound, *lossReasonPerc
 
-    def getWinRates(self) -> list[float]:
+    def getWinRates(self) -> List[float]:
         """Die Gewinnraten für alle Spieler zurückgeben."""
         return [self.getPlayerStats(p.id)[0] for p in self.players]
 
-    def getLossReasons(self) -> list[list[float]]:
+    def getLossReasons(self) -> List[Tuple[float, ...]]:
         """Die Gründe fürs Ausscheiden für alle Spieler zurückgeben."""
         return [self.getPlayerStats(p.id)[2:] for p in self.players]
 
     def prettyResults(self, sort_by_winrate=True, force_rerender=False) -> str:
-        if force_rerender or not self._prettyResultsCached:
+        if force_rerender or self._prettyResultsCached is None:
             self._prettyResultsCached = self._renderPrettyResults(
                 sort_by_winrate=sort_by_winrate)
 
         return self._prettyResultsCached
 
     def _renderPrettyResults(self, sort_by_winrate=True) -> str:
-        if not self.assertFinished():
-            return
+        assert self.done
         space = 3
         output = f"Ran simulation in {self.t_end-self.t_start:.3f} seconds\n"
-        table = [
+        table: List[List[str]] = [
                 ["player", "win rate", "avg. win move", "loss causes", "", "", ""],
                 ["", "", "", "lie", "false acc", "worse", "no rep"]
         ]
-        players_stats = []
-        for player in self.players:
-            stats = self.getPlayerStats(player.id)[:6]
-            players_stats.append([repr(player), *stats])
+        player_stats: List[Tuple[str, Tuple[float, ...]]] = [(repr(p), self.getPlayerStats(p.id)[:6]) for p in self.players]
         if sort_by_winrate:
-            players_stats.sort(key=lambda row: row[1], reverse=True)
-        players_stats = [
-            [row[0], *[f"{el:.2f}" for el in row[1:]]] for row in players_stats]
-        table.extend(players_stats)
+            # Sort by first element of the stats tuple, which is win rate
+            player_stats.sort(key=lambda row: row[1][1], reverse=True) # type: ignore
+        player_stats_formatted = [[name, *[f"{el:.2f}" for el in stats]] for name, stats in player_stats]
+        table.extend(player_stats_formatted)
         output += formatTable(table)
         return output
 
     def saveResultsToDisk(self):
-        if not self.assertFinished():
-            return
+        assert self.done
         writeLog(self.t_start, self.players,
                  self.n_repetitions, self.prettyResults())
 
@@ -166,10 +162,3 @@ class Evaluation:
         for i, player in enumerate(players):
             player.id = i
 
-    def assertFinished(self) -> bool:
-        if not self.done:
-            logging.warning(
-                "Simulation hasn't been evaluated yet. Call Evaluation.run() to evaluate.")
-            return False
-        else:
-            return True

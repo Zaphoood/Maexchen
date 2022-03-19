@@ -1,4 +1,4 @@
-def formatTable(table, space=2):
+def formatTable(table, space=2) -> str:
     """Eine zweidimensionale Tabelle formatieren und als String zurückgeben.
 
     :param table: Tabelle als nested list

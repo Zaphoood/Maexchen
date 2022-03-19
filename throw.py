@@ -110,6 +110,43 @@ class Throw:
         :param other: Um wie viel der Rang des zurückgegebenen Throws kleiner ist als der Rang von self"""
         return self.__add__(-other)
 
+
+class NoneThrow(Throw):
+    """Placeholder for a Throw that has no information"""
+    def __init__(self):
+        self.value = 0
+        self.rank = -1 
+        self.isMaexchen = False
+        self.isDouble = False
+
+    def __str__(self):
+        return "NoneThrow"
+
+    def __repr__(self):
+        return "<NoneThrow>"
+
+    def __eq__(self, other: object):
+        return isinstance(other, self.__class__)
+
+    def __lt__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __gt__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __le__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __ge__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __add__(self, other: object):
+        raise Exception("Cannot perform arithmetics on NoneThrow")
+
+    def __sub__(self, other: object):
+        raise Exception("Cannot perform arithmetics on NoneThrow")
+
+
 def throwByRank(rank: int) -> Throw:
     """Erzeugt ein Throw-Objekt, das den angegebenen Rang hat"""
     return Throw(c.THROW_VALUES[rank])

@@ -31,7 +31,6 @@ class Game:
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
-    # TODO: Shuffle players if specified
     def __init__(self, players: List[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = True) -> None:
         # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
         # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
@@ -58,7 +57,8 @@ class Game:
         self._seed = seed if seed else random.randrange(sys.maxsize)
         self.rng = random.Random(self._seed)
 
-        self.rng.shuffle(self.players)
+        if shufflePlayers:
+            self.rng.shuffle(self.players)
 
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""

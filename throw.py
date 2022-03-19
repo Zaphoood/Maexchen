@@ -44,13 +44,19 @@ class Throw:
     def __repr__(self) -> str:
         return f"Throw (value={self.value})"
 
-    def __eq__(self, other: Throw) -> bool:
-        """Überprüfen, ob eine anderer Throw vom gleichen Rang ist
+    def __eq__(self, other: object) -> bool:
+        """Evaluate equality with Throw or int.
+        
+        If other is of type int, self.value is compared to it, if it is a
+        Throw instance, self.rank is compared to other.rank.
 
-        :param other: Zu vergleichender Throw"""
-        if not isinstance(other, Throw):
+        :param other: Object to compare"""
+        if isinstance(other, Throw):
+            return self.rank == other.rank
+        elif isinstance(other, int):
+            return other == self.value
+        else:
             return False
-        return self.rank == other.rank
 
     def __gt__(self, other: Throw) -> bool:
         """Überprüfen, ob eine anderer Throw von höherem Rang ist

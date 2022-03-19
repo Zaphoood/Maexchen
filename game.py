@@ -190,6 +190,7 @@ class Game:
         :param reason: Grund für das ausscheiden des Spielers
         :param message: Nachricht, die im log ausgegeben werden soll."""
         self.happen(gameevent.EventKick(self.players[i].id, reason))
+        # TODO: Don't pop players! We need them for knowledge across mutltiple games in an evaluation
         self.players.pop(i)
         self.incrementCurrentPlayer = False
         # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler

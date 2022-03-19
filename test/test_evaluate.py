@@ -30,7 +30,7 @@ class TestOnInitPlayer(Player):
 class TestOnInit(unittest.TestCase):
     def test_player_on_init(self):
         test_player = TestOnInitPlayer()
-        ev = Evaluation([DummyPlayer(), test_player], 1, disableDeepcopy = True)
+        ev = Evaluation([DummyPlayer(), test_player], 1, deepcopy = False)
         self.assertEqual(ev.players, test_player.playersReceived)
 
 class TestAll(unittest.TestCase):
@@ -56,10 +56,10 @@ class TestCounterThres(unittest.TestCase):
         self.runSim()
 
     def runSim(self):
-        ev = Evaluation(self.players, 1000, showProgress = True, disableDeepcopy=True)
+        ev = Evaluation(self.players, 1000, showProgress=True, deepcopy=False)
         ev.run()
-        print(ev.prettyResults())
-        print(f"CounterThresPlayer judgement:")
+        #print(ev.prettyResults())
+        #print(f"CounterThresPlayer judgement:")
         table = [["Player", "isThresPlayer", "mostFreqThrow"]]
         for player in [p for p in ev.players if p is not self.ctp]:
             if self.ctp.existThresSuggestion(player.id):
@@ -69,5 +69,5 @@ class TestCounterThres(unittest.TestCase):
             else:
                 table.append([f"{repr(player)}", "No", f"({self.ctp.mostFreqThrowFreq(player.id):.3f})"])
 
-        print(formatTable(table))
+        #print(formatTable(table))
 

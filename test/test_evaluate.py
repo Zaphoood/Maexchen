@@ -1,9 +1,12 @@
 import unittest
 from typing import List
+import logging
 
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer, CounterThresPlayer
 from evaluate import Evaluation
 from format import formatTable
+
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 
 
 class TestEvaluate(unittest.TestCase):
@@ -39,7 +42,6 @@ class TestAll(unittest.TestCase):
         players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), TrackingPlayer(), CounterThresPlayer()]
         ev = Evaluation(players, 1000, showProgress = True)
         ev.run()
-        print(ev.prettyResults())
 
 class TestCounterThres(unittest.TestCase):
     def test_dummy(self):
@@ -70,5 +72,5 @@ class TestCounterThres(unittest.TestCase):
             else:
                 table.append([f"{repr(player)}", "No", f"({self.ctp.mostFreqThrowFreq(player.id):.3f})"])
 
-        #print(formatTable(table))
+        print(formatTable(table))
 

@@ -1,7 +1,7 @@
 import unittest
 import logging
 
-from game import Game, TooFewPlayers
+from game import Game, TooFewPlayers, DuplicateId
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer
 from gamelog import GameLog
 import gameevent
@@ -28,6 +28,14 @@ class TestInit(unittest.TestCase):
     def test_shuffle(self):
         Game([DummyPlayer()], shufflePlayers=False)
         Game([DummyPlayer()], shufflePlayers=True)
+
+    def test_duplicate(self):
+        # This should not work
+        with self.assertRaises(DuplicateId):
+            Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=True)
+        # This should work
+        game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=False)
+        self.assertNotEqual(game.players[0].id, game.players[1].id)
 
 class TestNPlayers(unittest.TestCase):
     """Testet Spiele mit verschiedenen Spielerzahlen"""

@@ -6,7 +6,7 @@ import copy
 import time
 from contextlib import suppress
 import logging
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Dict, Optional, Union
 
 from gameevent import EventKick
 from player import Player
@@ -41,11 +41,10 @@ class Evaluation:
 
         # Speichert, wie oft jeder Spieler gewonnen hat. Der Index entspricht der id der jeweiligen Spieler.
         self.gamesWon = [0 for _ in range(len(self.players))]
-        # Speichert, bei der wievielten Runde ein Spieler gewonnen hat
-        self.winRounds: List[List[int]] = [[] for _ in range(len(self.players))]
-        # Speichert, aus welchem Grund der Spieler entfernt wurde
-        self.lossReason = [{reason: 0 for reason in KICK_REASON}
-                           for _ in range(len(self.players))]
+        # Store the indexes of the moves at which the player won
+        self.winRounds: Dict[Optional[int], List[int]] = {p.id: [] for p in self.players}
+        # Store how many times the player was kicked for each reason
+        self.lossReason: Dict[Optional[int], Dict[KICK_REASON, int]] = {p.id: {reason: 0 for reason in KICK_REASON} for p in self.players}
 
         self.done = False
         self._prettyResultsCached: Optional[str] = None
@@ -73,7 +72,7 @@ class Evaluation:
                     printProgress(prg, prg_steps, end=(
                         "\r" if i < self.n_repetitions - 1 else "\n"))
             # No need to deepcopy here since we already did that in __init__
-            game = Game(self.players, deepcopy=False)
+            game = Game(self.players, deepcopy=False, disableAssignIds=True)
             game.init()
             game.run()
             if game.running:

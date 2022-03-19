@@ -17,6 +17,8 @@ class TooFewPlayers(Exception):
         else:
             self.n_players = None
 
+class DuplicateId(Exception):
+    pass
 
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
@@ -32,23 +34,23 @@ class Game:
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
-    def __init__(self, players: List[Player], seed: int = None, shufflePlayers: bool = True, deepcopy: bool = True) -> None:
+    def __init__(self, players: List[Player], seed: int = None, shufflePlayers: bool = True, deepcopy: bool = True, disableAssignIds: bool = False) -> None:
         # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
         # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
         self.players = [copy.copy(p) for p in players] if deepcopy else players
         self.alive_players = [True for _ in self.players]
-        # Jedem Spieler eine eindeutige ID zuweisen
-        used_ids: Set[int] = set()
-        for p in self.players:
-            if not p.id or (p.id in used_ids):
-                # 0 als anfängliche ID verwenden falls noch keine zugewiesen wurden
-                p.id = max(used_ids) + 1 if used_ids else 0
-            used_ids.add(p.id)
-
-        self.iMove = -1  # Gibt den Zug seit dem Anfang der Runde bzw. dem letzten zurücksetzten des zu überbietenden Wertes an
+        if disableAssignIds:
+            # If assigning unique IDs was disabled, check if the ones the players have are unique
+            # If they are not, exit
+            if not self.checkUniqueIds():
+                raise DuplicateId()
+        else:
+            # Assign a unique Id to each player
+            self.assignIds()
+        # Index of the current move
+        self.iMove = -1 
         self.lastThrowStated = None
         self.lastThrowActual = None
-        self.initialized = False
         self._running = False
 
         self.log = GameLog(self.players)
@@ -229,8 +231,26 @@ class Game:
         return self._running
 
     @property
-    def seed(self):
+    def seed(self) -> int:
         return self._seed
+
+    def assignIds(self) -> None:
+        # Assign a unique ID to each player
+        used_ids: Set[int] = set()
+        for p in self.players:
+            if not isinstance(p.id, int) or (p.id in used_ids):
+                p.id = max(used_ids) + 1 if used_ids else 0
+            used_ids.add(p.id)
+
+    def checkUniqueIds(self) -> bool:
+        # Check if every player has a unique id
+        used_ids: Set[int] = set()
+        for p in self.players:
+            assert isinstance(p.id, int)
+            if p.id in used_ids:
+                return False
+            used_ids.add(p.id)
+        return True
 
     def nextAlivePlayer(self, start):
         assert any(self.alive_players), "Cannot find next alive player; none are left"

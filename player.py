@@ -245,6 +245,9 @@ class CounterThresPlayer(Player):
         # { player0Id: [wurf0, wurf1, ...],
         #   player1Id: [wurf0, wurf1, ...],
         #   ... }
+        # TODO: Use this table structure instead:
+        # { player0ID: [0, 0, 0, 0, ..., 0], ... }
+        #              ^--- 21 entries --^
         self.throwStats = {}
         # Dasselbe, aber als Counter-Objekt, d. h. kategorisiert und gezählt
         self.throwStatsCounted = {}
@@ -316,8 +319,13 @@ class CounterThresPlayer(Player):
 
     def mostFreqThrowFreq(self, playerId: int):
         """Die Frequenz des am häufigsten angegebenen Wurfs eines Spielers berechenen."""
-        total_occs = self.getPlayerStatsCounted(playerId).most_common(1)[0][1]
-        return total_occs / self.countDataPoints(playerId)
+        most_freq = self.getPlayerStatsCounted(playerId).most_common(1)
+        try:
+            total_occs = most_freq[0][1] 
+            return total_occs / self.countDataPoints(playerId)
+        except IndexError:
+            # No data collected for this specific player
+            return 0
 
     def countDataPoints(self, playerId: int):
         """Die Anzahl von aufgezeichneten Datenpunkten über einen bestimmten Spieler zurückgeben."""

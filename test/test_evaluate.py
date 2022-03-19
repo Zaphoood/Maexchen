@@ -2,6 +2,7 @@ import unittest
 
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer, CounterThresPlayer
 from evaluate import Evaluation
+from format import formatTable
 
 
 class TestEvaluate(unittest.TestCase):
@@ -38,8 +39,6 @@ class TestAll(unittest.TestCase):
         ev = Evaluation(players, 1000, showProgress = True)
         ev.run()
         print(ev.prettyResults())
-        ev.plotWinRate()
-        ev.plotLossReason()
 
 class TestCounterThres(unittest.TestCase):
     def test_dummy(self):
@@ -61,10 +60,14 @@ class TestCounterThres(unittest.TestCase):
         ev.run()
         print(ev.prettyResults())
         print(f"CounterThresPlayer judgement:")
-        for p in ev.players:
-            if p is self.ctp:
-                continue
-            if self.ctp.existThresSuggestion(p.id):
-                print(f"  {repr(p)} Is a ThresPlayer: lieThres={self.ctp.mostFreqThrow(p.id)}\t({self.ctp.mostFreqThrowFreq(p.id):.3f})")
+        table = [["Player", "isThresPlayer", "mostFreqThrow"]]
+        for player in [p for p in ev.players if p is not self.ctp]:
+            if self.ctp.existThresSuggestion(player.id):
+                if (most_freq := self.ctp.mostFreqThrow(player.id)):
+                    table.append([f"{repr(player)}", "Yes",
+                        f"lieThres={most_freq}\t{self.ctp.mostFreqThrowFreq(player.id):.3f}"])
             else:
-                print(f"  {repr(p)} Is not a ThresPlayer\t\t\t({self.ctp.mostFreqThrowFreq(p.id):.3f})")
+                table.append([f"{repr(player)}", "No", f"({self.ctp.mostFreqThrowFreq(player.id):.3f})"])
+
+        print(formatTable(table))
+

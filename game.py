@@ -20,7 +20,8 @@ class TooFewPlayers(Exception):
 
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
-    players: List[Player]  # Liste aller Spieler
+    players: List[Player]  # All players participating in the game
+    alive_players: List[bool] # For each player, store if it's still in the game
     currentPlayer: int  # Index des Spielers der gerade an der Reihe ist
     incrementCurrentPlayer: bool  # Ob currentPlayer nach dem aktuellen Zug erhöht werden soll (wird ein Spieler entfernt, soll dies nicht geschehen)
     lastThrowStated: Optional[Throw]  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
@@ -31,10 +32,11 @@ class Game:
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
 
-    def __init__(self, players: List[Player], seed: int = None, shufflePlayers: bool = False, deepcopy: bool = True) -> None:
+    def __init__(self, players: List[Player], seed: int = None, shufflePlayers: bool = True, deepcopy: bool = True) -> None:
         # Verhindern, dass alle Spieler Referenzen zum selben Objekt sind
         # Das kann passieren, wenn eine Liste durch "list = [element] * integer" erstellt wird
         self.players = [copy.copy(p) for p in players] if deepcopy else players
+        self.alive_players = [True for _ in self.players]
         # Jedem Spieler eine eindeutige ID zuweisen
         used_ids: Set[int] = set()
         for p in self.players:
@@ -51,18 +53,21 @@ class Game:
 
         self.log = GameLog(self.players)
 
-        # Pseudo-Zufallszahlengenerator (RNG) initialisieren. Falls ein Seed als Parameter angegeben ist, diesen
-        # verwenden, ansonsten einen neuen Seed generieren. Dadurch ist der Seed immer bekannt und kann verwendet
-        # werden, um Spiele zu reproduzieren
+        # Initialize PRNG. Use seed if specified, otherwise generate a new seed.
+        # The important part is not the randomness source but that the seed is known
+        # so that the Game can be reproduced later.
         self._seed = seed if seed else random.randrange(sys.maxsize)
         self.rng = random.Random(self._seed)
 
+        # Yes, the order of self.players changes, while self.alive_players stays the same.
+        # This does not introduce any discrepancy because at this point all players are alive anyway.
+        # Though, the order of neither of those lists must change throughout the game!
         if shufflePlayers:
             self.rng.shuffle(self.players)
 
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""
-        if len(self.players) > 1:
+        if len(self.players) == self.countAlivePlayers() > 1:
             logging.info("=== Game initialized ===")
             self.currentPlayer = self.rng.randrange(0, len(self.players))
             for p in self.players:
@@ -91,33 +96,28 @@ class Game:
             return
 
         self.iMove += 1
-        logging.info(f"Move {self.iMove}")
+        logging.info(f"Move {self.iMove} | {self.countAlivePlayers()} players left")
         self.log.newRound()
 
         self.handlePlayerMove()
 
-        if not self.players:
+        
+        alive_players = self.countAlivePlayers()
+        if alive_players == 0:
             # Dieser Zustand (kein Spieler mehr übrig) sollte nicht eintreten.
             # Das Spiel ist bereits vorbei, wenn nur ein Spieler übrig bleibt.
             logging.warning("Zero players left, game is over. (How did we get here?)")
             self.happen(gameevent.EventAbort(message="Zero players left, game is over. (How did we get here?)"))
             self._running = False
-        elif len(self.players) == 1:
+        elif alive_players == 1:
             # Spiel ist vorbei
             logging.info(f"One player left, game is over")
             logging.info(f"{repr(self.players[0])} won")
             assert isinstance(self.players[0].id, int)
             self.happen(gameevent.EventFinish(self.players[0].id))
             self._running = False
-        else:
-            logging.info(f"{len(self.players)} players left")
 
-        # Den Index, der angibt, welcher Spieler an der Reihe ist, nur erhöhen, falls kein Spieler gelöscht wurde
-        if self.incrementCurrentPlayer:
-            self.currentPlayer += 1
-        # Modulo-Operator muss immer angewendet werden, auch wenn der Spielerindex nicht erhöht wurde, für den Fall
-        # dass der letzte Spieler aus self.players entfernt wird
-        self.currentPlayer %= len(self.players)
+        self.currentPlayer = self.nextAlivePlayer(self.currentPlayer + 1)
 
     def handlePlayerMove(self) -> None:
         """Regelt die Interaktion mit der Spielerklasse"""
@@ -125,10 +125,9 @@ class Game:
         # Dadurch wird currentPlayer am Ende von move() nicht erhöht
         self.incrementCurrentPlayer = True
 
-        if self.lastThrowStated is None:
-            # Erste Runde -> Es gibt keinen Vorgänger
-            doubtPred = False
-        else:
+        # Default value, in cases there is no last throw
+        doubtPred: Optional[bool] = False
+        if self.lastThrowStated is not None:
             # Den Spieler, der an der Reihe ist, fragen, ob er seinen Vorgänger anzweifelt
             doubtPred = self.players[self.currentPlayer].getDoubt(self.lastThrowStated, self.iMove, self.rng)
 
@@ -144,23 +143,27 @@ class Game:
             if self.lastThrowStated == self.lastThrowActual:
                 # Aktueller Spieler ist im Unrecht, Vorgänger hat die Wahrheit gesagt -> Aktuellen Spieler entfernen
                 playerToKick = self.currentPlayer
-                self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.FALSE_ACCUSATION, message=f"Previous {repr(self.players[(self.currentPlayer - 1) % len(self.players)])} was wrongfully doubted, {repr(self.players[playerToKick])} will be removed")
+                self.kickPlayer(playerToKick, gameevent.KICK_REASON.FALSE_ACCUSATION)
+                logging.info(f"Previous player was wrongfully doubted, {repr(self.players[playerToKick])} will be removed")
             else:
                 # Aktueller Spieler hat Recht, Vorgänger hat gelogen -> Vorherigen Spieler entfernen
-                playerToKick = (self.currentPlayer - 1) % len(self.players)
-                self.kickPlayer(playerToKick, gameevent.KICK_REASON.LYING, message=f"Previous player was rightfully doubted, {repr(self.players[playerToKick % len(self.players)])} will be removed")
+                playerToKick = self.prevAlivePlayer(self.currentPlayer - 1)
+                self.kickPlayer(playerToKick, gameevent.KICK_REASON.LYING)
+                logging.info(f"Previous player was rightfully doubted, {repr(self.players[playerToKick])} will be removed")
 
         else:
             # Der Spieler hat geantwortet, akzeptiert das vorherige Ergebnis, würfelt selber und verkündet das Ergebnis
+            if self.lastThrowStated is not None:
+                logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             # Zufälligen Wurf generieren
-            logging.info(f"{repr(self.players[self.currentPlayer])} chose not to doubt their predecessor.")
             currentThrow = self.randomThrow()
             # Den Spieler fragen, welchen Wurf er angeben will, gewürfelt zu haben
             throwStated = self.players[self.currentPlayer].getThrowStated(currentThrow, self.lastThrowStated,
                     self.iMove, self.rng)
             if throwStated is None:
                 # Spieler hat nicht geantwortet
-                self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.NO_RESPONSE, message=f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
+                self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.NO_RESPONSE)
+                logging.info(f"{repr(self.players[self.currentPlayer])} will be removed (got no response when asked for Throw)")
             else:
                 # Spieler hat geantwortet
                 logging.info(
@@ -186,27 +189,25 @@ class Game:
                         self.lastThrowActual = currentThrow
                     else:
                         # Vorgänger wurde nicht überboten
-                        self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR, message=f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
+                        self.kickPlayer(self.currentPlayer, gameevent.KICK_REASON.FAILED_TO_BEAT_PREDECESSOR)
+                        logging.info(f"Stated current throw {throwStated} doesn't beat stated previous throw {self.lastThrowStated}")
 
-    def kickPlayer(self, i: int, reason: gameevent.KICK_REASON, message: str = "") -> None:
+    def kickPlayer(self, i: int, reason: gameevent.KICK_REASON) -> None:
         """Einen Spieler aus der Runde entfernen.
 
         :param i: Index des Spielers, der entfernt werden soll
         :param reason: Grund für das ausscheiden des Spielers
         :param message: Nachricht, die im log ausgegeben werden soll."""
+        assert self.alive_players[i], f"Trying to kick already dead player {repr(self.players[i])}"
+        # This is the only way to make mypy understand that id is in fact an int
         id_ = self.players[i].id
         assert isinstance(id_, int)
         self.happen(gameevent.EventKick(id_, reason))
-        # TODO: Don't pop players! We need them for knowledge across mutltiple games in an evaluation
-        self.players.pop(i)
+        self.alive_players[i] = False
         self.incrementCurrentPlayer = False
-        # Nachdem ein Spieler entfernt wurde, beginnt die Runde von neuem, d.h. der nächste Spieler
-        # kann irgendein Ergebnis würfeln und musst niemanden überbieten
-        logging.info("Value to be beaten is reset.")
-        self.lastThrowStated: Optional[Throw] = None
-        self.lastThrowActual: Optional[Throw] = None 
-        if message:
-            logging.info(message)
+        self.lastThrowStated = None
+        self.lastThrowActual = None 
+        logging.info("Value to beat has been reset.")
 
     def happen(self, event: gameevent.Event) -> None:
         """Schreibt ein Event in den log und benachrichtigt Spieler mit listensToEvents==True davon.
@@ -230,6 +231,24 @@ class Game:
     @property
     def seed(self):
         return self._seed
+
+    def nextAlivePlayer(self, start):
+        assert any(self.alive_players), "Cannot find next alive player; none are left"
+        start %= len(self.players)
+        while not self.alive_players[start]:
+            start = (start + 1) % len(self.players)
+        return start
+    
+    def prevAlivePlayer(self, start):
+        assert any(self.alive_players), "Cannot find next alive player; none are left"
+        start %= len(self.players)
+        while not self.alive_players[start]:
+            start = (start - 1) % len(self.players)
+        return start
+
+
+    def countAlivePlayers(self):
+        return sum(self.alive_players)
 
     def randomThrow(self) -> Throw:
         """Gibt einen zufälligen Wurf zurück.

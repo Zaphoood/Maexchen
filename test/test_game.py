@@ -7,7 +7,7 @@ from gamelog import GameLog
 import gameevent
 from throw import Throw
 
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
 class TestInit(unittest.TestCase):

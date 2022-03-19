@@ -5,6 +5,7 @@ from typing import List, Optional, Any
 from player import FLAGS_TO_PLAYERS
 import constants as c
 
+
 @dataclass
 class Flag:
     name: str
@@ -35,19 +36,26 @@ FLAGS = [
     Flag("verbose", ["-v", "--verbose"], "Enable verbose output"),
     Flag("quiet", ["-q", "--quiet"], "Quiet output, i.e. no progress bar"),
     Flag("no-write", ["-x", "--no-write"], "Don't write to log file"),
-    Flag("no-sort", ["-u", "--no-sort"], "Don't sort results by player win rate"),
-    Flag("plot-all", ["-p", "--plot-all"], "Show plots for win rate and loss reason"),
+    Flag("no-sort", ["-u", "--no-sort"],
+         "Don't sort results by player win rate"),
+    Flag("plot-all", ["-p", "--plot-all"],
+         "Show plots for win rate and loss reason"),
     Flag("plot-win-rate", ["--plot-win-rate"], "Show plot for win rate"),
-    Flag("plot-loss-reason", ["--plot-loss-reason"], "Show plot for loss reason"),
+    Flag("plot-loss-reason", ["--plot-loss-reason"],
+         "Show plot for loss reason"),
     # Only used in help section
     Flag("player-class-dummy", [], help_alias="--<PLAYER_CLASS> [N]",
-        help_str=f"Add N Player(s) of PLAYER_CLASS to simulation. Possible values for PLAYER_CLASS are: {player_flags}."),
+         help_str=f"Add N Player(s) of PLAYER_CLASS to simulation. Possible values for PLAYER_CLASS are: {player_flags}."),
 ]
 # Add a flag for each player
-FLAGS += [Flag(player_arg, [f"--{player_arg}"], "", hidden=True, value_after=1, value_after_type=int) for player_arg in FLAGS_TO_PLAYERS.keys()]
- 
+FLAGS += [Flag(player_arg, [f"--{player_arg}"], "", hidden=True, value_after=1,
+               value_after_type=int) for player_arg in FLAGS_TO_PLAYERS.keys()]
+
 MAX_LINE_LEN = 70
-INDENT = 4
+INDENT = 2
+HELP_TEXT_BORDER = 2
+HELP_TEXT_INDENT = 12
+
 
 class ArgumentParser:
     def __init__(self) -> None:
@@ -85,12 +93,14 @@ class ArgumentParser:
                         if flag.value_after > 0:
                             # Try to convert the next flag to the specified type `flag.value_after_type`
                             try:
-                                flag.value = flag.value_after_type(self.args[i + 1])
+                                flag.value = flag.value_after_type(
+                                    self.args[i + 1])
                                 skip_arg = True
                             except (IndexError, ValueError):
                                 # If value_after is 2, a value *must* follow the flag.
                                 if flag.value_after == 2:
-                                    print(f"Flag `{flag.name}` must be followed by a value of type {flag.value_after_type.__name__}")
+                                    print(
+                                        f"Flag `{flag.name}` must be followed by a value of type {flag.value_after_type.__name__}")
                         break
                 else:
                     print(f"Unexpected command line argument \"{arg}\"")
@@ -102,21 +112,25 @@ class ArgumentParser:
         except StopIteration:
             return None
 
-
     def printHelp(self):
         out = []
         out.append((USAGE, 0))
         out.append(("", 0))
         out.append(("Options are:", 0))
         out.append(("", 0))
-        alias_strs = [flag.help_alias or ", ".join(flag.aliases) for flag in FLAGS]
-        # Get length of longest alias str
-        max_len = len(max(alias_strs, key=lambda a: len(a)))
-        # Calculate position of help text to be offset by at least one INDENT
-        help_pos = (max_len // INDENT + 1) * INDENT
+        alias_strs = [flag.help_alias or ", ".join(
+            flag.aliases) for flag in FLAGS]
+        help_pos = HELP_TEXT_INDENT * INDENT
+        ind = 1
         for flag, alias in zip(FLAGS, alias_strs):
+            alias_len = len(alias) + ind * INDENT
             if not flag.hidden:
-                out.append((alias + " " * (help_pos - len(alias)) + flag.help_str, 1))
+                if alias_len >= help_pos - HELP_TEXT_BORDER:
+                    out.append((alias, ind))
+                    out.append((flag.help_str, HELP_TEXT_INDENT))
+                else:
+                    out.append(
+                        (alias + " " * (help_pos - alias_len) + flag.help_str, ind))
 
         out = breakLines(out, MAX_LINE_LEN)
         for line, ind in out:

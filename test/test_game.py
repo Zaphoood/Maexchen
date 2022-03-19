@@ -25,10 +25,9 @@ class TestInit(unittest.TestCase):
         game = Game([a, b], deepcopy=True)
         self.assertFalse(game.players[0] is game.players[1])
 
-    # TODO: When shuffling players is implemented, activate this test
-    #def test_shuffle(self):
-    #    Game([DummyPlayer()], shufflePlayers=False)
-    #    Game([DummyPlayer()], shufflePlayers=True)
+    def test_shuffle(self):
+        Game([DummyPlayer()], shufflePlayers=False)
+        Game([DummyPlayer()], shufflePlayers=True)
 
 class TestNPlayers(unittest.TestCase):
     """Testet Spiele mit verschiedenen Spielerzahlen"""

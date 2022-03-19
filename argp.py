@@ -30,7 +30,7 @@ USAGE = f"Usage: {PROG} NUM_REPS [OPTIONS]"
 DESCRIPTION = "The number of the times the simulation will be run \
 is specified by NUM_REPS"
 
-FLAGS = [
+FLAGS: List[Flag] = [
     Flag("help", ["-h", "--help"], "Show this help message and exit"),
     Flag("verbose", ["-v", "--verbose"], "Enable verbose output"),
     Flag("quiet", ["-q", "--quiet"], "Quiet output, i.e. no progress bar"),
@@ -51,11 +51,11 @@ INDENT = 4
 
 class ArgumentParser:
     def __init__(self) -> None:
-        self.logging_level = c.LOGGING_LEVEL
-        self.args = sys.argv
-        self.n_reps = None
+        self.logging_level: int = c.LOGGING_LEVEL
+        self.args: List[str] = sys.argv
+        self.n_reps: int = -1
         self.players: List[Player] = []
-        self.flags = FLAGS
+        self.flags: List[Flag] = FLAGS
 
     def parseArgs(self):
         self.args = self.args[1:]

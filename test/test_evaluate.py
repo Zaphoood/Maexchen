@@ -1,4 +1,5 @@
 import unittest
+from typing import List
 
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer, CounterThresPlayer
 from evaluate import Evaluation
@@ -22,7 +23,7 @@ class TestOnInitPlayer(Player):
         super().__init__(*args, **kwargs)
         self.playersReceived = None
 
-    def onInit(self, players: list[Player]):
+    def onInit(self, players: List[Player]):
         print("TestOnInitPlayer got these players:")
         print("\n".join([repr(player) for player in players]))
         self.playersReceived = players

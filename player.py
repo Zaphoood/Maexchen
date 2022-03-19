@@ -35,7 +35,7 @@ class Player:
         # das oben nicht erkannt, deswegen hier überprüfen.
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut
 
         :param lastThrow: Wurf des vorherigen Spielrs
@@ -43,7 +43,7 @@ class Player:
         """
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
@@ -77,13 +77,13 @@ class DummyPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None:
             # Erste Runde
             return myThrow
@@ -100,13 +100,13 @@ class AdvancedDummyPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen or lastThrow == Throw(66):
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
@@ -135,7 +135,7 @@ class CounterDummyPlayer(Player):
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = None
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
@@ -145,7 +145,7 @@ class CounterDummyPlayer(Player):
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
@@ -161,13 +161,13 @@ class ShowOffPlayer(Player):
     def __init__(self, playerId=None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
@@ -183,10 +183,10 @@ class RandomPlayer(Player):
             raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         return rng.random() < self.doubtChance
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         return Throw(rng.choice(c.THROW_VALUES))
 
 
@@ -214,13 +214,13 @@ class ThresholdPlayer(Player):
         else:
             raise TypeError(f"lieThreshold must be of type int or Throw (got {type(lieThreshold)})")
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if self.doubtThreshold:
             return lastThrow >= self.doubtThreshold
         else:
             return lastThrow.isMaexchen
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
             if myThrow <= self.lieThreshold:
@@ -274,7 +274,7 @@ class CounterThresPlayer(Player):
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastPlayerId = None
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         elif self.existThresSuggestion(self.lastPlayerId):
@@ -286,7 +286,7 @@ class CounterThresPlayer(Player):
         return False
 
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         """Verhalten ist dasselbe wie DummyPlayer."""
         if lastThrow is None:
             return myThrow
@@ -348,13 +348,13 @@ class TrackingPlayer(Player):
         # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
         self.lastPlayerId = None
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         else:
             return self.shouldDoubt(lastThrow)
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:

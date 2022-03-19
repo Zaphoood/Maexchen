@@ -27,5 +27,6 @@ if __name__ == '__main__':
                 ev.plotWinRate()
             if parser.getFlag("plot-loss-reason"):
                 ev.plotLossReason()
+    # TODO: Print Exception's content here instead of `pass`ing
     except TooFewPlayers:
         pass

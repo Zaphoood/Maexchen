@@ -1,6 +1,6 @@
 import unittest
 
-from plot import plotWinRate, plotLossReason, plotBoth
+from plot import plotWinRate, plotLossReason
 
 
 class TestPlot(unittest.TestCase):
@@ -19,7 +19,3 @@ class TestPlot(unittest.TestCase):
         ]
 
         plotLossReason(player_names, loss_reaons)
-
-
-if __name__ == "__main__":
-    unittest.main()

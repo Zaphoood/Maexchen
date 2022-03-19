@@ -1,5 +1,5 @@
 from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
-from typing import Callable
+from typing import Callable, Optional
 from contextlib import suppress
 from collections import Counter
 import random
@@ -12,9 +12,9 @@ from utils import probLT, probGE
 
 
 class Player:
-    id: int  # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss; wird von Game
-
-    # zugewiesen
+    # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss.
+    # Wird von Game zugewiesen
+    id: Optional[int]
 
     def __init__(self, playerId: int = None, listensToEvents: bool = False):
         self.id = playerId
@@ -35,7 +35,7 @@ class Player:
         # das oben nicht erkannt, deswegen hier überprüfen.
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut
 
         :param lastThrow: Wurf des vorherigen Spielrs
@@ -43,7 +43,7 @@ class Player:
         """
         raise NotImplementedError
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
 
         Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
@@ -77,13 +77,13 @@ class DummyPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None:
             # Erste Runde
             return myThrow
@@ -100,13 +100,13 @@ class AdvancedDummyPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen or lastThrow == Throw(66):
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
@@ -127,15 +127,15 @@ class CounterDummyPlayer(Player):
         self.lastPlayerId = None
 
     def onEvent(self, event: gameevent.Event) -> None:
-        if event.eventType == gameevent.EVENT_TYPES.THROW:
+        if isinstance(event, gameevent.EventThrow):
             self.secondLastThrow = self.lastThrow
             self.lastThrow = event.throwStated
-        elif event.eventType == gameevent.EVENT_TYPES.KICK:
+        elif isinstance(event, gameevent.EventKick):
             # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = None
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
@@ -145,7 +145,7 @@ class CounterDummyPlayer(Player):
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
@@ -161,13 +161,13 @@ class ShowOffPlayer(Player):
     def __init__(self, playerId=None) -> None:
         super().__init__(playerId)
 
-    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         else:
             return False
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
@@ -183,10 +183,10 @@ class RandomPlayer(Player):
             raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         return rng.random() < self.doubtChance
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         return Throw(rng.choice(c.THROW_VALUES))
 
 
@@ -214,13 +214,13 @@ class ThresholdPlayer(Player):
         else:
             raise TypeError(f"lieThreshold must be of type int or Throw (got {type(lieThreshold)})")
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if self.doubtThreshold:
             return lastThrow >= self.doubtThreshold
         else:
             return lastThrow.isMaexchen
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
             if myThrow <= self.lieThreshold:
@@ -245,6 +245,9 @@ class CounterThresPlayer(Player):
         # { player0Id: [wurf0, wurf1, ...],
         #   player1Id: [wurf0, wurf1, ...],
         #   ... }
+        # TODO: Use this table structure instead:
+        # { player0ID: [0, 0, 0, 0, ..., 0], ... }
+        #              ^--- 21 entries --^
         self.throwStats = {}
         # Dasselbe, aber als Counter-Objekt, d. h. kategorisiert und gezählt
         self.throwStatsCounted = {}
@@ -262,7 +265,7 @@ class CounterThresPlayer(Player):
         self.recalcCounted = {player.id: True for player in players if player is not self}
 
     def onEvent(self, event: gameevent.Event) -> None:
-        if event.eventType == gameevent.EVENT_TYPES.THROW:
+        if isinstance(event, gameevent.EventThrow):
             if event.playerId != self.id:
                 self.throwStats[event.playerId].append(event.throwStated.value)
                 self.lastPlayerId = event.playerId
@@ -271,7 +274,7 @@ class CounterThresPlayer(Player):
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastPlayerId = None
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         elif self.existThresSuggestion(self.lastPlayerId):
@@ -283,7 +286,7 @@ class CounterThresPlayer(Player):
         return False
 
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         """Verhalten ist dasselbe wie DummyPlayer."""
         if lastThrow is None:
             return myThrow
@@ -316,8 +319,13 @@ class CounterThresPlayer(Player):
 
     def mostFreqThrowFreq(self, playerId: int):
         """Die Frequenz des am häufigsten angegebenen Wurfs eines Spielers berechenen."""
-        total_occs = self.getPlayerStatsCounted(playerId).most_common(1)[0][1]
-        return total_occs / self.countDataPoints(playerId)
+        most_freq = self.getPlayerStatsCounted(playerId).most_common(1)
+        try:
+            total_occs = most_freq[0][1] 
+            return total_occs / self.countDataPoints(playerId)
+        except IndexError:
+            # No data collected for this specific player
+            return 0
 
     def countDataPoints(self, playerId: int):
         """Die Anzahl von aufgezeichneten Datenpunkten über einen bestimmten Spieler zurückgeben."""
@@ -340,13 +348,13 @@ class TrackingPlayer(Player):
         # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
         self.lastPlayerId = None
 
-    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> bool:
+    def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
             return True
         else:
             return self.shouldDoubt(lastThrow)
 
-    def getThrowStated(self, myThrow: Throw, lastThrow: Throw, iMove: int, rng: random.Random) -> Throw:
+    def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
@@ -357,11 +365,11 @@ class TrackingPlayer(Player):
         self.playerStats = {player.id: [0, 0] for player in players if player is not self}
 
     def onEvent(self, event: gameevent.Event) -> None:
-        if event.eventType == gameevent.EVENT_TYPES.THROW:
+        if isinstance(event, gameevent.EventThrow):
             self.secondLastThrow = self.lastThrow
             self.lastThrow = event.throwStated
             self.lastPlayerId = event.playerId
-        elif event.eventType == gameevent.EVENT_TYPES.KICK:
+        if isinstance(event, gameevent.EventKick):
             if event.reason == gameevent.KICK_REASON.LYING:
                 # Tracken, dass Spieler gelogen hat
                 if event.playerId != self.id:
@@ -415,7 +423,7 @@ class TrackingPlayer(Player):
         """Einschätzen, ob dem vorherigen Spieler misstraut werden soll.
         Das geschieht auf folgende Weise: Zuerst wird die Wahrscheinlichkeit, dass der Spieler lügt,
         eingeschätzt. Diese errechnet sich aus der Wahrscheinlichkeit, den vorletzten Wurf mit einem zufälligen
-        Wurf zu übertreffen mal der Tendenz des Spielers zum Lügen (1 - Glaubwürdigkeit) plus die Wahrscheinlichkeit,
+        Wurf zu übertreffen, mal der Tendenz des Spielers, zu lügen (1 - Glaubwürdigkeit), plus die Wahrscheinlichkeit,
         den vorletzten Wurf mit einem zufälligen Wurf nicht zu übertreffen.
             P_Lüge = P_zufällig_erreichen(Vorletzter Wurf) * P_Lüge + P_nicht_zufällig_erreichen
         Anschließend wird die Wahrscheinlichkeit, dass der Spieler die Wahrheit sagt, eingeschätzt:
@@ -428,7 +436,11 @@ class TrackingPlayer(Player):
         if self.secondLastThrow is None:
             # Zweiter Zug der "Runde" (nach letztem Zurücksetzen des zu überbietenden Wertes)
             if self.existPlayerStats(self.lastPlayerId):
-                return self.getPlayerCredibility(self.lastPlayerId)
+                # TODO: Compare credibility to some threshold
+                #return self.getPlayerCredibility(self.lastPlayerId)
+                
+                # This is just a placeholder until that to-do gets implemented
+                return False
             else:
                 return False
 

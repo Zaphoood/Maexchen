@@ -39,18 +39,24 @@ class Throw:
         self.isMaexchen = self.value == c.MAEXCHEN  # Mäxchen
 
     def __str__(self) -> str:
-        return f"Throw (str(self.value))"
+        return str(self.value)
 
     def __repr__(self) -> str:
         return f"Throw (value={self.value})"
 
-    def __eq__(self, other: Throw) -> bool:
-        """Überprüfen, ob eine anderer Throw vom gleichen Rang ist
+    def __eq__(self, other: object) -> bool:
+        """Evaluate equality with Throw or int.
+        
+        If other is of type int, self.value is compared to it, if it is a
+        Throw instance, self.rank is compared to other.rank.
 
-        :param other: Zu vergleichender Throw"""
-        if not isinstance(other, Throw):
+        :param other: Object to compare"""
+        if isinstance(other, Throw):
+            return self.rank == other.rank
+        elif isinstance(other, int):
+            return other == self.value
+        else:
             return False
-        return self.rank == other.rank
 
     def __gt__(self, other: Throw) -> bool:
         """Überprüfen, ob eine anderer Throw von höherem Rang ist
@@ -103,6 +109,43 @@ class Throw:
 
         :param other: Um wie viel der Rang des zurückgegebenen Throws kleiner ist als der Rang von self"""
         return self.__add__(-other)
+
+
+class NoneThrow(Throw):
+    """Placeholder for a Throw that has no information"""
+    def __init__(self):
+        self.value = 0
+        self.rank = -1 
+        self.isMaexchen = False
+        self.isDouble = False
+
+    def __str__(self):
+        return "NoneThrow"
+
+    def __repr__(self):
+        return "<NoneThrow>"
+
+    def __eq__(self, other: object):
+        return isinstance(other, self.__class__)
+
+    def __lt__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __gt__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __le__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __ge__(self, other: object):
+        raise Exception("Cannot compare NoneThrow")
+
+    def __add__(self, other: object):
+        raise Exception("Cannot perform arithmetics on NoneThrow")
+
+    def __sub__(self, other: object):
+        raise Exception("Cannot perform arithmetics on NoneThrow")
+
 
 def throwByRank(rank: int) -> Throw:
     """Erzeugt ein Throw-Objekt, das den angegebenen Rang hat"""

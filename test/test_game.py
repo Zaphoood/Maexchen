@@ -1,27 +1,56 @@
 import unittest
 import logging
 
-from game import Game
+from game import Game, TooFewPlayers, DuplicateId
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer
-from userplayer import UserPlayer
 from gamelog import GameLog
 import gameevent
-import throw
+from throw import Throw
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 
 
-class TestOnePlayer(unittest.TestCase):
-    """Testet ein Spiel mit nur einem Spieler"""
+class TestInit(unittest.TestCase):
+    def test_seed(self):
+        Game([DummyPlayer()], seed=123)
 
-    def setUp(self):
-        players = [DummyPlayer()]
+    def test_deepcopy(self):
+        # No deepcopy, a and b should be references to the same object
+        a, b = [DummyPlayer()] * 2
+        game = Game([a, b], deepcopy=False)
+        self.assertTrue(game.players[0] is game.players[1])
+
+        # No deepcopy, a and b should individual objects
+        a, b = [DummyPlayer()] * 2
+        game = Game([a, b], deepcopy=True)
+        self.assertFalse(game.players[0] is game.players[1])
+
+    def test_shuffle(self):
+        Game([DummyPlayer()], shufflePlayers=False)
+        Game([DummyPlayer()], shufflePlayers=True)
+
+    def test_duplicate(self):
+        # This should not work
+        with self.assertRaises(DuplicateId):
+            Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=True)
+        # This should work
+        game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=False)
+        self.assertNotEqual(game.players[0].id, game.players[1].id)
+
+class TestNPlayers(unittest.TestCase):
+    """Testet Spiele mit verschiedenen Spielerzahlen"""
+
+    def test_one(self):
+        game = Game([])
+        self.assertRaises(TooFewPlayers, game.init)
+        game = Game([DummyPlayer()])
+        self.assertRaises(TooFewPlayers, game.init)
+
+    def test_three(self):
+        players = [DummyPlayer()] * 3
         self.game = Game(players)
-
-    def test_move(self):
         self.game.init()
-        self.game.move()
-        self.assertFalse(self.game.isRunning())
+        self.game.run()
 
 
 class TestPlayerIds(unittest.TestCase):
@@ -56,19 +85,6 @@ class TestPlayerIds(unittest.TestCase):
         self.assert_unique_ids(game)
 
 
-class TestThreePlayers(unittest.TestCase):
-    """Testet ein Spiel mit drei Spielern.
-
-    Es gibt kein erwartetes Ergebnis, nur, dass nach einer Runde ein Spieler übrig ist, der gewonnen hat.
-    """
-
-    def setUp(self):
-        players = [DummyPlayer()] * 3
-        self.game = Game(players)
-
-    def test_game(self):
-        self.game.init()
-        self.game.run()
 
 class TestLog(unittest.TestCase):
     def test_log(self):
@@ -89,13 +105,12 @@ class TestGameWithLog(unittest.TestCase):
         game2.init()
         game2.run()
         self.assertEqual(game1.log, game2.log)
-        print(game1.log.pretty())
 
 
 class TestGameEvent(unittest.TestCase):
     def test_gameevent_equals(self):
-        e1 = gameevent.EventThrow(1, throw.Throw(1, 2), throw.Throw(1, 2))
-        e2 = gameevent.EventThrow(1, throw.Throw(1, 2), throw.Throw(1, 2))
+        e1 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
+        e2 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
         self.assertEqual(e1, e2)
         e1 = gameevent.EventDoubt(1)
         e2 = gameevent.EventDoubt(1)
@@ -112,14 +127,6 @@ class TestGameEvent(unittest.TestCase):
         self.assertEqual(e1, e2)
 
 
-class TestGameUser(unittest.TestCase):
-    def test_game_w_user(self):
-        up = UserPlayer()
-        game = Game([DummyPlayer()] * 2 + [ShowOffPlayer(), up])
-        game.init()
-        game.run()
-
-
 class EventListenerPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -132,11 +139,14 @@ class EventListenerPlayer(Player):
         return Throw(2, 1) if lastThrow.isMaexchen else lastThrow + 1
 
     def onEvent(self, event):
-        print(f"EventListenerPlayer got Event: {event}")
+        logging.info(f"EventListenerPlayer got Event: {event}")
 
 
 class TestEventListening(unittest.TestCase):
-    def test_event_listening(self):
+    def test_methods(self):
+        p = EventListenerPlayer()
+        p.getDoubt(Throw(2, 1))
+    def test_game(self):
         game = Game([RandomPlayer(), EventListenerPlayer()])
         game.init()
         game.run()
@@ -144,10 +154,10 @@ class TestEventListening(unittest.TestCase):
 
 class TestTrackingPlayer(unittest.TestCase):
     def test_normal_functionality(self):
-        tr = TrackingPlayer()
-        players = [DummyPlayer(), RandomPlayer(), ProbabilisticPlayer(), tr]
-        game = Game(players, disableDeepcopy=True)
-        tr.onInit(game.players)
+        tracking_player = TrackingPlayer()
+        players = [DummyPlayer(), RandomPlayer(), ThresholdPlayer(), tracking_player]
+        game = Game(players, deepcopy=True)
+        tracking_player.onInit(game.players)
         game.init()
         game.run()
 
@@ -156,11 +166,7 @@ class TestAll(unittest.TestCase):
     def test_all(self):
         tr = TrackingPlayer()
         players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
-        game = Game(players, disableDeepcopy=True)
+        game = Game(players, deepcopy=True)
         tr.onInit(game.players)
         game.init()
         game.run()
-
-
-if __name__ == '__main__':
-    unittest.main()

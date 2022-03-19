@@ -1,4 +1,5 @@
 from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
+from typing import Optional, Set
 import contextlib
 import copy
 
@@ -11,7 +12,7 @@ class GameLog:
     moves: list[list[Event]]  # Ein Zug besteht aus mehreren Ereignissen
     n_players: int  # Gesamtanzahl der Spieler zu Beginn des Spiels
 
-    winner_id: int  # ID des Siegers des Spiels
+    winner_id: Optional[int]  # ID des Siegers des Spiels
 
     def __init__(self, players: list[Player] = None):
         players = [] if players is None else players
@@ -70,7 +71,8 @@ class GameLog:
         """Gibt die Anzahl der Runden des Spiels an."""
         return len(self.moves)
 
-    def __eq__(self, other: GameLog) -> bool:
-        if not isinstance(other, GameLog):
-            raise NotImplementedError
-        return self.players == other.players and self.n_players == other.n_players and self.moves == other.moves
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, GameLog):
+            return self.players == other.players and self.n_players == other.n_players and self.moves == other.moves
+        else:
+            return False

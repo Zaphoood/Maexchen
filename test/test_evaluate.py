@@ -1,9 +1,12 @@
 import unittest
+from typing import List
+import logging
 
-from game import Game
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer, CounterThresPlayer
-from gamelog import GameLog
 from evaluate import Evaluation
+from format import formatTable
+
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 
 
 class TestEvaluate(unittest.TestCase):
@@ -23,7 +26,7 @@ class TestOnInitPlayer(Player):
         super().__init__(*args, **kwargs)
         self.playersReceived = None
 
-    def onInit(self, players: list[Player]):
+    def onInit(self, players: List[Player]):
         print("TestOnInitPlayer got these players:")
         print("\n".join([repr(player) for player in players]))
         self.playersReceived = players
@@ -31,17 +34,14 @@ class TestOnInitPlayer(Player):
 class TestOnInit(unittest.TestCase):
     def test_player_on_init(self):
         test_player = TestOnInitPlayer()
-        ev = Evaluation([DummyPlayer(), test_player], 1, disableDeepcopy = True)
+        ev = Evaluation([DummyPlayer(), test_player], 1, deepcopy = False)
         self.assertEqual(ev.players, test_player.playersReceived)
 
 class TestAll(unittest.TestCase):
     def test_all(self):
         players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), TrackingPlayer(), CounterThresPlayer()]
-        ev = Evaluation(players, 10000, showProgress = True)
+        ev = Evaluation(players, 1000, showProgress = True)
         ev.run()
-        print(ev.prettyResults())
-        ev.plotWinRate()
-        ev.plotLossReason()
 
 class TestCounterThres(unittest.TestCase):
     def test_dummy(self):
@@ -59,19 +59,18 @@ class TestCounterThres(unittest.TestCase):
         self.runSim()
 
     def runSim(self):
-        ev = Evaluation(self.players, 1000, showProgress = True, disableDeepcopy=True)
+        ev = Evaluation(self.players, 1000, showProgress=True, deepcopy=False)
         ev.run()
-        print(ev.prettyResults())
-        print(f"CounterThresPlayer judgement:")
-        for p in ev.players:
-            if p is self.ctp:
-                continue
-            if self.ctp.existThresSuggestion(p.id):
-                print(f"  {repr(p)} Is a ThresPlayer: lieThres={self.ctp.mostFreqThrow(p.id)}\t({self.ctp.mostFreqThrowFreq(p.id):.3f})")
+        #print(ev.prettyResults())
+        #print(f"CounterThresPlayer judgement:")
+        table = [["Player", "isThresPlayer", "mostFreqThrow"]]
+        for player in [p for p in ev.players if p is not self.ctp]:
+            if self.ctp.existThresSuggestion(player.id):
+                if (most_freq := self.ctp.mostFreqThrow(player.id)):
+                    table.append([f"{repr(player)}", "Yes",
+                        f"lieThres={most_freq}\t{self.ctp.mostFreqThrowFreq(player.id):.3f}"])
             else:
-                print(f"  {repr(p)} Is not a ThresPlayer\t\t\t({self.ctp.mostFreqThrowFreq(p.id):.3f})")
+                table.append([f"{repr(player)}", "No", f"({self.ctp.mostFreqThrowFreq(player.id):.3f})"])
 
+        print(formatTable(table))
 
-
-if __name__ == '__main__':
-    unittest.main()

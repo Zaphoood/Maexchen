@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import sys
 from typing import List, Optional, Any
 
-from player import FLAGS_TO_PLAYERS
+from player import Player, FLAGS_TO_PLAYERS
 import constants as c
 
 
@@ -31,7 +31,7 @@ USAGE = f"Usage: {PROG} NUM_REPS [OPTIONS]"
 DESCRIPTION = "The number of the times the simulation will be run \
 is specified by NUM_REPS"
 
-FLAGS = [
+FLAGS: List[Flag] = [
     Flag("help", ["-h", "--help"], "Show this help message and exit"),
     Flag("verbose", ["-v", "--verbose"], "Enable verbose output"),
     Flag("quiet", ["-q", "--quiet"], "Quiet output, i.e. no progress bar"),
@@ -59,11 +59,11 @@ HELP_TEXT_INDENT = 12
 
 class ArgumentParser:
     def __init__(self) -> None:
-        self.logging_level = c.LOGGING_LEVEL
-        self.args = sys.argv
-        self.n_reps = None
-        self.players = []
-        self.flags = FLAGS
+        self.logging_level: int = c.LOGGING_LEVEL
+        self.args: List[str] = sys.argv
+        self.n_reps: int = -1
+        self.players: List[Player] = []
+        self.flags: List[Flag] = FLAGS
 
     def parseArgs(self):
         self.args = self.args[1:]

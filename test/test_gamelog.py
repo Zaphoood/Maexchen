@@ -26,7 +26,3 @@ class TestGameLog(unittest.TestCase):
         prettyList = log.prettyList()
         self.assertEqual(len(prettyList), 3)
         self.assertTrue(prettyList[-1].endswith("(Game is still ongoing)"))
-
-
-if __name__ == '__main__':
-    unittest.main()

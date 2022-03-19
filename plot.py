@@ -1,4 +1,7 @@
+from typing import List
+
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import pylab
 import numpy as np
 
@@ -16,12 +19,12 @@ def plotLossReason(*args, **kwargs):
     figure = _lossReasonFig(*args, **kwargs) 
     plt.show()
  
-def plotWRandLR(player_names: list[str], win_rates: list[float], loss_reasons: list[float], win_y_range=None, loss_y_range=[0., 1.]):
+def plotWRandLR(player_names: List[str], win_rates: List[float], loss_reasons: List[List[float]], win_y_range=None, loss_y_range=[0., 1.]):
     win_rate_figure = _winRateFig(player_names, win_rates, win_y_range, fig_index=0)
     loss_reason_figure = _lossReasonFig(player_names, loss_reasons, loss_y_range, fig_index=1)
     plt.show()
     
-def _winRateFig(player_names: list[str], values: list[float], y_range=None, fig_index=None) -> None:
+def _winRateFig(player_names: List[str], values: List[float], y_range=None, fig_index=None) -> Figure:
     fig = plt.figure(fig_index)
     window = pylab.gcf()
     window.canvas.manager.set_window_title('Gewinnrate je Spieler')
@@ -35,11 +38,11 @@ def _winRateFig(player_names: list[str], values: list[float], y_range=None, fig_
 
     return fig
 
-def _lossReasonFig(player_names: list[str], values: list[float], y_range=[0, 1], fig_index=None) -> None:
+def _lossReasonFig(player_names: List[str], values: List[List[float]], y_range=[0, 1], fig_index=None) -> Figure:
     # Allow only for three values per player
     values = [player_stats[:3] for player_stats in values]
-    # Flip table so bars are grouped by player and not by category
-    values = [row for row in zip(*values)]
+    # Flip table so bars are grouped per player, not by category
+    values = list(zip(*values)) # type: ignore
 
     fig = plt.figure(fig_index)
     window = pylab.gcf()

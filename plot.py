@@ -40,7 +40,6 @@ def _winRateFig(player_names: List[str], values: List[float], y_range=None, fig_
 
 def _lossReasonFig(player_names: List[str], values: List[List[float]], y_range=[0, 1], fig_index=None) -> Figure:
     # Allow only for three values per player
-    print(values)
     values = [player_stats[:3] for player_stats in values]
     # Flip table so bars are grouped per player, not by category
     values = list(zip(*values)) # type: ignore

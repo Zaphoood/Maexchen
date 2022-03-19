@@ -21,7 +21,7 @@ class UserPlayer(Player):
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: Random) -> Optional[Throw]:
         # Spieler fragen, ob er die Wahrheit sagen will
         if lastThrow is None:
-            truthPrompt = f"You threw {myThrow.value} (no predecessor). Will you tell this result to the other players? "
+            truthPrompt = f"You threw {myThrow.value} (no predecessor). Will you tell this result to the other players?"
             beatsLast = True  # Has to be True so later checks work
         else:
             beatsLast = myThrow > lastThrow
@@ -87,7 +87,7 @@ class UserPlayer(Player):
             try:
                 answ = int(inp)
             except ValueError:
-                print("That is not a number. Try again:", end=" ")
+                print("That's not a number. Try again:", end=" ")
                 continue
             if allowedAnswers is None:
                 return True, answ

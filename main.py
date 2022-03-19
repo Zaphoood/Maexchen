@@ -9,7 +9,6 @@ parser.parseArgs()
 if __name__ == '__main__':
     players = []
     for player_flag, player_class in player.FLAGS_TO_PLAYERS.items():
-        print(f"{player_flag}: {parser.getFlag(player_flag)}")
         players.extend([player_class() for _ in range(parser.getFlag(player_flag) or 0)])
 
     try:

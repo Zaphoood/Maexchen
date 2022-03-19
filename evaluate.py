@@ -56,7 +56,7 @@ class Evaluation:
 
     def run(self) -> None:
         if len(self.players) < 2:
-            logging.warn("Running evaluation with only {len(self.players)} players.")
+            logging.warning("Running evaluation with only {len(self.players)} players.")
         def printProgress(prg: int, total: int, end: str = "\n"):
             print("[" + "#"*prg + "."*(total-prg) + "]", end=end)
 
@@ -68,7 +68,7 @@ class Evaluation:
             printProgress(0, prg_steps, end="\r")
         for i in range(self.n_repetitions):
             if self.showProgress:
-                if prg < (prg := int(i / self.n_repetitions * prg_steps)):
+                if prg < (prg := i * prg_steps // self.n_repetitions):
                     printProgress(prg, prg_steps, end=(
                         "\r" if i < self.n_repetitions - 1 else "\n"))
             # No need to deepcopy here since we already did that in __init__

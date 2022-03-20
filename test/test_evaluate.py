@@ -61,8 +61,8 @@ class TestCounterThres(unittest.TestCase):
     def runSim(self):
         ev = Evaluation(self.players, 1000, showProgress=True, deepcopy=False)
         ev.run()
-        #print(ev.prettyResults())
-        #print(f"CounterThresPlayer judgement:")
+        print(ev.prettyResults())
+        print(f"CounterThresPlayer judgement:")
         table = [["Player", "isThresPlayer", "mostFreqThrow"]]
         for player in [p for p in ev.players if p is not self.ctp]:
             if self.ctp.existThresSuggestion(player.id):

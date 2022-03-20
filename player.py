@@ -1,5 +1,5 @@
 from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
-from typing import Callable, Optional
+from typing import List, Callable, Optional
 from contextlib import suppress
 from collections import Counter
 import random
@@ -341,12 +341,12 @@ class TrackingPlayer(Player):
         # {player0Id: [anzahl_wahrheit0, anzahl_wahrheit0],
         #  player1Id: [anzahl_wahrheit1, anzahl_wahrheit1],
         #  ...}
-        self.playerStats = {}
+        self.playerStats: Dict[int, List[int]] = {}
         # Den letzten und vorletzten Wurf abspeichern
-        self.secondLastThrow = None
-        self.lastThrow = None
+        self.secondLastThrow: Optional[Throw] = None
+        self.lastThrow: Optional[Throw] = None
         # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
-        self.lastPlayerId = None
+        self.lastPlayerId: Optional[int] = None
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
@@ -385,12 +385,12 @@ class TrackingPlayer(Player):
             self.lastThrow = self.secondLastThrow = self.lastPlayerId = None
 
     def trackPlayerLie(self, playerId: int) -> None:
-        self.savePlayerStat(playerId, 1)
+        self._savePlayerStat(playerId, 1)
 
     def trackPlayerTruth(self, playerId: int) -> None:
-        self.savePlayerStat(playerId, 0)
+        self._savePlayerStat(playerId, 0)
 
-    def savePlayerStat(self, playerId: int, event: int) -> None:
+    def _savePlayerStat(self, playerId: int, event: int) -> None:
         """Abspeichern, dass ein Spieler gelogen hat bzw. die Wahrheit gesagt hat.
 
         :param playerId: Die ID des Spielers, um den es sich handelt
@@ -415,9 +415,10 @@ class TrackingPlayer(Player):
         """Gibt zurück, ob für einen Spieler bereits etwas in dessen Statistik aufgezeichnet wurde.
 
         :param playerId: Die ID des Spielers, dessen Statistik überprüft werden soll."""
-        with suppress(KeyError):  # contextlib.suppress
-            return sum(self.playerStats[playerId]) > 0
-        return False
+        if playerId in self.playerStats:
+            return any(self.playerStats[playerId])
+        else:
+            return False
 
     def shouldDoubt(self, playerThrow: Throw) -> bool:
         """Einschätzen, ob dem vorherigen Spieler misstraut werden soll.

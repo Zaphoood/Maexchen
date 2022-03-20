@@ -51,6 +51,7 @@ class Game:
         self.iMove = -1 
         self.lastThrowStated = None
         self.lastThrowActual = None
+        # TODO: Set self._initialized to False; use @property for accessing it!
         self._running = False
 
         self.log = GameLog(self.players)
@@ -72,8 +73,6 @@ class Game:
         if len(self.players) == self.countAlivePlayers() > 1:
             logging.info("=== Game initialized ===")
             self.currentPlayer = self.rng.randrange(0, len(self.players))
-            for p in self.players:
-                p.onInit(self.players)
             self.initialized = True
             self._running = True
         else:

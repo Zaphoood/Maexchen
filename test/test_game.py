@@ -158,7 +158,7 @@ class TestTrackingPlayer(unittest.TestCase):
     def test_tracking(self):
         tracking_player = TrackingPlayer()
         players = [DummyPlayer(), RandomPlayer(), ThresholdPlayer(), tracking_player]
-        game = Game(players, deepcopy=True)
+        game = Game(players, deepcopy=False)
         tracking_player.onInit(game.players)
         game.init()
         game.run()

@@ -11,6 +11,10 @@ from throw import Throw, throwByRank
 from utils import probLT, probGE
 
 
+class PlayerNotInitialized(Exception):
+    pass
+
+
 class Player:
     # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss.
     # Wird von Game zugewiesen
@@ -18,7 +22,10 @@ class Player:
 
     def __init__(self, playerId: int = None, listensToEvents: bool = False):
         self.id = playerId
+        # Whether this instances onEvent() should be called by Game
         self.listensToEvents = listensToEvents
+        # Whether the instances onInit() method has been called
+        self._initialized: bool = False
 
     def __str__(self):
         return f"{self.__class__.__name__} with id {self.id}"
@@ -59,13 +66,22 @@ class Player:
         """Wird von Evaluation vor dem beginn einer Simulation aufgerufen.
 
         :param players: Liste aller Spieler die am Spiel teilnehmen"""
-        pass
+        self._initialized = True
 
     def onEvent(self, event: gameevent.Event) -> None:
         """Wird von Game aufgerufen, wenn ein Ereignis im Spiel passiert und self.listensToEvents==True.
 
         :param event: Das Ereignis, das passiert ist"""
         pass
+
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
+
+    def _assertInitialized(self) -> None:
+        """Raise an Exception if the instance's onInit() has not been called."""
+        if not self._initialized:
+            raise PlayerNotInitialized()
 
 
 class DummyPlayer(Player):
@@ -259,6 +275,7 @@ class CounterThresPlayer(Player):
         self.freqThres = 0.4
 
     def onInit(self, players: list[Player]) -> None:
+        super().onInit(players)
         # Leere Statistik erstellen
         self.throwStats = {player.id: [] for player in players if player is not self}
         self.throwStatsCounted = {player.id: None for player in players if player is not self}
@@ -361,6 +378,7 @@ class TrackingPlayer(Player):
             return lastThrow + 1
 
     def onInit(self, players: list[Player]) -> None:
+        super().onInit(players)
         # Leere Statistik erstellen
         self.playerStats = {player.id: [0, 0] for player in players if player is not self}
 
@@ -396,10 +414,8 @@ class TrackingPlayer(Player):
         :param playerId: Die ID des Spielers, um den es sich handelt
         :param event: event==0 => Spieler hat die Wahrheit gesagt
                       event==1 => Spieler hat gelogen"""
-        if self.playerStats == {}:
-            logging.warning(f"TrackingPlayer: No player statistics created (i.e. onInit() wasn't called) for {self.__repr__()}")
-        else:
-            self.playerStats[playerId][event] += 1
+        self._assertInitialized()
+        self.playerStats[playerId][event] += 1
 
     def getPlayerCredibility(self, playerId: int) -> float:
         """Errechnet anhand der Statistik über einen Spieler dessen Glaubwürdigkeit.

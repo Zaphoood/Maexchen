@@ -2,11 +2,28 @@ import unittest
 from random import Random
 
 import constants as c
-from player import DummyPlayer, RandomPlayer, TrackingPlayer, CounterThresPlayer
+from player import Player, DummyPlayer, RandomPlayer, TrackingPlayer, CounterThresPlayer
+from player import PlayerNotInitialized
 from throw import Throw
 from move import Move
 import gameevent
 import logging
+
+
+class TestInit(unittest.TestCase):
+    def test_assert_initialized(self):
+        p = Player()
+
+        # This shouldn't work
+        self.assertRaises(PlayerNotInitialized, p._assertInitialized)
+
+        # Initialize player
+        p.onInit([])
+        try:
+            # This should work
+            p._assertInitialized()
+        except PlayerNotInitialized:
+            self.fail("Player._assertInitialized() fails even though it's onInit() has been called")
 
 
 class TestDummyPlayer(unittest.TestCase):

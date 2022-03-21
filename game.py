@@ -30,13 +30,13 @@ class DuplicateId(Exception):
 class Game:
     """Regelt die Umsetzung der Spielregeln (Würfeln und die Interaktion zwischen Spielern)."""
     players: List[Player]  # All players participating in the game
-    alive_players: List[bool] # For each player, store if it's still in the game
+    alive_players: List[bool] # For each player, store if they are still in the game (i. e. if they're 'alive')
     currentPlayer: int  # Index des Spielers der gerade an der Reihe ist
     incrementCurrentPlayer: bool  # Ob currentPlayer nach dem aktuellen Zug erhöht werden soll (wird ein Spieler entfernt, soll dies nicht geschehen)
     lastThrowStated: Optional[Throw]  # Angabe die der letzte Spieler über sein Wurfergebnis gemacht hat
     lastThrowActual: Optional[Throw]  # Tatsächlicher Wurf des letzten Spielers
     moveCounter: int  # Zählt die Züge
-    initialized: bool  # Gibt an, ob das Spiel initialisiert wurde
+    _initialized: bool  # Gibt an, ob das Spiel initialisiert wurde
     _running: bool  # Gibt an, ob das Spiel noch läuft
     log: GameLog
     rng: random.Random  # Pseudozufallszahlengenerator
@@ -58,7 +58,7 @@ class Game:
         self.iMove = -1 
         self.lastThrowStated = None
         self.lastThrowActual = None
-        # TODO: Set self._initialized to False; use @property for accessing it!
+        self._initialized = False
         self._running = False
 
         self.log = GameLog(self.players)
@@ -75,12 +75,24 @@ class Game:
         if shufflePlayers:
             self.rng.shuffle(self.players)
 
+    @property
+    def running(self) -> bool:
+        return self._running
+
+    @property
+    def seed(self) -> int:
+        return self._seed
+
+    @property
+    def initialized(self) -> int:
+        return self._initialized
+ 
     def init(self) -> None:
         """Überprüft, ob genügend Spieler vorhanden sind und initialisiert das Spiel"""
         if len(self.players) == self.countAlivePlayers() > 1:
             logging.info("=== Game initialized ===")
             self.currentPlayer = self.rng.randrange(0, len(self.players))
-            self.initialized = True
+            self._initialized = True
             self._running = True
         else:
             self.happen(gameevent.EventAbort(message="Too few players for game (at least 2 are required)"))
@@ -231,14 +243,6 @@ class Game:
         for player in self.players:
             if player.listensToEvents:
                 player.onEvent(event)
-
-    @property
-    def running(self) -> bool:
-        return self._running
-
-    @property
-    def seed(self) -> int:
-        return self._seed
 
     def assignIds(self) -> None:
         # Assign a unique ID to each player

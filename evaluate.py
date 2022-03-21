@@ -12,7 +12,7 @@ from gameevent import EventKick
 from player import Player
 from game import Game
 from gameevent import KICK_REASON
-from format import formatTable
+from format import formatTable, printProgress
 from disk import writeLog
 from plot import plotWinRate, plotLossReason, plotWRandLR
 import constants as c
@@ -57,8 +57,6 @@ class Evaluation:
     def run(self) -> None:
         if len(self.players) < 2:
             logging.warning("Running evaluation with only {len(self.players)} players.")
-        def printProgress(prg: int, total: int, end: str = "\n"):
-            print("[" + "#"*prg + "."*(total-prg) + "]", end=end)
 
         self.t_start = time.time()
         prg = 0

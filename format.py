@@ -12,10 +12,13 @@ def formatTable(table, space=2) -> str:
     column_widths = [max([len(table[row][col] + delim) for row in range(len(table))]) for col in range(len(table[0]))]
     
     table_str = "\n".join(
-        ["".join(
-                [el + " " * (column_widths[col] - len(el)) for col, el in enumerate(row)]
-        )
-        for row in table]
-    )
+            ["".join(
+                [el + " " * (column_widths[col] - len(el))
+                for col, el in enumerate(row)])
+            for row in table])
+
     return table_str
 
+
+def printProgress(prg: int, total: int, end: str = "\n"):
+    print("[" + "#"*prg + "."*(total-prg) + "]", end=end)

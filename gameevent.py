@@ -35,7 +35,8 @@ class Event:
     """Base class for all Events."""
     # The type of Event
     eventType: EVENT_TYPES
-    # The player which caused the event; this is not needed for events such as EventFinish
+    # The player which caused the event which the event relates to (e. g. EventFinish uses
+    # this to store the id of the winner of the game)
     playerId: Optional[int]
 
     def __init__(self, eventType: EVENT_TYPES, playerId: Optional[int]) -> None:
@@ -117,24 +118,23 @@ class EventKick(Event):
 
 class EventFinish(Event):
     """Spiel wird ordnungsgemäß beendet."""
-    # TODO: Consider using already existing attribute playerId
-    winner_id: int
+    playerId: int
 
-    def __init__(self, winner_id: int) -> None:
+    def __init__(self, playerId: int) -> None:
         super().__init__(EVENT_TYPES.FINISH, None)
-        self.winner_id = winner_id
+        self.playerId = playerId
 
     def __str__(self) -> str:
-        return f"Game finished regularly. Player with id={self.winner_id} won"
+        return f"Game finished regularly. Player with id={self.playerId} won"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (winner_id={(self.winner_id)})"
+        return f"<{self.__class__.__name__} (playerId={(self.playerId)})"
 
     def __eq__(self, other: object) -> bool:
         # super().__eq__(other) is not used here since it also compares
         # equality of playerId which is irrelevant here
         if isinstance(other, EventFinish):
-            return self.winner_id == other.winner_id
+            return self.playerId == other.playerId
         else:
             return False
 

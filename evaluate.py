@@ -56,7 +56,7 @@ class Evaluation:
 
     def run(self) -> None:
         if len(self.players) < 2:
-            logging.warning("Running evaluation with only {len(self.players)} players.")
+            logging.warning(f"Running evaluation with only {len(self.players)} players.")
 
         self.t_start = time.time()
         prg = 0

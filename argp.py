@@ -21,7 +21,20 @@ class Flag:
     help_alias: Optional[str] = None
     # Whether to omit this flag in the help section
     hidden: bool = False
+    # Whether the flag has been set
+    _set: bool = False
+    # A value which followed the flag. Whether this value is allowed/obligatory
+    # is specified by value_after
     value: Any = None
+
+    @property
+    def set(self) -> bool:
+        return self._set
+
+    @set.setter
+    def set(self, value: bool) -> None:
+        assert isinstance(value, bool)
+        self._set = value
 
 
 player_flags = ", ".join(FLAGS_TO_PLAYERS.keys())
@@ -108,7 +121,7 @@ class ArgumentParser:
 
     def getFlag(self, name):
         try:
-            return next(filter(lambda flag: flag.name == name, self.flags)).value
+            return next(filter(lambda flag: flag.name == name, self.flags))
         except StopIteration:
             return None
 

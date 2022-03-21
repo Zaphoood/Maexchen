@@ -4,7 +4,7 @@ import logging
 
 from player import Player, DummyPlayer, AdvancedDummyPlayer, CounterDummyPlayer, ShowOffPlayer, RandomPlayer, ThresholdPlayer, TrackingPlayer, CounterThresPlayer
 from evaluate import Evaluation
-from format import formatTable
+from formatting import formatTable
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 

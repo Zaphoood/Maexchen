@@ -12,7 +12,7 @@ from gameevent import EventKick
 from player import Player
 from game import Game
 from gameevent import KICK_REASON
-from format import formatTable, printProgress
+from formatting import formatTable, printProgress
 from disk import writeLog
 from plot import plotWinRate, plotLossReason, plotWRandLR
 import constants as c

@@ -152,8 +152,6 @@ class TestEventListening(unittest.TestCase):
         game.run()
 
 
-# TODO: Consider removing this entire testacase; there is already a testcase for
-# TrackingPlayer in test_player.py
 class TestTrackingPlayer(unittest.TestCase):
     def test_tracking(self):
         tracking_player = TrackingPlayer()

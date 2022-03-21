@@ -351,7 +351,7 @@ class CounterThresPlayer(Player):
 class TrackingPlayer(Player):
     """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, credLevel=0.5, **kwargs):
         super().__init__(*args, listensToEvents=True, **kwargs)
 
         # Statistik über die Wahrheitstreue der anderen Spieler. Das Format ist:
@@ -364,6 +364,9 @@ class TrackingPlayer(Player):
         self.lastThrow: Optional[Throw] = None
         # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
         self.lastPlayerId: Optional[int] = None
+        # Level of credibility which another player must at least have so that we trust them
+        # if there are no other data points (this is the case if the last player had no value to beat)
+        self.credLevel = credLevel
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
         if lastThrow.isMaexchen:
@@ -453,11 +456,7 @@ class TrackingPlayer(Player):
         if self.secondLastThrow is None:
             # Zweiter Zug der "Runde" (nach letztem Zurücksetzen des zu überbietenden Wertes)
             if self.existPlayerStats(self.lastPlayerId):
-                # TODO: Compare credibility to some threshold
-                #return self.getPlayerCredibility(self.lastPlayerId)
-                
-                # This is just a placeholder until that to-do gets implemented
-                return False
+                return self.getPlayerCredibility(self.lastPlayerId) > self.credLevel
             else:
                 return False
 

@@ -2,6 +2,7 @@ import logging
 import copy
 import random
 import sys
+from contextlib import suppress
 from typing import List, Set, Optional
 
 from gamelog import GameLog
@@ -11,11 +12,17 @@ from throw import Throw, NoneThrow
 
 class TooFewPlayers(Exception):
     """Is raised when too few players have been provided to the Game class"""
-    def __init__(self, *args):
-        if args:
-            self.n_players = args[0]
-        else:
+    n_players: Optional[int]
+    message: str
+
+    def __init__(self, *args, message: str = "") -> None:
+        if not args:
             self.n_players = None
+            self.message = message or "Too few players for simulation"
+        else:
+            with suppress(ValueError):  # contextlib.suppress
+                self.n_players = args[0]
+            self.message = message or f"{self.n_players} player(s) is too few for a simulation."
 
 class DuplicateId(Exception):
     pass

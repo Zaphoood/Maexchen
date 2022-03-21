@@ -125,7 +125,8 @@ class ArgumentParser:
         except StopIteration:
             return None
 
-    def printHelp(self):
+    @staticmethod
+    def printHelp():
         out = []
         out.append((USAGE, 0))
         out.append(("", 0))

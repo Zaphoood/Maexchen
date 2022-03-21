@@ -2,6 +2,9 @@ from evaluate import Evaluation
 from argp import ArgumentParser
 import player
 from game import TooFewPlayers
+import logging
+
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.ERROR)
 
 parser = ArgumentParser()
 parser.parseArgs()
@@ -21,6 +24,10 @@ def main():
         # Otherwise, just add one player
         n = parser.getFlag(player_flag).value or (1 & parser.getFlag(player_flag).set)
         players.extend([player_class() for _ in range(n)])
+    if not players:
+        parser.printHelp()
+        logging.error("You must specify at least one player")
+        exit(1)
 
     try:
         ev = Evaluation(players, parser.n_reps,
@@ -37,9 +44,9 @@ def main():
                 ev.plotWinRate()
             if parser.getFlag("plot-loss-reason").set:
                 ev.plotLossReason()
-    # TODO: Print Exception's content here instead of `pass`ing
-    except TooFewPlayers:
-        pass
+    except TooFewPlayers as e:
+        print(e.message)
+        exit(1)
 
 
 if __name__ == '__main__':

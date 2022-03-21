@@ -26,8 +26,8 @@ class TestInit(unittest.TestCase):
         self.assertFalse(game.players[0] is game.players[1])
 
     def test_shuffle(self):
-        Game([DummyPlayer()], shufflePlayers=False)
-        Game([DummyPlayer()], shufflePlayers=True)
+        Game([DummyPlayer(), DummyPlayer()], shufflePlayers=False)
+        Game([DummyPlayer(), DummyPlayer()], shufflePlayers=True)
 
     def test_duplicate(self):
         # This should not work
@@ -36,6 +36,19 @@ class TestInit(unittest.TestCase):
         # This should work
         game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=False)
         self.assertNotEqual(game.players[0].id, game.players[1].id)
+
+    def test_too_few(self):
+        # Game with zero players should fail
+        game = Game([])
+        with self.assertRaises(TooFewPlayers) as cm:
+            game.init()
+        self.assertEqual(cm.exception.n_players, 0)
+
+        # Game with one player should fail
+        game = Game([DummyPlayer()])
+        with self.assertRaises(TooFewPlayers) as cm:
+            game.init()
+        self.assertEqual(cm.exception.n_players, 1)
 
 class TestNPlayers(unittest.TestCase):
     """Testet Spiele mit verschiedenen Spielerzahlen"""

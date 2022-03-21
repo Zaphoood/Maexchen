@@ -6,7 +6,15 @@ from game import TooFewPlayers
 parser = ArgumentParser()
 parser.parseArgs()
 
-if __name__ == '__main__':
+def main_with_catch():
+    """Warp the program in a try/except block that catches KeyboardInterrupt and exits nicely."""
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nAborted")
+
+
+def main():
     players = []
     for player_flag, player_class in player.FLAGS_TO_PLAYERS.items():
         players.extend([player_class() for _ in range(parser.getFlag(player_flag) or 0)])
@@ -29,3 +37,7 @@ if __name__ == '__main__':
     # TODO: Print Exception's content here instead of `pass`ing
     except TooFewPlayers:
         pass
+
+
+if __name__ == '__main__':
+    main_with_catch()

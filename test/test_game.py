@@ -167,8 +167,10 @@ class TestTrackingPlayer(unittest.TestCase):
 class TestAll(unittest.TestCase):
     def test_all(self):
         tr = TrackingPlayer()
-        players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
-        game = Game(players, deepcopy=True)
+        ctp = CounterDummyPlayer()
+        players = [DummyPlayer(),  AdvancedDummyPlayer(), ctp, ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
+        game = Game(players, deepcopy=False)
+        ctp.onInit(game.players)
         tr.onInit(game.players)
         game.init()
         game.run()

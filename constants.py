@@ -12,6 +12,7 @@ THROW_VALUES = [
     *[i * 10 + i for i in range(1, 7)],  # Päsche
     MAEXCHEN
 ]
+N_THROW_VALUES = len(THROW_VALUES)
 # Weist jedem Wurfergebnisses einen Rang zu
 THROW_RANK_BY_VALUE = {val: rank for rank, val in enumerate(THROW_VALUES)}
 

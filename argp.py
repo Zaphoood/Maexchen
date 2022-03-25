@@ -49,6 +49,7 @@ FLAGS: List[Flag] = [
     Flag("verbose", ["-v", "--verbose"], "Enable verbose output"),
     Flag("quiet", ["-q", "--quiet"], "Quiet output, i.e. no progress bar"),
     Flag("no-write", ["-x", "--no-write"], "Don't write to log file"),
+    Flag("out-file", ["-o", "--out"], "Output file to which simulation results are written", value_after=2, value_after_type=str),
     Flag("no-sort", ["-u", "--no-sort"],
          "Don't sort results by player win rate"),
     Flag("plot-all", ["-p", "--plot-all"],
@@ -64,7 +65,7 @@ FLAGS: List[Flag] = [
 FLAGS += [Flag(player_arg, [f"--{player_arg}"], "", hidden=True, value_after=1,
                value_after_type=int) for player_arg in FLAGS_TO_PLAYERS.keys()]
 
-MAX_LINE_LEN = 70
+MAX_LINE_LEN = 80
 INDENT = 2
 HELP_TEXT_BORDER = 2
 HELP_TEXT_INDENT = 12
@@ -112,8 +113,9 @@ class ArgumentParser:
                             except (IndexError, ValueError):
                                 # If value_after is 2, a value *must* follow the flag.
                                 if flag.value_after == 2:
-                                    print(
-                                        f"Flag `{flag.name}` must be followed by a value of type {flag.value_after_type.__name__}")
+                                    print(f"Flag `{arg}` must be followed by a value of type {flag.value_after_type.__name__}.")
+                                    print(f"Help for `{arg}`: {flag.help_str}")
+                                    exit(1)
                         break
                 else:
                     print(f"Unexpected command line argument \"{arg}\"")
@@ -123,7 +125,7 @@ class ArgumentParser:
         try:
             return next(filter(lambda flag: flag.name == name, self.flags))
         except StopIteration:
-            return None
+            raise ValueError(f"Unknown flag `{name}`")
 
     @staticmethod
     def printHelp():
@@ -139,7 +141,7 @@ class ArgumentParser:
         for flag, alias in zip(FLAGS, alias_strs):
             alias_len = len(alias) + ind * INDENT
             if not flag.hidden:
-                if alias_len >= help_pos - HELP_TEXT_BORDER:
+                if alias_len > help_pos - HELP_TEXT_BORDER:
                     out.append((alias, ind))
                     out.append((flag.help_str, HELP_TEXT_INDENT))
                 else:

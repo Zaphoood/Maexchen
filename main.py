@@ -3,6 +3,7 @@ from argp import ArgumentParser
 import player
 from game import TooFewPlayers
 import logging
+from disk import existsPathToFile
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.ERROR)
 
@@ -28,13 +29,20 @@ def main():
         parser.printHelp()
         logging.error("You must specify at least one player")
         exit(1)
-
+    if not parser.getFlag("no-write").set:
+        log_path = None
+        log_path_flag = parser.getFlag("out-file")
+        if log_path_flag.set:
+            log_path = log_path_flag.value
+            if not existsPathToFile(log_path):
+                logging.error(f"Can't write to {log_path}: Directory doesn't exist.")
+                exit(1)
+ 
     try:
         ev = Evaluation(players, parser.n_reps,
                         showProgress=not parser.getFlag("quiet").set)
         ev.run()
-        if not parser.getFlag("no-write").set:
-            ev.saveResultsToDisk()
+        ev.saveResultsToDisk(log_path=log_path)
         print(ev.prettyResults(sort_by_winrate=not parser.getFlag("no-sort").set, force_rerender=True))
 
         if parser.getFlag("plot-all").set:

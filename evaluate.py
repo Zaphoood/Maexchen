@@ -135,10 +135,10 @@ class Evaluation:
         output += formatTable(table)
         return output
 
-    def saveResultsToDisk(self):
+    def saveResultsToDisk(self, log_path=None):
         assert self.done
         writeLog(self.t_start, self.players,
-                 self.n_repetitions, self.prettyResults())
+                 self.n_repetitions, self.prettyResults(), log_path=log_path)
 
     def plotWinRate(self):
         # Using plot.plotWinRate

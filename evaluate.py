@@ -66,8 +66,7 @@ class Evaluation:
                 if prg < (prg := i * prg_steps // self.n_repetitions):
                     printProgress(prg, prg_steps, end=(
                         "\r" if i < self.n_repetitions - 1 else "\n"))
-            # No need to deepcopy here since we already did that in __init__
-            game = Game(self.players, deepcopy=False, disableAssignIds=True)
+            game = Game(self.players, disable_assign_ids=True)
             game.init()
             game.run()
             if game.running:

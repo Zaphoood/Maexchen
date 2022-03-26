@@ -15,27 +15,16 @@ class TestInit(unittest.TestCase):
     def test_seed(self):
         Game([DummyPlayer()], seed=123)
 
-    def test_deepcopy(self):
-        # No deepcopy, a and b should be references to the same object
-        a, b = [DummyPlayer()] * 2
-        game = Game([a, b], deepcopy=False)
-        self.assertTrue(game.players[0] is game.players[1])
-
-        # No deepcopy, a and b should individual objects
-        a, b = [DummyPlayer()] * 2
-        game = Game([a, b], deepcopy=True)
-        self.assertFalse(game.players[0] is game.players[1])
-
     def test_shuffle(self):
-        Game([DummyPlayer(), DummyPlayer()], shufflePlayers=False)
-        Game([DummyPlayer(), DummyPlayer()], shufflePlayers=True)
+        Game([DummyPlayer(), DummyPlayer()], shuffle_players=False)
+        Game([DummyPlayer(), DummyPlayer()], shuffle_players=True)
 
     def test_duplicate(self):
         # This should not work
         with self.assertRaises(DuplicateId):
-            Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=True)
+            Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disable_assign_ids=True)
         # This should work
-        game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=False)
+        game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disable_assign_ids=False)
         self.assertNotEqual(game.players[0].id, game.players[1].id)
 
     def test_too_few(self):
@@ -61,7 +50,7 @@ class TestNPlayers(unittest.TestCase):
         self.assertRaises(TooFewPlayers, game.init)
 
     def test_three(self):
-        players = [DummyPlayer()] * 3
+        players = [DummyPlayer() for _ in range(3)]
         self.game = Game(players)
         self.game.init()
         self.game.run()
@@ -79,7 +68,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_assign(self):
         # No IDs assigned manually
-        players = [DummyPlayer()] * 10
+        players = [DummyPlayer() for _ in range(10)]
         game = Game(players)
         self.assert_unique_ids(game)
 
@@ -139,7 +128,7 @@ class TestTrackingPlayer(unittest.TestCase):
     def test_tracking(self):
         tracking_player = TrackingPlayer()
         players = [DummyPlayer(), RandomPlayer(), ThresholdPlayer(), tracking_player]
-        game = Game(players, deepcopy=False)
+        game = Game(players)
         tracking_player.onInit(game.players)
         game.init()
         game.run()
@@ -150,7 +139,7 @@ class TestAll(unittest.TestCase):
         tr = TrackingPlayer()
         ctp = CounterDummyPlayer()
         players = [DummyPlayer(),  AdvancedDummyPlayer(), ctp, ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
-        game = Game(players, deepcopy=False)
+        game = Game(players)
         ctp.onInit(game.players)
         tr.onInit(game.players)
         game.init()

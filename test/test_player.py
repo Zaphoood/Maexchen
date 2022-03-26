@@ -2,11 +2,27 @@ import unittest
 from random import Random
 
 import constants as c
-from player import DummyPlayer, RandomPlayer, TrackingPlayer, CounterThresPlayer
+from player import Player, DummyPlayer, RandomPlayer, TrackingPlayer, CounterThresPlayer
+from player import PlayerNotInitialized
 from throw import Throw
-from move import Move
 import gameevent
 import logging
+
+
+class TestInit(unittest.TestCase):
+    def test_assert_initialized(self):
+        p = Player()
+
+        # This shouldn't work
+        self.assertRaises(PlayerNotInitialized, p._assertInitialized)
+
+        # Initialize player
+        p.onInit([])
+        try:
+            # This should work
+            p._assertInitialized()
+        except PlayerNotInitialized:
+            self.fail("Player._assertInitialized() fails even though it's onInit() has been called")
 
 
 class TestDummyPlayer(unittest.TestCase):
@@ -18,9 +34,9 @@ class TestDummyPlayer(unittest.TestCase):
         # Eigenes Ergebnis soll wahrheitsgemäß verkündet werden, wenn es den Vorgänger übertrumpft
         throw = Throw(3, 1)
         while throw < Throw(2, 1):
-            biggerThrow = throw + 1
-            throwStated = dummy.getThrowStated(biggerThrow, throw, 0, self.rng)
-            self.assertEqual(throwStated, biggerThrow)
+            bigger_throw = throw + 1
+            throw_stated = dummy.getThrowStated(bigger_throw, throw, 0, self.rng)
+            self.assertEqual(throw_stated, bigger_throw)
             throw += 1
 
         # Vorgänger, der Mäxchen gewürfelt hat, soll immer angezweifelt werden.
@@ -70,8 +86,8 @@ class TestRandomPlayer(unittest.TestCase):
 class TestTrackingPlayer(unittest.TestCase):
     def setUp(self):
         self.n_dummies = 10
-        self.dummies = [DummyPlayer(playerId=i) for i in range(self.n_dummies)]
-        self.tr = TrackingPlayer(playerId=self.n_dummies)
+        self.dummies = [DummyPlayer(player_id=i) for i in range(self.n_dummies)]
+        self.tr = TrackingPlayer(player_id=self.n_dummies)
         self.tr.onInit([self.tr, *self.dummies])
 
     def test_stats_creation(self):
@@ -126,18 +142,50 @@ class TestTrackingPlayer(unittest.TestCase):
 class TestCounterThresPlayer(unittest.TestCase):
     def setUp(self):
         self.n_dummies = 2
-        self.dummies = [DummyPlayer(i) for i in range(self.n_dummies)]
-        self.ctp = CounterThresPlayer(self.n_dummies)
+        self.dummies = [DummyPlayer(player_id=i) for i in range(self.n_dummies)]
+        self.ctp = CounterThresPlayer()
         players = [self.ctp, *self.dummies]
         self.ctp.onInit(players)
 
-    def test_init(self):
+    def test_on_init(self):
         for dummy in self.dummies:
-            self.assertEqual(self.ctp.throwStats[dummy.id], [])
+            self.assertEqual(self.ctp.throwStats[dummy.id], [0] * c.N_THROW_VALUES)
+
+    def test_equal_number_of_throws(self):
+        dummy = DummyPlayer(player_id=0)
+        ctp = CounterThresPlayer(minDataPoints=1, freqThres=0.49)
+        players = [ctp, dummy]
+        ctp.onInit([dummy])
+        for i in range(2):
+            ctp.onEvent(gameevent.EventThrow(dummy.id, None, Throw(31)))
+        for i in range(2):
+            ctp.onEvent(gameevent.EventThrow(dummy.id, None, Throw(32)))
+        # `31` and `32` have been tracked the same amount of times
+        # --> there should be no suggestion
+        self.assertFalse(ctp.existsAssumption(dummy.id))
 
     def test_tracking(self):
-        # TODO: Finish implementing this test case
-        throw1 = Throw(3,3)
+        throw1 = Throw(33)
+        throw2 = Throw(61)
 
-        # Spieler 0 wirft 33
-        self.ctp.onEvent(gameevent.EventThrow(0, None, throw1))
+        # Simulate another player throwing six times: Five times `33`
+        n = 6
+        for i in range(n - 1):
+            self.ctp.onEvent(gameevent.EventThrow(self.dummies[0].id, None, throw1))
+        # and one time `61`
+        self.ctp.onEvent(gameevent.EventThrow(self.dummies[0].id, None, throw2))
+
+        self.assertEqual(self.ctp.mostFreqThrowIndices(self.dummies[0].id), [throw1.rank])
+        self.assertEqual(self.ctp.mostFreqThrow(self.dummies[0].id), [throw1.value])
+        self.assertAlmostEqual(self.ctp.mostFreqThrowFreq(self.dummies[0].id), (n - 1)/n)
+        self.assertEqual(self.ctp.totalThrowsTracked(self.dummies[0].id), n)
+
+        # Minimum amount of data points and the threshold for the most frequent Throw
+        # value should be met by now --> There should be a suggestion that dummies[0]
+        # is a ThresholdPlayer
+        self.assertTrue(self.ctp.existsAssumption(self.dummies[0].id))
+        # Since CounterThresPlayer suspects that dummies[0] is a ThresholdPlayer,
+        # he should doubt them when they throw their most common throw (`throw1`) again.
+        self.assertTrue(self.ctp.getDoubt(throw1, n + 2, None))
+        self.ctp.getThrowStated(Throw(21), Throw(66), 1, None)
+

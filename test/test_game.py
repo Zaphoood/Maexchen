@@ -1,3 +1,4 @@
+# TODO: Do `from unittest import TestCase` instead
 import unittest
 import logging
 
@@ -14,28 +15,30 @@ class TestInit(unittest.TestCase):
     def test_seed(self):
         Game([DummyPlayer()], seed=123)
 
-    def test_deepcopy(self):
-        # No deepcopy, a and b should be references to the same object
-        a, b = [DummyPlayer()] * 2
-        game = Game([a, b], deepcopy=False)
-        self.assertTrue(game.players[0] is game.players[1])
-
-        # No deepcopy, a and b should individual objects
-        a, b = [DummyPlayer()] * 2
-        game = Game([a, b], deepcopy=True)
-        self.assertFalse(game.players[0] is game.players[1])
-
     def test_shuffle(self):
-        Game([DummyPlayer()], shufflePlayers=False)
-        Game([DummyPlayer()], shufflePlayers=True)
+        Game([DummyPlayer(), DummyPlayer()], shuffle_players=False)
+        Game([DummyPlayer(), DummyPlayer()], shuffle_players=True)
 
     def test_duplicate(self):
         # This should not work
         with self.assertRaises(DuplicateId):
-            Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=True)
+            Game([DummyPlayer(player_id=0), DummyPlayer(player_id=0)], disable_assign_ids=True)
         # This should work
-        game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disableAssignIds=False)
+        game = Game([DummyPlayer(player_id=0), DummyPlayer(player_id=0)], disable_assign_ids=False)
         self.assertNotEqual(game.players[0].id, game.players[1].id)
+
+    def test_too_few(self):
+        # Game with zero players should fail
+        game = Game([])
+        with self.assertRaises(TooFewPlayers) as cm:
+            game.init()
+        self.assertEqual(cm.exception.n_players, 0)
+
+        # Game with one player should fail
+        game = Game([DummyPlayer()])
+        with self.assertRaises(TooFewPlayers) as cm:
+            game.init()
+        self.assertEqual(cm.exception.n_players, 1)
 
 class TestNPlayers(unittest.TestCase):
     """Testet Spiele mit verschiedenen Spielerzahlen"""
@@ -47,7 +50,7 @@ class TestNPlayers(unittest.TestCase):
         self.assertRaises(TooFewPlayers, game.init)
 
     def test_three(self):
-        players = [DummyPlayer()] * 3
+        players = [DummyPlayer() for _ in range(3)]
         self.game = Game(players)
         self.game.init()
         self.game.run()
@@ -65,13 +68,13 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_assign(self):
         # No IDs assigned manually
-        players = [DummyPlayer()] * 10
+        players = [DummyPlayer() for _ in range(10)]
         game = Game(players)
         self.assert_unique_ids(game)
 
     def test_partial(self):
         # Some IDs assigned manually, some to be assigned by Game
-        players = [DummyPlayer(playerId=3), DummyPlayer(playerId=100), DummyPlayer(), DummyPlayer(), DummyPlayer(playerId=2)]
+        players = [DummyPlayer(player_id=3), DummyPlayer(player_id=100), DummyPlayer(), DummyPlayer(), DummyPlayer(player_id=2)]
         game = Game(players)
         self.assert_unique_ids(game)
         self.assertTrue(any([p.id == 3 for p in game.players]))
@@ -80,51 +83,20 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_conflict(self):
         # Conflicting IDs assigned manually
-        players = [DummyPlayer(playerId=2), DummyPlayer(playerId=2), DummyPlayer(playerId=3), DummyPlayer(), DummyPlayer(playerId=2)]
+        players = [DummyPlayer(player_id=2), DummyPlayer(player_id=2), DummyPlayer(player_id=3), DummyPlayer(), DummyPlayer(player_id=2)]
         game = Game(players)
         self.assert_unique_ids(game)
 
 
-
 class TestLog(unittest.TestCase):
     def test_log(self):
-        log1 = GameLog()
-        log1.happen(gameevent.EventAbort)
-        log2 = GameLog()
-        log2.happen(gameevent.EventAbort)
-        self.assertEqual(log1, log2)
+        log = GameLog()
+        log.happen(gameevent.EventAbort())
+        self.assertTrue(log.hasFinished())
 
-
-class TestGameWithLog(unittest.TestCase):
-    def test_gamewlog(self):
-        fixed_seed = 123456
-        game1 = Game([DummyPlayer()] * 4, seed=fixed_seed)
-        game1.init()
-        game1.run()
-        game2 = Game([DummyPlayer()] * 4, seed=fixed_seed)
-        game2.init()
-        game2.run()
-        self.assertEqual(game1.log, game2.log)
-
-
-class TestGameEvent(unittest.TestCase):
-    def test_gameevent_equals(self):
-        e1 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
-        e2 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
-        self.assertEqual(e1, e2)
-        e1 = gameevent.EventDoubt(1)
-        e2 = gameevent.EventDoubt(1)
-        self.assertEqual(e1, e2)
-        e1 = gameevent.EventKick(1, "reason")
-        e2 = gameevent.EventKick(1, "reason")
-        self.assertEqual(e1, e2)
-        p = Player(1)
-        e1 = gameevent.EventFinish(p)
-        e2 = gameevent.EventFinish(p)
-        self.assertEqual(e1, e2)
-        e1 = gameevent.EventAbort()
-        e2 = gameevent.EventAbort()
-        self.assertEqual(e1, e2)
+        log = GameLog()
+        log.happen(gameevent.EventFinish(0))
+        self.assertTrue(log.hasFinished())
 
 
 class EventListenerPlayer(Player):
@@ -136,7 +108,7 @@ class EventListenerPlayer(Player):
         return False
 
     def getThrowStated(myThrow, lastThrow, *args, **kwargs):
-        return Throw(2, 1) if lastThrow.isMaexchen else lastThrow + 1
+        return Throw(2, 1) if lastThrow.is_maexchen else lastThrow + 1
 
     def onEvent(self, event):
         logging.info(f"EventListenerPlayer got Event: {event}")
@@ -153,10 +125,10 @@ class TestEventListening(unittest.TestCase):
 
 
 class TestTrackingPlayer(unittest.TestCase):
-    def test_normal_functionality(self):
+    def test_tracking(self):
         tracking_player = TrackingPlayer()
         players = [DummyPlayer(), RandomPlayer(), ThresholdPlayer(), tracking_player]
-        game = Game(players, deepcopy=True)
+        game = Game(players)
         tracking_player.onInit(game.players)
         game.init()
         game.run()
@@ -165,8 +137,10 @@ class TestTrackingPlayer(unittest.TestCase):
 class TestAll(unittest.TestCase):
     def test_all(self):
         tr = TrackingPlayer()
-        players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
-        game = Game(players, deepcopy=True)
+        ctp = CounterDummyPlayer()
+        players = [DummyPlayer(),  AdvancedDummyPlayer(), ctp, ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), tr]
+        game = Game(players)
+        ctp.onInit(game.players)
         tr.onInit(game.players)
         game.init()
         game.run()

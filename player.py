@@ -1,24 +1,34 @@
-from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
-from typing import Callable, Optional
-from contextlib import suppress
-from collections import Counter
+# Necessary for type hints of methods that include their own class
+from __future__ import annotations
+from typing import List, Optional
 import random
-import logging
 
 import constants as c
 import gameevent
-from throw import Throw, throwByRank
+from throw import Throw
 from utils import probLT, probGE
 
 
+class PlayerNotInitialized(Exception):
+    pass
+
+
 class Player:
-    # Identifikationsnummer die unter allen Player in einem Game einzigartig sein muss.
-    # Wird von Game zugewiesen
+    """Base class for all players"""
+
+    # A player's id is necessary to identify it, since players don't have a fixed position in the
+    # array that Game stores them in. It must be unique among all players of a game, and is assigned
+    # by the Game this Player corresponds to.
+    # TODO: This might not be necessary anymore since the order of players during a game
+    # doesn't change
     id: Optional[int]
 
-    def __init__(self, playerId: int = None, listensToEvents: bool = False):
-        self.id = playerId
-        self.listensToEvents = listensToEvents
+    def __init__(self, player_id: int = None, listens_to_events: bool = False):
+        self.id = player_id
+        # Whether this instances onEvent() should be called by Game
+        self.listens_to_events = listens_to_events
+        # Whether the instances onInit() method has been called
+        self._initialized: bool = False
 
     def __str__(self):
         return f"{self.__class__.__name__} with id {self.id}"
@@ -26,74 +36,77 @@ class Player:
     def __repr__(self):
         return f"<{self.__class__.__name__} (id={self.id})>"
 
-    def __eq__(self, other):
-        # Falls other kein Player oder eine Unterklasse davon ist, Fehler ausgeben
-        if not isinstance(other, Player):
-            raise NotImplementedError(f"Can't compare Player to non-Player ({type(other)})")
-        # Überprüfen, ob other von der gleiche Klasse oder einer Unterklasse wie self ist.
-        # Falls other und self Instanzen von verschiedenen Unterklassen von Player sind, wird
-        # das oben nicht erkannt, deswegen hier überprüfen.
-        return isinstance(other, self.__class__) and self.id == other.id
-
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        """Fragt den Spieler, ob er dem Wurf seines Vorgängers vertraut
+        """Ask the player whether they doubt the previous player
 
-        :param lastThrow: Wurf des vorherigen Spielrs
-        :param iMove: Um den wievielten Zug der Runde handelt es sich
+        :param lastThrow: The previous player's throw
+        :param iMove: The index of the move of the game
         """
         raise NotImplementedError
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
-        """Gibt basierend auf dem Wurf dieses Spielers myThrow das Würfelergebnis zurück, das der Spieler verkündet.
+        """Return the throw to tell to the other players (this might not be the actual throw -- players are allowed to lie)
 
-        Das angegebene Ergebnis muss nicht der Wahrheit entsprechen. Der eigene Wurf wird zuvor vom Spiel (Game)
-        zufällig gewählt und dieser Funktion übergeben. Die Funktion muss None als Wert für lastThrow akzeptieren
-        können.
-
-        :param myThrow: Wurf dieses Spielers
-        :param lastThrow: Wurf des vorherigen Spielers
-        :param iMove: Um den wievielten Zug der Runde handelt es sich"""
+        :param myThrow: This instances throw
+        :param lastThrow: The previous Player's throw
+        :param iMove: The index of the move of the game
+        """
         raise NotImplementedError
 
     def onInit(self, players: list[Player]) -> None:
-        """Wird von Evaluation vor dem beginn einer Simulation aufgerufen.
+        """Is called at the start of an Evaluation.
 
-        :param players: Liste aller Spieler die am Spiel teilnehmen"""
-        pass
+        :param players: List of all players in the Evaluation
+        """
+        self._initialized = True
 
     def onEvent(self, event: gameevent.Event) -> None:
-        """Wird von Game aufgerufen, wenn ein Ereignis im Spiel passiert und self.listensToEvents==True.
+        """Is called by Game on every event that occurs.
 
-        :param event: Das Ereignis, das passiert ist"""
+        :param event: The event that has occurred
+        """
         pass
+
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
+
+    def _assertInitialized(self) -> None:
+        """Raise an Exception if the instance has not been initialized.
+
+        Player instances can be initialized by calling the onInit() method."""
+        if not self._initialized:
+            raise PlayerNotInitialized()
 
 
 class DummyPlayer(Player):
-    """Sehr grundlegende Spielerklasse.
+    """Very basic player model.
 
-    Kann das eigene Ergebnis den Vorgänger überbieten, wird dieses angegeben.
-    Kann es das nicht, wird ein falsches Ergebnis verkündet"""
+    Trusts all results except Mäxchen.
+    Only lies if necessary, that is, if DummyPlayer's throw doesn't beat the previous one.
+    Otherwise just tells the truth.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         else:
             return False
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None:
-            # Erste Runde
+            # No need to beat the last throw
             return myThrow
         else:
             if myThrow > lastThrow:
-                # Vorgänger kann überboten werden -> Wahrheitsgemäße Antwort machen
+                # Our throw beats previous one
                 return myThrow
             else:
-                # Vorgänger kann kein Mäxchen gehabt haben, sonst wäre er angezweifelt worden
-                # Lügen und nächsthöheres Würfelergebnis angeben
+                # Doesn't beet previous throw
+                # Just state we threw the next highest Throw
                 return lastThrow + 1
 
 class AdvancedDummyPlayer(Player):
@@ -101,7 +114,7 @@ class AdvancedDummyPlayer(Player):
         super().__init__(*args, **kwargs)
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen or lastThrow == Throw(66):
+        if lastThrow.is_maexchen or lastThrow == Throw(66):
             return True
         else:
             return False
@@ -116,31 +129,29 @@ class AdvancedDummyPlayer(Player):
                 return Throw(rng.choice(c.THROW_VALUES[lastThrow.rank + 1:-1]))
 
 class CounterDummyPlayer(Player):
-    """Möglichst erfolgreich gegen DummyPlayer"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, listensToEvents=True, **kwargs)
+    """Designed to exploit the flaws in DummyPlayer's strategy"""
 
-        # Den letzten und vorletzten Wurf abspeichern
-        self.secondLastThrow = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, listens_to_events=True, **kwargs)
+
+        # Store last and second to last Throw so that
+        # we can deduce the previous players strategy
         self.lastThrow = None
-        # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
-        self.lastPlayerId = None
+        self.secondLastThrow = None
 
     def onEvent(self, event: gameevent.Event) -> None:
         if isinstance(event, gameevent.EventThrow):
             self.secondLastThrow = self.lastThrow
-            self.lastThrow = event.throwStated
+            self.lastThrow = event.throw_stated
         elif isinstance(event, gameevent.EventKick):
-            # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
-            # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = None
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
-            # Letzter Wurf ist genau eins höher als der vorletzte -> letzter Spieler ist wahrscheinlich
-            # lügender DummyPlayer
+            # Last Throw is exactly one above the one before that, which means that the last player
+            # is likely to be a DummyPlayer
             return True
         else:
             return False
@@ -149,26 +160,28 @@ class CounterDummyPlayer(Player):
         if lastThrow is None or myThrow > lastThrow:
             return myThrow
         else:
-            # Wenn zum Lügen gezwungen: 66 angeben, sodass der nächste Spieler Mäxchen angeben muss -> übernächster Spieler misstraut
+            # If forced to lie, announced 66 as the Throw value. The next player must then announce 21 (Mäxchen),
+            # so that the one after that will most like doubt them, since Mäxchen can't be beaten
             return Throw(66)
 
 class ShowOffPlayer(Player):
-    """Angeber-Spielerklasse.
+    """A real show-off.
 
-    Gibt immer an, einen Pasch oder Mäxchen gewürfelt zu haben, es sei denn, der Vorgänger hat
-    Mäxchen gewürfelt"""
+    Always announces that they threw a double or Mäxchen, except if the predecessor happened
+    to throw Mäxchen.
+    """
 
-    def __init__(self, playerId=None) -> None:
-        super().__init__(playerId)
+    def __init__(self, player_id=None) -> None:
+        super().__init__(player_id)
 
     def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         else:
             return False
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
-        """Generiert zufällig ein Pasch oder Mäxchen, um den vorherigen Wurf zu überbieten"""
+        #Randomly choose a double or Mäxchen in order to beat the previous player
         rank_11 = c.THROW_RANK_BY_VALUE[11]
         if lastThrow is None:
             return Throw(random.choice(c.THROW_VALUES[rank_11:]))
@@ -177,10 +190,10 @@ class ShowOffPlayer(Player):
 
 
 class RandomPlayer(Player):
+    """Acts completely randomly"""
+
     def __init__(self, *args, doubtChance: float = 0.5, **kwargs):
         super().__init__(*args, **kwargs)
-        if not 0 <= doubtChance <= 1:
-            raise ValueError("Parameter doubtChance must be in range [0., 1.]")
         self.doubtChance = doubtChance
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
@@ -191,16 +204,16 @@ class RandomPlayer(Player):
 
 
 class ThresholdPlayer(Player):
-    """Schwellenwert-Spielerklasse
+    """Doubts or trusts depending on certain constant thresholds.
 
-    Misstraut und lügt ab bestimmten Schwellenwerten.
-    Ist das Ergebnis des Vorgängers größer oder gleich doubtThreshold, wird dem Vorgänger misstraut.
-    Ist das eigene Eregebnis höher als dass des Vorgängers und niedriger als lieThreshold, wird gelogen und
-    lieThreshold als eigener Wurf zurückgegeben.
+    If the last players throw is greater than or equal to `doubtThreshold`, they are doubted.
+    If our own throw is higher than the last throw but lower than `lieThreshold`, we lie and
+    announce we threw `lieThreshold`. Therefore, we never state anything than that threshold
+    as our throw.
     """
     
-    def __init__(self, playerId: int = None, doubtThreshold: int = 61, lieThreshold: int = 61):
-        super().__init__(playerId)
+    def __init__(self, player_id: int = None, doubtThreshold: int = 61, lieThreshold: int = 61):
+        super().__init__(player_id)
         if isinstance(doubtThreshold, int):
             self.doubtThreshold = Throw(doubtThreshold)
         elif isinstance(doubtThreshold, Throw):
@@ -218,11 +231,10 @@ class ThresholdPlayer(Player):
         if self.doubtThreshold:
             return lastThrow >= self.doubtThreshold
         else:
-            return lastThrow.isMaexchen
+            return lastThrow.is_maexchen
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
-            # Erster Zug der Runde oder vorheriger Spieler wurde entfernt -> Zu überbietender Wert wurde zurückgesetzt
             if myThrow <= self.lieThreshold:
                 return self.lieThreshold
             else:
@@ -232,62 +244,59 @@ class ThresholdPlayer(Player):
             return lastThrow + 1
 
 class CounterThresPlayer(Player):
-    """Möglichst effektiv gegen CounterPlayer.
+    """Designed to exploit the flaws in ThresholdPlayer's strategy
 
-    Speichert die angegebenen Ergebnisse der Mitspieler ab. Wird ein Muster
-    erkannt, das dem Verhalten eines CounterPlayer entspricht, wird diesem beim vermuteten
-    Schwellenwert immer misstraut"""
+    Stores the results other players announce, in order to detect a pattern.
+    If a player is suspected to be a ThresPlayer, then any throw they announce
+    which corresponds to their supposed threshold is doubted.
+    """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, listensToEvents=True, **kwargs)
+    def __init__(self, *args, minDataPoints=5, freqThres=0.5, **kwargs):
+        super().__init__(*args, listens_to_events=True, **kwargs)
 
-        # Statistik über die Würfe der anderen Spieler. Das Format ist:
-        # { player0Id: [wurf0, wurf1, ...],
-        #   player1Id: [wurf0, wurf1, ...],
-        #   ... }
-        # TODO: Use this table structure instead:
-        # { player0ID: [0, 0, 0, 0, ..., 0], ... }
+        # Statistic about the frequency of other players throws
+        # { player0Id: [0, 0, 0, 0, ..., 0],
+        #   player1Id: [0, 0, 0, 0, ..., 0],
         #              ^--- 21 entries --^
-        self.throwStats = {}
-        # Dasselbe, aber als Counter-Objekt, d. h. kategorisiert und gezählt
-        self.throwStatsCounted = {}
-        self.recalcCounted = {}
-        # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
+        # ... }
+        self.throwStats: Dict[int, List[int]] = {}
+        # The last player to state a throw
         self.lastPlayerId = None
 
-        self.minDataPoints = 5
-        self.freqThres = 0.4
+        # Minimum amount of data points to collect before we make an assumption about
+        # another player
+        self.minDataPoints = minDataPoints
+        # Minimum frequency at which a player must announce a certain Throw so that we assume
+        # they are a ThresPlayer
+        self.freqThres = freqThres
 
     def onInit(self, players: list[Player]) -> None:
-        # Leere Statistik erstellen
-        self.throwStats = {player.id: [] for player in players if player is not self}
-        self.throwStatsCounted = {player.id: None for player in players if player is not self}
-        self.recalcCounted = {player.id: True for player in players if player is not self}
+        super().onInit(players)
+        # Create empty table for each player
+        self.throwStats = {player.id: [0 for _ in range(c.N_THROW_VALUES)] for player in players if player is not self}
 
     def onEvent(self, event: gameevent.Event) -> None:
         if isinstance(event, gameevent.EventThrow):
-            if event.playerId != self.id:
-                self.throwStats[event.playerId].append(event.throwStated.value)
-                self.lastPlayerId = event.playerId
-        elif event.eventType == gameevent.EVENT_TYPES.KICK:
-            # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
-            # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
+            if event.player_id != self.id:
+                self.throwStats[event.player_id][event.throw_stated.rank] += 1
+                self.lastPlayerId = event.player_id
+        elif event.event_type == gameevent.EVENT_TYPES.KICK:
             self.lastPlayerId = None
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
-        elif self.existThresSuggestion(self.lastPlayerId):
-            # Entscheidung Anhand von Statistik über Spieler treffen
-            if self.mostFreqThrow(self.lastPlayerId) == lastThrow:
-                # Spieler hat entsprechend der Vermutung gehandelt
+        elif self.existsAssumption(self.lastPlayerId):
+            # Decide based on data that was collected about the last player
+            if self.mostFreqThrow(self.lastPlayerId)[0] == lastThrow:
+                # Last player acted according to assumption 
                 return True
-        # Vermutung existiert nicht oder konnte nicht bestätigt werden
+        # No assumption exists or it couldn't be confirmed
         return False
 
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
-        """Verhalten ist dasselbe wie DummyPlayer."""
+        # Same behavior as DummyPlayer
         if lastThrow is None:
             return myThrow
         else:
@@ -296,60 +305,69 @@ class CounterThresPlayer(Player):
             else:
                 return lastThrow + 1
 
-    def existThresSuggestion(self, playerId: int):
-        """Beurteilen, ob von einem Spieler hinreichend aussagekräftige Statistik existiert,
-        um eine Vermutung über dessen Schwellenwert aufzustellen.
+    def existsAssumption(self, player_id: int):
+        """Assess whether the data collected about a player is meaningful enough to make an assumption.
 
-        Die Vorraussetzung dafür ist, dass die Anzahl Datenpunkte über diesen Spieler > self.minDataPoints
-        und dass ein Ergebnis einen Anteil an allen von diesem Spieler verkündeten Ergebnisse ausmacht,
-        der größer als self.freqThres ist.
+        Requirements are:
+         * Enough data points have been collected
+         * The frequency of the most frequent throw is above a certain threshold
+         * The player has a max frequency for just one Throw
 
-        :param playerId: Die ID des zu beurteilenden Spielers
+        :param player_id: The ID of the player to assess
         """
-        return self.countDataPoints(playerId) > self.minDataPoints and self.mostFreqThrowFreq(playerId) > self.freqThres
+        return self.totalThrowsTracked(player_id) > self.minDataPoints\
+                and self.mostFreqThrowFreq(player_id) > self.freqThres\
+                and len(self.mostFreqThrowIndices(player_id)) == 1
 
-    def getPlayerStatsCounted(self, playerId: int):
-        if self.recalcCounted[playerId] or self.throwStatsCounted[playerId] is None:
-            self.throwStatsCounted[playerId] = Counter(self.throwStats[playerId])
-        return self.throwStatsCounted[playerId]
+    def mostFreqThrowIndices(self, player_id: int) -> List[int]:
+        """Return the indices of the most frequent throw(s) of a player.
+        
+        The index of a throw in table which holds the statistics about a player
+        corresponds to the rank of that throw."""
+        p_stats = self.throwStats[player_id]
+        max_freq = max(p_stats)
+        return [i for i, freq in enumerate(p_stats) if freq == max_freq]
 
-    def mostFreqThrow(self, playerId: int):
-        """Den von einem Spieler am häufigsten angegebenen Wurf zurückgeben."""
-        return self.getPlayerStatsCounted(playerId).most_common(1)[0][0]
+    def mostFreqThrow(self, player_id: int) -> List[int]:
+        """Return the values of the most frequent throw(s) of a player"""
+        return [c.THROW_VALUES[index] for index in self.mostFreqThrowIndices(player_id)]
 
-    def mostFreqThrowFreq(self, playerId: int):
-        """Die Frequenz des am häufigsten angegebenen Wurfs eines Spielers berechenen."""
-        most_freq = self.getPlayerStatsCounted(playerId).most_common(1)
-        try:
-            total_occs = most_freq[0][1] 
-            return total_occs / self.countDataPoints(playerId)
-        except IndexError:
+    def mostFreqThrowFreq(self, player_id: int) -> float:
+        """Calculate the frequency of a players most frequent throw"""
+        # Avoid ZeroDivision by checking total number of tracked throws first
+        if (total_throws := self.totalThrowsTracked(player_id)):
+            return max(self.throwStats[player_id]) / total_throws
+        else:
             # No data collected for this specific player
-            return 0
+            return 0.0
 
-    def countDataPoints(self, playerId: int):
-        """Die Anzahl von aufgezeichneten Datenpunkten über einen bestimmten Spieler zurückgeben."""
-        return len(self.throwStats[playerId])
+    def totalThrowsTracked(self, player_id: int) -> int:
+        """Count the number of data points collected about a player"""
+        return sum(self.throwStats[player_id])
 
 class TrackingPlayer(Player):
-    """Spielerklasse, die das Verhalten anderer Spieler beobachtet und dementsprechend handelt"""
+    """Tracks other players tendency to tell the truth or lie"""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, listensToEvents=True, **kwargs)
+    def __init__(self, *args, credLevel=0.5, **kwargs):
+        super().__init__(*args, listens_to_events=True, **kwargs)
 
-        # Statistik über die Wahrheitstreue der anderen Spieler. Das Format ist:
-        # {player0Id: [anzahl_wahrheit0, anzahl_wahrheit0],
-        #  player1Id: [anzahl_wahrheit1, anzahl_wahrheit1],
+        # Statistic about other player's truthfulness
+        # {player0Id: [count_truths, count_lies],
+        # {player1Id: [count_truths, count_lies],
         #  ...}
-        self.playerStats = {}
-        # Den letzten und vorletzten Wurf abspeichern
-        self.secondLastThrow = None
-        self.lastThrow = None
-        # Den Spieler, der den letzten Wurf angegeben hat, abspeichern
-        self.lastPlayerId = None
+        self.playerStats: Dict[int, List[int]] = {}
+        # Store last and second to last Throw so that
+        # we can deduce the previous players strategy
+        self.lastThrow: Optional[Throw] = None
+        self.secondLastThrow: Optional[Throw] = None
+        # The last player to state a throw
+        self.lastPlayerId: Optional[int] = None
+        # Level of credibility which another player must at least have so that we trust them
+        # if there are no other data points (this is the case if the last player had no value to beat)
+        self.credLevel = credLevel
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         else:
             return self.shouldDoubt(lastThrow)
@@ -361,66 +379,70 @@ class TrackingPlayer(Player):
             return lastThrow + 1
 
     def onInit(self, players: list[Player]) -> None:
-        # Leere Statistik erstellen
+        super().onInit(players)
+        # Create empty table for each player
         self.playerStats = {player.id: [0, 0] for player in players if player is not self}
 
     def onEvent(self, event: gameevent.Event) -> None:
         if isinstance(event, gameevent.EventThrow):
             self.secondLastThrow = self.lastThrow
-            self.lastThrow = event.throwStated
-            self.lastPlayerId = event.playerId
+            self.lastThrow = event.throw_stated
+            self.lastPlayerId = event.player_id
         if isinstance(event, gameevent.EventKick):
             if event.reason == gameevent.KICK_REASON.LYING:
-                # Tracken, dass Spieler gelogen hat
-                if event.playerId != self.id:
-                    self.trackPlayerLie(event.playerId)
+                if event.player_id != self.id:
+                    self.trackPlayerLie(event.player_id)
             elif event.reason == gameevent.KICK_REASON.FALSE_ACCUSATION:
-                # Tracken, dass vorheriger Spieler (-> self.lastPlayerId) die Wahrheit gesagt hat
-                # Es wird angenommen dass lastPlayerId!=None, da sonst eine falsche Anschludigung sonst
-                # nicht möglich ist
                 if self.lastPlayerId != self.id:
                     self.trackPlayerTruth(self.lastPlayerId)
-            # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
-            # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastThrow = self.secondLastThrow = self.lastPlayerId = None
 
-    def trackPlayerLie(self, playerId: int) -> None:
-        self.savePlayerStat(playerId, 1)
+    def trackPlayerLie(self, player_id: int) -> None:
+        """Track that the last player lied"""
+        self._savePlayerStat(player_id, 1)
 
-    def trackPlayerTruth(self, playerId: int) -> None:
-        self.savePlayerStat(playerId, 0)
+    def trackPlayerTruth(self, player_id: int) -> None:
+        """Track that the last player told the truth"""
+        self._savePlayerStat(player_id, 0)
 
-    def savePlayerStat(self, playerId: int, event: int) -> None:
-        """Abspeichern, dass ein Spieler gelogen hat bzw. die Wahrheit gesagt hat.
+    def _savePlayerStat(self, player_id: int, event: int) -> None:
+        """Store an event regarding a player.
 
-        :param playerId: Die ID des Spielers, um den es sich handelt
-        :param event: event==0 => Spieler hat die Wahrheit gesagt
-                      event==1 => Spieler hat gelogen"""
-        if self.playerStats == {}:
-            logging.warning(f"TrackingPlayer: No player statistics created (i.e. onInit() wasn't called) for {self.__repr__()}")
+        An event can be either that player lying or telling the truth.
+
+        :param player_id: The ID of the player
+        :param event: What the player did: 0 = telling the truth, 1 = lying
+        """
+        self._assertInitialized()
+        self.playerStats[player_id][event] += 1
+
+    def getPlayerCredibility(self, player_id: int) -> float:
+        """Calculate a players credibility.
+
+        It is calculated with
+            credibility = count_truths / (count_truths + count_lies)
+
+        :param player_id: The ID of the player
+        """
+        truths, lies = self.playerStats[player_id]
+        return truths / (truths + lies) if self.existPlayerStats(player_id) else None 
+
+    def existPlayerStats(self, player_id: int) -> bool:
+        """Check if there has been any data collected at all about a player
+
+        :param player_id: The ID of the player
+        """
+        if player_id in self.playerStats:
+            return any(self.playerStats[player_id])
         else:
-            self.playerStats[playerId][event] += 1
-
-    def getPlayerCredibility(self, playerId: int) -> float:
-        """Errechnet anhand der Statistik über einen Spieler dessen Glaubwürdigkeit.
-
-        Die Glaubwürdigkeit berechnet sich wie folgt:
-            glaubw = anzahl_wahrheit / (anzahl_wahrheit + anzahl_lüge)
-
-        :param playerId: Die ID des Spielers, dessen Glaubwürdigkeit berechnet werden soll."""
-        truths, lies = self.playerStats[playerId]
-        return truths / (truths + lies) if self.existPlayerStats(playerId) else None 
-
-    def existPlayerStats(self, playerId: int) -> bool:
-        """Gibt zurück, ob für einen Spieler bereits etwas in dessen Statistik aufgezeichnet wurde.
-
-        :param playerId: Die ID des Spielers, dessen Statistik überprüft werden soll."""
-        with suppress(KeyError):  # contextlib.suppress
-            return sum(self.playerStats[playerId]) > 0
-        return False
+            # TODO: This should be unreachable, maybe throw an Exception instead
+            # If this block is reached, that must be a bug
+            return False
 
     def shouldDoubt(self, playerThrow: Throw) -> bool:
-        """Einschätzen, ob dem vorherigen Spieler misstraut werden soll.
+        # TODO: Translate this docstring into english
+        """Assess whether the last player should be mistrusted.
+
         Das geschieht auf folgende Weise: Zuerst wird die Wahrscheinlichkeit, dass der Spieler lügt,
         eingeschätzt. Diese errechnet sich aus der Wahrscheinlichkeit, den vorletzten Wurf mit einem zufälligen
         Wurf zu übertreffen, mal der Tendenz des Spielers, zu lügen (1 - Glaubwürdigkeit), plus die Wahrscheinlichkeit,
@@ -431,21 +453,16 @@ class TrackingPlayer(Player):
         dass der Spieler die Wahrheit sagt.
             P_Wahrheit = P_zufällig_erreichen(Vorletzter Wurf) * P_Wahrheit
 
-        :param playerId: ID des vorherigen Spielers
         :param playerThrow: Wurf des vorherigen Spielers"""
         if self.secondLastThrow is None:
-            # Zweiter Zug der "Runde" (nach letztem Zurücksetzen des zu überbietenden Wertes)
+            # Second move after resetting of value to beat
             if self.existPlayerStats(self.lastPlayerId):
-                # TODO: Compare credibility to some threshold
-                #return self.getPlayerCredibility(self.lastPlayerId)
-                
-                # This is just a placeholder until that to-do gets implemented
-                return False
+                return self.getPlayerCredibility(self.lastPlayerId) > self.credLevel
             else:
                 return False
 
         else:
-            # Späterer Zug
+            # Any other move
             if self.existPlayerStats(self.lastPlayerId):
                 p_lie = probGE(self.secondLastThrow) * (1 - self.getPlayerCredibility(self.lastPlayerId)) + probLT(self.secondLastThrow) 
                 p_truth = probGE(self.secondLastThrow) * self.getPlayerCredibility(self.lastPlayerId)
@@ -456,7 +473,7 @@ class TrackingPlayer(Player):
             return p_lie > p_truth
 
 
-# Conversion from command line flags to Player classes
+# Map command line flags to Player classes
 FLAGS_TO_PLAYERS = {
     "dummy": DummyPlayer,
     "c-dummy": CounterDummyPlayer,

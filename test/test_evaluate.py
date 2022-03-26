@@ -11,13 +11,13 @@ logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 
 class TestEvaluate(unittest.TestCase):
     def test_get_player_stats(self):
-        ev = Evaluation([DummyPlayer()], 0, showProgress=False)
+        ev = Evaluation([DummyPlayer()], 0, show_progress=False)
         ev.getPlayerStats(0)
         ev.run()
         print(ev.prettyResults())
 
     def test_randoms(self):
-        ev = Evaluation([RandomPlayer() for _ in range(3)], 1000, showProgress=False)
+        ev = Evaluation([RandomPlayer() for _ in range(3)], 1000, show_progress=False)
         ev.run()
         print(ev.prettyResults())
 
@@ -40,7 +40,7 @@ class TestOnInit(unittest.TestCase):
 class TestAll(unittest.TestCase):
     def test_all(self):
         players = [DummyPlayer(),  AdvancedDummyPlayer(), CounterDummyPlayer(), ShowOffPlayer(), RandomPlayer(), ThresholdPlayer(), TrackingPlayer(), CounterThresPlayer()]
-        ev = Evaluation(players, 1000, showProgress = True)
+        ev = Evaluation(players, 1000, show_progress = True)
         ev.run()
 
 class TestCounterThres(unittest.TestCase):
@@ -59,13 +59,13 @@ class TestCounterThres(unittest.TestCase):
         self.runSim()
 
     def runSim(self):
-        ev = Evaluation(self.players, 1000, showProgress=True, deepcopy=False)
+        ev = Evaluation(self.players, 1000, show_progress=True, deepcopy=False)
         ev.run()
-        #print(ev.prettyResults())
-        #print(f"CounterThresPlayer judgement:")
+        print(ev.prettyResults())
+        print(f"CounterThresPlayer judgement:")
         table = [["Player", "isThresPlayer", "mostFreqThrow"]]
         for player in [p for p in ev.players if p is not self.ctp]:
-            if self.ctp.existThresSuggestion(player.id):
+            if self.ctp.existsAssumption(player.id):
                 if (most_freq := self.ctp.mostFreqThrow(player.id)):
                     table.append([f"{repr(player)}", "Yes",
                         f"lieThres={most_freq}\t{self.ctp.mostFreqThrowFreq(player.id):.3f}"])

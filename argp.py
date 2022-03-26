@@ -21,7 +21,20 @@ class Flag:
     help_alias: Optional[str] = None
     # Whether to omit this flag in the help section
     hidden: bool = False
+    # Whether the flag has been set
+    _set: bool = False
+    # A value which followed the flag. Whether this value is allowed/obligatory
+    # is specified by value_after
     value: Any = None
+
+    @property
+    def set(self) -> bool:
+        return self._set
+
+    @set.setter
+    def set(self, value: bool) -> None:
+        assert isinstance(value, bool)
+        self._set = value
 
 
 player_flags = ", ".join(FLAGS_TO_PLAYERS.keys())
@@ -36,6 +49,7 @@ FLAGS: List[Flag] = [
     Flag("verbose", ["-v", "--verbose"], "Enable verbose output"),
     Flag("quiet", ["-q", "--quiet"], "Quiet output, i.e. no progress bar"),
     Flag("no-write", ["-x", "--no-write"], "Don't write to log file"),
+    Flag("out-file", ["-o", "--out"], "Output file to which simulation results are written", value_after=2, value_after_type=str),
     Flag("no-sort", ["-u", "--no-sort"],
          "Don't sort results by player win rate"),
     Flag("plot-all", ["-p", "--plot-all"],
@@ -51,7 +65,7 @@ FLAGS: List[Flag] = [
 FLAGS += [Flag(player_arg, [f"--{player_arg}"], "", hidden=True, value_after=1,
                value_after_type=int) for player_arg in FLAGS_TO_PLAYERS.keys()]
 
-MAX_LINE_LEN = 70
+MAX_LINE_LEN = 80
 INDENT = 2
 HELP_TEXT_BORDER = 2
 HELP_TEXT_INDENT = 12
@@ -91,16 +105,18 @@ class ArgumentParser:
                     if arg in flag.aliases:
                         flag.set = True
                         if flag.value_after > 0:
-                            # Try to convert the next flag to the specified type `flag.value_after_type`
+                            # Try to convert the value that was passed after the flag to the specified type `flag.value_after_type`
                             try:
                                 flag.value = flag.value_after_type(
                                     self.args[i + 1])
                                 skip_arg = True
                             except (IndexError, ValueError):
-                                # If value_after is 2, a value *must* follow the flag.
+                                # If value_after is 2, a value must follow the flag
                                 if flag.value_after == 2:
-                                    print(
-                                        f"Flag `{flag.name}` must be followed by a value of type {flag.value_after_type.__name__}")
+                                    print(f"Flag `{arg}` must be followed by a value of type {flag.value_after_type.__name__}.")
+                                    print(f"Help for `{arg}`: {flag.help_str}")
+                                    exit(1)
+                        # Found flag, leave loop
                         break
                 else:
                     print(f"Unexpected command line argument \"{arg}\"")
@@ -108,16 +124,17 @@ class ArgumentParser:
 
     def getFlag(self, name):
         try:
-            return next(filter(lambda flag: flag.name == name, self.flags)).value
+            return next(filter(lambda flag: flag.name == name, self.flags))
         except StopIteration:
-            return None
+            raise ValueError(f"Unknown flag `{name}`")
 
-    def printHelp(self):
-        out = []
-        out.append((USAGE, 0))
-        out.append(("", 0))
-        out.append(("Options are:", 0))
-        out.append(("", 0))
+    @staticmethod
+    def printHelp():
+        lines = []
+        lines.append((USAGE, 0))
+        lines.append(("", 0))
+        lines.append(("Options are:", 0))
+        lines.append(("", 0))
         alias_strs = [flag.help_alias or ", ".join(
             flag.aliases) for flag in FLAGS]
         help_pos = HELP_TEXT_INDENT * INDENT
@@ -125,15 +142,15 @@ class ArgumentParser:
         for flag, alias in zip(FLAGS, alias_strs):
             alias_len = len(alias) + ind * INDENT
             if not flag.hidden:
-                if alias_len >= help_pos - HELP_TEXT_BORDER:
-                    out.append((alias, ind))
-                    out.append((flag.help_str, HELP_TEXT_INDENT))
+                if alias_len > help_pos - HELP_TEXT_BORDER:
+                    lines.append((alias, ind))
+                    lines.append((flag.help_str, HELP_TEXT_INDENT))
                 else:
-                    out.append(
+                    lines.append(
                         (alias + " " * (help_pos - alias_len) + flag.help_str, ind))
 
-        out = breakLines(out, MAX_LINE_LEN)
-        for line, ind in out:
+        lines = breakLines(lines, MAX_LINE_LEN)
+        for line, ind in lines:
             printIndented(line, ind)
 
 
@@ -145,6 +162,7 @@ def breakLines(lines, max_len):
         if ind * INDENT + len(line) > max_len:
             # Split current line across multiple lines
             lines.pop(i)
+            # Additional indent is applied to all lines except the first
             additional_indent = 0
             while line:
                 total_len = 0

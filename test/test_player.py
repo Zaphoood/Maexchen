@@ -5,7 +5,6 @@ import constants as c
 from player import Player, DummyPlayer, RandomPlayer, TrackingPlayer, CounterThresPlayer
 from player import PlayerNotInitialized
 from throw import Throw
-from move import Move
 import gameevent
 import logging
 

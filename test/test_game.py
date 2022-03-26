@@ -1,3 +1,4 @@
+# TODO: Do `from unittest import TestCase` instead
 import unittest
 import logging
 
@@ -98,46 +99,15 @@ class TestPlayerIds(unittest.TestCase):
         self.assert_unique_ids(game)
 
 
-
 class TestLog(unittest.TestCase):
     def test_log(self):
-        log1 = GameLog()
-        log1.happen(gameevent.EventAbort)
-        log2 = GameLog()
-        log2.happen(gameevent.EventAbort)
-        self.assertEqual(log1, log2)
+        log = GameLog()
+        log.happen(gameevent.EventAbort())
+        self.assertTrue(log.hasFinished())
 
-
-class TestGameWithLog(unittest.TestCase):
-    def test_gamewlog(self):
-        fixed_seed = 123456
-        game1 = Game([DummyPlayer()] * 4, seed=fixed_seed)
-        game1.init()
-        game1.run()
-        game2 = Game([DummyPlayer()] * 4, seed=fixed_seed)
-        game2.init()
-        game2.run()
-        self.assertEqual(game1.log, game2.log)
-
-
-class TestGameEvent(unittest.TestCase):
-    def test_gameevent_equals(self):
-        e1 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
-        e2 = gameevent.EventThrow(1, Throw(1, 2), Throw(1, 2))
-        self.assertEqual(e1, e2)
-        e1 = gameevent.EventDoubt(1)
-        e2 = gameevent.EventDoubt(1)
-        self.assertEqual(e1, e2)
-        e1 = gameevent.EventKick(1, "reason")
-        e2 = gameevent.EventKick(1, "reason")
-        self.assertEqual(e1, e2)
-        p = Player(1)
-        e1 = gameevent.EventFinish(p)
-        e2 = gameevent.EventFinish(p)
-        self.assertEqual(e1, e2)
-        e1 = gameevent.EventAbort()
-        e2 = gameevent.EventAbort()
-        self.assertEqual(e1, e2)
+        log = GameLog()
+        log.happen(gameevent.EventFinish(0))
+        self.assertTrue(log.hasFinished())
 
 
 class EventListenerPlayer(Player):

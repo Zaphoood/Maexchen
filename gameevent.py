@@ -49,12 +49,6 @@ class Event:
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"
 
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.eventType == other.eventType and self.playerId == other.playerId
-        else:
-            return False
-
 
 class EventThrow(Event):
     """Spieler würfelt und gibt ein Würfelergebnis an."""
@@ -76,12 +70,6 @@ class EventThrow(Event):
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (playerId={self.playerId}, throwActual={self.throwActual}, throwStated={self.throwStated})>"
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return super().__eq__(other) and self.throwActual == other.throwActual and self.throwStated == other.throwStated
-        else:
-            return False
 
 
 class EventDoubt(Event):
@@ -109,12 +97,6 @@ class EventKick(Event):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (playerId={self.playerId}, reason=\"{self.reason.value}\")>"
 
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return super().__eq__(other) and self.reason == other.reason
-        else:
-            return False
-
 
 class EventFinish(Event):
     """Spiel wird ordnungsgemäß beendet."""
@@ -130,13 +112,6 @@ class EventFinish(Event):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (playerId={(self.playerId)})"
 
-    def __eq__(self, other: object) -> bool:
-        # super().__eq__(other) is not used here since it also compares
-        # equality of playerId which is irrelevant here
-        if isinstance(other, EventFinish):
-            return self.playerId == other.playerId
-        else:
-            return False
 
 class EventAbort(Event):
     """Spiel wird vorzeitig beendet."""
@@ -151,11 +126,3 @@ class EventAbort(Event):
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"
-
-    def __eq__(self, other: object) -> bool:
-        # super().__eq__(other) is not used here since it also compares
-        # equality of playerId which is irrelevant here
-        if isinstance(other, EventAbort):
-            return self.message == other.message
-        else:
-            return False

@@ -1,5 +1,5 @@
 import unittest
-from throw import Throw, OutOfBoundsError
+from throw import Throw, ThrowOutOfBounds
 
 
 class TestThrow(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestRankDict(TestThrow):
 
         # Kleinstmöglicher Wert
         small = Throw(3, 1)
-        self.assertRaises(OutOfBoundsError, small.__sub__, 1)
+        self.assertRaises(ThrowOutOfBounds, small.__sub__, 1)
         # Größtmöglicher Wert
         big = Throw(2, 1)
-        self.assertRaises(OutOfBoundsError, big.__add__, 1)
+        self.assertRaises(ThrowOutOfBounds, big.__add__, 1)

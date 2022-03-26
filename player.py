@@ -91,7 +91,7 @@ class DummyPlayer(Player):
         super().__init__(*args, **kwargs)
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         else:
             return False
@@ -114,7 +114,7 @@ class AdvancedDummyPlayer(Player):
         super().__init__(*args, **kwargs)
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen or lastThrow == Throw(66):
+        if lastThrow.is_maexchen or lastThrow == Throw(66):
             return True
         else:
             return False
@@ -147,7 +147,7 @@ class CounterDummyPlayer(Player):
             self.lastThrow = self.secondLastThrow = None
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         elif self.secondLastThrow is not None and lastThrow == self.secondLastThrow + 1:
             # Last Throw is exactly one above the one before that, which means that the last player
@@ -175,7 +175,7 @@ class ShowOffPlayer(Player):
         super().__init__(player_id)
 
     def getDoubt(self, lastThrow: Throw, iMove:int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         else:
             return False
@@ -231,7 +231,7 @@ class ThresholdPlayer(Player):
         if self.doubtThreshold:
             return lastThrow >= self.doubtThreshold
         else:
-            return lastThrow.isMaexchen
+            return lastThrow.is_maexchen
 
     def getThrowStated(self, myThrow: Throw, lastThrow: Optional[Throw], iMove: int, rng: random.Random) -> Optional[Throw]:
         if lastThrow is None or myThrow > lastThrow:
@@ -284,7 +284,7 @@ class CounterThresPlayer(Player):
             self.lastPlayerId = None
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         elif self.existsAssumption(self.lastPlayerId):
             # Decide based on data that was collected about the last player
@@ -367,7 +367,7 @@ class TrackingPlayer(Player):
         self.credLevel = credLevel
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: random.Random) -> Optional[bool]:
-        if lastThrow.isMaexchen:
+        if lastThrow.is_maexchen:
             return True
         else:
             return self.shouldDoubt(lastThrow)

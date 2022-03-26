@@ -86,8 +86,8 @@ class TestRandomPlayer(unittest.TestCase):
 class TestTrackingPlayer(unittest.TestCase):
     def setUp(self):
         self.n_dummies = 10
-        self.dummies = [DummyPlayer(playerId=i) for i in range(self.n_dummies)]
-        self.tr = TrackingPlayer(playerId=self.n_dummies)
+        self.dummies = [DummyPlayer(player_id=i) for i in range(self.n_dummies)]
+        self.tr = TrackingPlayer(player_id=self.n_dummies)
         self.tr.onInit([self.tr, *self.dummies])
 
     def test_stats_creation(self):
@@ -142,7 +142,7 @@ class TestTrackingPlayer(unittest.TestCase):
 class TestCounterThresPlayer(unittest.TestCase):
     def setUp(self):
         self.n_dummies = 2
-        self.dummies = [DummyPlayer(playerId=i) for i in range(self.n_dummies)]
+        self.dummies = [DummyPlayer(player_id=i) for i in range(self.n_dummies)]
         self.ctp = CounterThresPlayer()
         players = [self.ctp, *self.dummies]
         self.ctp.onInit(players)
@@ -152,7 +152,7 @@ class TestCounterThresPlayer(unittest.TestCase):
             self.assertEqual(self.ctp.throwStats[dummy.id], [0] * c.N_THROW_VALUES)
 
     def test_equal_number_of_throws(self):
-        dummy = DummyPlayer(playerId=0)
+        dummy = DummyPlayer(player_id=0)
         ctp = CounterThresPlayer(minDataPoints=1, freqThres=0.49)
         players = [ctp, dummy]
         ctp.onInit([dummy])
@@ -162,7 +162,7 @@ class TestCounterThresPlayer(unittest.TestCase):
             ctp.onEvent(gameevent.EventThrow(dummy.id, None, Throw(32)))
         # `31` and `32` have been tracked the same amount of times
         # --> there should be no suggestion
-        self.assertFalse(ctp.existThresSuggestion(dummy.id))
+        self.assertFalse(ctp.existsAssumption(dummy.id))
 
     def test_tracking(self):
         throw1 = Throw(33)
@@ -183,7 +183,7 @@ class TestCounterThresPlayer(unittest.TestCase):
         # Minimum amount of data points and the threshold for the most frequent Throw
         # value should be met by now --> There should be a suggestion that dummies[0]
         # is a ThresholdPlayer
-        self.assertTrue(self.ctp.existThresSuggestion(self.dummies[0].id))
+        self.assertTrue(self.ctp.existsAssumption(self.dummies[0].id))
         # Since CounterThresPlayer suspects that dummies[0] is a ThresholdPlayer,
         # he should doubt them when they throw their most common throw (`throw1`) again.
         self.assertTrue(self.ctp.getDoubt(throw1, n + 2, None))

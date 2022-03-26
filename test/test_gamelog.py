@@ -7,12 +7,12 @@ from gameevent import EventAbort, EventFinish
 
 class TestGameLog(unittest.TestCase):
     def test_abort(self):
-        players = [DummyPlayer(playerId=1)]
+        players = [DummyPlayer(player_id=1)]
         log = GameLog(players)
         log.happen(EventAbort())
 
     def test_player_list(self):
-        players = [DummyPlayer(playerId=1), ShowOffPlayer(playerId=2)]
+        players = [DummyPlayer(player_id=1), ShowOffPlayer(player_id=2)]
         log = GameLog(players)
 
         e_abort = EventAbort()
@@ -25,7 +25,7 @@ class TestGameLog(unittest.TestCase):
         log.pretty()
 
     def test_unfinished(self):
-        players = [DummyPlayer(playerId=1)]
+        players = [DummyPlayer(player_id=1)]
 
         log = GameLog(players)
         self.assertFalse(log.hasFinished())

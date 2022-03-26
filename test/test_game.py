@@ -22,9 +22,9 @@ class TestInit(unittest.TestCase):
     def test_duplicate(self):
         # This should not work
         with self.assertRaises(DuplicateId):
-            Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disable_assign_ids=True)
+            Game([DummyPlayer(player_id=0), DummyPlayer(player_id=0)], disable_assign_ids=True)
         # This should work
-        game = Game([DummyPlayer(playerId=0), DummyPlayer(playerId=0)], disable_assign_ids=False)
+        game = Game([DummyPlayer(player_id=0), DummyPlayer(player_id=0)], disable_assign_ids=False)
         self.assertNotEqual(game.players[0].id, game.players[1].id)
 
     def test_too_few(self):
@@ -74,7 +74,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_partial(self):
         # Some IDs assigned manually, some to be assigned by Game
-        players = [DummyPlayer(playerId=3), DummyPlayer(playerId=100), DummyPlayer(), DummyPlayer(), DummyPlayer(playerId=2)]
+        players = [DummyPlayer(player_id=3), DummyPlayer(player_id=100), DummyPlayer(), DummyPlayer(), DummyPlayer(player_id=2)]
         game = Game(players)
         self.assert_unique_ids(game)
         self.assertTrue(any([p.id == 3 for p in game.players]))
@@ -83,7 +83,7 @@ class TestPlayerIds(unittest.TestCase):
 
     def test_conflict(self):
         # Conflicting IDs assigned manually
-        players = [DummyPlayer(playerId=2), DummyPlayer(playerId=2), DummyPlayer(playerId=3), DummyPlayer(), DummyPlayer(playerId=2)]
+        players = [DummyPlayer(player_id=2), DummyPlayer(player_id=2), DummyPlayer(player_id=3), DummyPlayer(), DummyPlayer(player_id=2)]
         game = Game(players)
         self.assert_unique_ids(game)
 

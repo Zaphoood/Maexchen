@@ -250,7 +250,7 @@ class Game:
     def happen(self, event: gameevent.Event) -> None:
         """Write an event to the log and alert other players.
 
-        For each player, if they have the attribute listensToEvents set to True,
+        For each player, if they have the attribute listens_to_events set to True,
         their onEvent method will be called.
 
         :param event: Event that has occured"""
@@ -260,7 +260,7 @@ class Game:
             # Delete the value of the actual throw, so that other players can't know what it was
             event.throw_actual = NoneThrow()
         for player in self.players:
-            if player.listensToEvents:
+            if player.listens_to_events:
                 player.onEvent(event)
 
     def assignIds(self) -> None:

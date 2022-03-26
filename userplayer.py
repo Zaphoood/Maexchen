@@ -11,8 +11,8 @@ ANSWER_ABORT = ["x", "leave", "exit", "abort"]
 
 
 class UserPlayer(Player):
-    def __init__(self, playerId: int = None) -> None:
-        super().__init__(playerId)
+    def __init__(self, player_id: int = None) -> None:
+        super().__init__(player_id)
 
     def getDoubt(self, lastThrow: Throw, iMove: int, rng: Random) -> Optional[bool]:
         gotAnsw, trust = self.getInputYesNo(f"Do you trust the previous player that they threw {lastThrow.value}?")

@@ -65,7 +65,7 @@ class TestCounterThres(unittest.TestCase):
         print(f"CounterThresPlayer judgement:")
         table = [["Player", "isThresPlayer", "mostFreqThrow"]]
         for player in [p for p in ev.players if p is not self.ctp]:
-            if self.ctp.existThresSuggestion(player.id):
+            if self.ctp.existsAssumption(player.id):
                 if (most_freq := self.ctp.mostFreqThrow(player.id)):
                     table.append([f"{repr(player)}", "Yes",
                         f"lieThres={most_freq}\t{self.ctp.mostFreqThrowFreq(player.id):.3f}"])

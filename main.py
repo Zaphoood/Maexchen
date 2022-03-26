@@ -40,7 +40,7 @@ def main():
  
     try:
         ev = Evaluation(players, parser.n_reps,
-                        showProgress=not parser.getFlag("quiet").set)
+                        show_progress=not parser.getFlag("quiet").set)
         ev.run()
         ev.saveResultsToDisk(log_path=log_path)
         print(ev.prettyResults(sort_by_winrate=not parser.getFlag("no-sort").set, force_rerender=True))

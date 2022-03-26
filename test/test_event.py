@@ -6,9 +6,9 @@ from throw import Throw
 class TestEvent(TestCase):
     def test_init(self):
         e_throw = EventThrow(0, Throw(21), Throw(21))
-        self.assertTrue(e_throw.isTruthful)
+        self.assertTrue(e_throw.is_truthful)
         e_throw = EventThrow(0, Throw(21), Throw(66))
-        self.assertFalse(e_throw.isTruthful)
+        self.assertFalse(e_throw.is_truthful)
 
         e_doubt = EventDoubt(0)
 

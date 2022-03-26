@@ -1,6 +1,6 @@
-from __future__ import annotations  # Notwendig für type hints, die die eigene Klasse beinhalten
+# Necessary for type hints of methods that include their own class
+from __future__ import annotations
 from typing import Optional
-import contextlib
 from enum import Enum, auto
 
 from throw import Throw
@@ -32,90 +32,90 @@ class KICK_REASON(StrEnum):
 
 
 class Event:
-    """Base class for all Events."""
+    """Base class for all Events"""
     # The type of Event
-    eventType: EVENT_TYPES
-    # The player which caused the event which the event relates to (e. g. EventFinish uses
-    # this to store the id of the winner of the game)
-    playerId: Optional[int]
+    event_type: EVENT_TYPES
+    # The player which caused the event or which the event relates to
+    player_id: Optional[int]
 
-    def __init__(self, eventType: EVENT_TYPES, playerId: Optional[int]) -> None:
-        self.eventType = eventType
-        self.playerId = playerId
+    def __init__(self, event_type: EVENT_TYPES, player_id: Optional[int]) -> None:
+        self.event_type = event_type
+        self.player_id = player_id
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__} by Player with id {self.playerId})>"
+        return f"{self.__class__.__name__} by Player with id {self.player_id})>"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"
+        return f"<{self.__class__.__name__} (type={self.event_type}, player_id={self.player_id})>"
 
 
 class EventThrow(Event):
-    """Spieler würfelt und gibt ein Würfelergebnis an."""
-    throwActual: Throw  # The actual result of the players throw
-    throwStated: Throw  # The result that the player stated they threw
-    isTruthful: Optional[bool]  # Whether the player stated their result truthfully
+    """Stores the result of a players dice throw and the result they told the other players"""
+    throw_actual: Throw  # The actual result of the players throw
+    throw_stated: Throw  # The result that the player stated they threw
+    is_truthful: Optional[bool]  # Whether the player stated their result truthfully
 
-    def __init__(self, playerId: int, throwActual: Throw, throwStated: Throw) -> None:
-        super().__init__(EVENT_TYPES.THROW, playerId)
-        self.throwActual = throwActual
-        self.throwStated = throwStated
-        self.isTruthful = None if None in (throwActual, throwStated) else throwActual == throwStated
+    def __init__(self, player_id: int, throw_actual: Throw, throw_stated: Throw) -> None:
+        super().__init__(EVENT_TYPES.THROW, player_id)
+        self.throw_actual = throw_actual
+        self.throw_stated = throw_stated
+        self.is_truthful = None if None in (throw_actual, throw_stated) else throw_actual == throw_stated
 
     def __str__(self) -> str:
-        if self.throwActual:
-            return f"Player with id {self.playerId} threw {self.throwActual}, states they threw {self.throwStated}"
+        if self.throw_actual:
+            return f"Player with id {self.player_id} threw {self.throw_actual}, states they threw {self.throw_stated}"
         else:
-            return f"Player with id {self.playerId} states they threw {self.throwStated}"
+            return f"Player with id {self.player_id} states they threw {self.throw_stated}"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (playerId={self.playerId}, throwActual={self.throwActual}, throwStated={self.throwStated})>"
+        return f"<{self.__class__.__name__} (player_id={self.player_id}, throw_actual={self.throw_actual}, throw_stated={self.throw_stated})>"
 
 
 class EventDoubt(Event):
-    """Spieler zweifelt seinen Vorgänger an."""
+    """Player doubts their predecessor"""
 
-    def __init__(self, playerId: int) -> None:
-        super().__init__(EVENT_TYPES.DOUBT, playerId)
+    def __init__(self, player_id: int) -> None:
+        super().__init__(EVENT_TYPES.DOUBT, player_id)
 
     def __str__(self) -> str:
-        return f"Player {self.playerId} chose to doubt their predecessor"
+        return f"Player {self.player_id} chose to doubt their predecessor"
 
 
 class EventKick(Event):
-    """Spieler verlässt (unfreiwillig) das Spiel."""
-    playerId: int
+    """Player is kicked from the game"""
+    player_id: int
     reason: KICK_REASON
 
-    def __init__(self, playerId: int, reason: KICK_REASON) -> None:
-        super().__init__(EVENT_TYPES.KICK, playerId)
+    def __init__(self, player_id: int, reason: KICK_REASON) -> None:
+        super().__init__(EVENT_TYPES.KICK, player_id)
         self.reason = reason
 
     def __str__(self) -> str:
-        return f"Player {self.playerId} was removed. Reason: {self.reason.value}"
+        return f"Player {self.player_id} was removed. Reason: {self.reason.value}"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (playerId={self.playerId}, reason=\"{self.reason.value}\")>"
+        return f"<{self.__class__.__name__} (player_id={self.player_id}, reason=\"{self.reason.value}\")>"
 
 
 class EventFinish(Event):
-    """Spiel wird ordnungsgemäß beendet."""
-    playerId: int
+    """Game ends regularly"""
+    player_id: int
 
-    def __init__(self, playerId: int) -> None:
+    def __init__(self, player_id: int) -> None:
         super().__init__(EVENT_TYPES.FINISH, None)
-        self.playerId = playerId
+        self.player_id = player_id
 
     def __str__(self) -> str:
-        return f"Game finished regularly. Player with id={self.playerId} won"
+        return f"Game finished regularly. Player with id={self.player_id} won"
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (playerId={(self.playerId)})"
+        return f"<{self.__class__.__name__} (player_id={(self.player_id)})"
 
 
 class EventAbort(Event):
-    """Spiel wird vorzeitig beendet."""
-    message: str  # Grund, warum das Spiel vorzeitig beendet wird
+    """Game ends early/irregularly"""
+    # Message / reason to end the Game early
+    message: str
 
     def __init__(self, message="") -> None:
         super().__init__(EVENT_TYPES.ABORT, None)
@@ -125,4 +125,4 @@ class EventAbort(Event):
         return "Game was aborted. " + (self.message if self.message else "(No message provided)")
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} (type={self.eventType}, playerId={self.playerId})>"
+        return f"<{self.__class__.__name__}>"

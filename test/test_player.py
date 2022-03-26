@@ -35,9 +35,9 @@ class TestDummyPlayer(unittest.TestCase):
         # Eigenes Ergebnis soll wahrheitsgemäß verkündet werden, wenn es den Vorgänger übertrumpft
         throw = Throw(3, 1)
         while throw < Throw(2, 1):
-            biggerThrow = throw + 1
-            throwStated = dummy.getThrowStated(biggerThrow, throw, 0, self.rng)
-            self.assertEqual(throwStated, biggerThrow)
+            bigger_throw = throw + 1
+            throw_stated = dummy.getThrowStated(bigger_throw, throw, 0, self.rng)
+            self.assertEqual(throw_stated, bigger_throw)
             throw += 1
 
         # Vorgänger, der Mäxchen gewürfelt hat, soll immer angezweifelt werden.

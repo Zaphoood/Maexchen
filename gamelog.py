@@ -31,7 +31,7 @@ class GameLog:
         self.moves[-1].append(event)
 
         if isinstance(event, EventFinish):
-            self.winner_id = event.playerId
+            self.winner_id = event.player_id
 
     def newRound(self):
         self.moves.append([])

@@ -85,7 +85,7 @@ class Evaluation:
             self.win_rounds[winner_id].append(game.log.countRounds())
         for event in game.log.getEvents():
             if isinstance(event, EventKick):
-                self.loss_reason[event.playerId][event.reason] += 1
+                self.loss_reason[event.player_id][event.reason] += 1
 
     def getPlayerStats(self, player_id) -> Tuple[float, ...]:
         win_rate: float = 0.

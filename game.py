@@ -239,7 +239,7 @@ class Game:
         # Andere Spieler benachrichtigen
         if isinstance(event, gameevent.EventThrow):
             # Create new event with throwActual deleted, so that other players can't know what the actual Throw was
-            event.throwActual = NoneThrow()
+            event.throw_actual = NoneThrow()
         for player in self.players:
             if player.listensToEvents:
                 player.onEvent(event)

@@ -145,7 +145,7 @@ class CounterDummyPlayer(Player):
     def onEvent(self, event: gameevent.Event) -> None:
         if isinstance(event, gameevent.EventThrow):
             self.secondLastThrow = self.lastThrow
-            self.lastThrow = event.throwStated
+            self.lastThrow = event.throw_stated
         elif isinstance(event, gameevent.EventKick):
             # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
@@ -274,10 +274,10 @@ class CounterThresPlayer(Player):
 
     def onEvent(self, event: gameevent.Event) -> None:
         if isinstance(event, gameevent.EventThrow):
-            if event.playerId != self.id:
-                self.throwStats[event.playerId][event.throwStated.rank] += 1
-                self.lastPlayerId = event.playerId
-        elif event.eventType == gameevent.EVENT_TYPES.KICK:
+            if event.player_id != self.id:
+                self.throwStats[event.player_id][event.throw_stated.rank] += 1
+                self.lastPlayerId = event.player_id
+        elif event.event_type == gameevent.EVENT_TYPES.KICK:
             # Wird ein Spieler gekickt, wird der zu überbietende Wert zurückgesetzt,
             # das Spiel beginnt also sozusagen von neuem. Deswegen Tracking-Variablen zurücksetzten
             self.lastPlayerId = None
@@ -384,13 +384,13 @@ class TrackingPlayer(Player):
     def onEvent(self, event: gameevent.Event) -> None:
         if isinstance(event, gameevent.EventThrow):
             self.secondLastThrow = self.lastThrow
-            self.lastThrow = event.throwStated
-            self.lastPlayerId = event.playerId
+            self.lastThrow = event.throw_stated
+            self.lastPlayerId = event.player_id
         if isinstance(event, gameevent.EventKick):
             if event.reason == gameevent.KICK_REASON.LYING:
                 # Tracken, dass Spieler gelogen hat
-                if event.playerId != self.id:
-                    self.trackPlayerLie(event.playerId)
+                if event.player_id != self.id:
+                    self.trackPlayerLie(event.player_id)
             elif event.reason == gameevent.KICK_REASON.FALSE_ACCUSATION:
                 # Tracken, dass vorheriger Spieler (-> self.lastPlayerId) die Wahrheit gesagt hat
                 # Es wird angenommen dass lastPlayerId!=None, da sonst eine falsche Anschludigung sonst
